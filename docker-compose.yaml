@@ -1,0 +1,81 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: vkahub-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-vkahub}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - vkahub-net
+
+  api:
+    build:
+      context: ./server/backend
+      dockerfile: Dockerfile
+    container_name: vkahub-api
+    depends_on:
+      - db
+    env_file:
+      - ./server/.env
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    networks:
+      - vkahub-net
+
+  client-builder:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: vkahub-client-builder
+    volumes:
+      - client_dist:/app/dist
+    command: sh -c "npm run build && cp -r dist/* /app/dist/"
+
+  nginx:
+    image: nginx:alpine
+    container_name: vkahub-nginx
+    depends_on:
+      - api
+      - client-builder
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default:/etc/nginx/conf.d/default.conf
+      - client_dist:/var/www/html
+    restart: unless-stopped
+    networks:
+      - vkahub-net
+
+  admin:
+    container_name: vkahub-admin
+    image: dpage/pgadmin4:6.19
+    depends_on:
+      - db
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_LISTEN_PORT: 5001
+    ports:
+      - "5001:5001"
+    volumes:
+      - pgadmin:/root/.pgadmin
+    networks:
+      - vkahub-net
+    restart: unless-stopped
+
+networks:
+  vkahub-net:
+    name: vkahub-net
+    driver: bridge
+
+volumes:
+  db_data:
+  pgadmin:
+  client_dist:

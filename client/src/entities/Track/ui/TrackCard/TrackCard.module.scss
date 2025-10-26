@@ -1,0 +1,14 @@
+.TrackCard {
+    height: 100%;
+    padding: 20px;
+    border: 2px solid #444;
+    border-radius: 12px;
+    display: flex;
+    transition: 200ms;
+    flex-grow: 1;
+    min-height: 12vw;
+
+    &:hover {
+        background: #444;
+    }
+}

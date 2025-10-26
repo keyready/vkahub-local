@@ -1,0 +1,53 @@
+.MobileSidebar {
+    padding: 10px;
+    transition: 200ms ease-in-out;
+    position: absolute;
+    opacity: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    transform: translateX(100%);
+}
+
+.MobileSidebarOpen {
+    width: 240px;
+    border-radius: 12px 0 0 12px;
+    background: var(--input-bg);
+    z-index: 9999999;
+    position: fixed;
+    transform: translateX(0);
+    top: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 1;
+}
+
+.backdrop {
+    transition: 200ms ease-in-out;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+}
+
+.backdropActive {
+    transition: 200ms ease-in-out;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(0 0 0 / 50%);
+    backdrop-filter: blur(2px);
+    z-index: 9999999;
+    opacity: 1;
+}
+
+.avatarImage {
+    border-radius: 50%;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}

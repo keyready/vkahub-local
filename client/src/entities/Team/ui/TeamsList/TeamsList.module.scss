@@ -1,0 +1,16 @@
+.TeamsList {
+    width: 100%;
+    overflow-y: auto;
+}
+
+.flex {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.grid {
+    display: grid;
+    grid-gap: 24px;
+    grid-template-columns: repeat(4, 1fr);
+}

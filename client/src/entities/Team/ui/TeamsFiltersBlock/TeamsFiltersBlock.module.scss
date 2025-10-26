@@ -1,0 +1,13 @@
+.TeamsFiltersBlock {
+    width: 100px;
+    transition: 200ms;
+    flex: 1 0 auto;
+}
+
+.opened {
+    width: 350px;
+    height: 400px;
+    padding: 12px;
+    border-radius: 12px;
+    transition: 200ms;
+}

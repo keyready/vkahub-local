@@ -1,0 +1,29 @@
+.Page {
+    height: calc(100vh - var(--navbar-heigth));
+    padding: 20px 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: start;
+    gap: 10px;
+    position: relative;
+    overflow-y: auto;
+}
+
+.updatedBannerVisible {
+    height: calc(100vh - var(--navbar-heigth) - var(--updated-toast-heigth));
+}
+
+@media (width < 1010px) {
+    .Page {
+        padding: 30px 30px;
+    }
+
+}
+
+@media (width < 500px) {
+    .Page {
+        padding: 10px 30px;
+    }
+
+}

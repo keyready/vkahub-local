@@ -1,0 +1,15 @@
+.NotFound {
+    padding: 20px 40px;
+    border-radius: 18px;
+    background: rgba(0 0 0 / 50%);
+    backdrop-filter: blur(10px);
+}
+
+.page {
+    background: url('/static/error-404.webp') no-repeat center;
+    background-size: cover;
+}
+
+.fullPage {
+    height: 100vh !important;
+}

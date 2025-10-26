@@ -1,0 +1,11 @@
+.LoginPage {
+    padding: 20px 25vw;
+    display: flex;
+}
+
+@media (width <= 1024px) {
+    .LoginPage {
+        padding: 20px 12vw;
+    }
+
+}

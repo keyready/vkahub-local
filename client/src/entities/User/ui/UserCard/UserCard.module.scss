@@ -1,0 +1,23 @@
+.UserCard {
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 12px;
+    transition: 200ms;
+
+    &:hover {
+        opacity: 0.7 !important;
+        transform: scale(1.01) !important;
+    }
+}
+
+.UserCardOpened {
+    padding: 10px 20px;
+    border-radius: 12px;
+}
+
+.imgWrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--bg-color);
+}

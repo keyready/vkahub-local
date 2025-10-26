@@ -1,0 +1,19 @@
+.ProfileInfoBlock {
+
+}
+
+.profileAvatar {
+    width: 208px;
+    height: 208px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    flex: 1 0 auto;
+}
+
+@media (max-width: 768px) {
+    .profileAvatar {
+        align-self: center;
+    }
+
+}

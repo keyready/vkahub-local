@@ -1,0 +1,43 @@
+@import 'reset';
+@import './variables/globals';
+@import './themes/normal';
+@import './themes/vka';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.app,
+.app_modal,
+.app_drawer {
+    color: var(--primary-color);
+    font: var(--font-m);
+}
+
+.app {
+    height: 100vh;
+    background: var(--bg-color);
+}
+
+.page {
+    width: 100%;
+    padding: 0 80px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    position: relative;
+}
+
+
+@media (width < 1010px) {
+    .page {
+        padding: 0 30px;
+    }
+
+}
+
+@media (width < 500px) {
+    .page {
+        padding: 0;
+    }
+
+}

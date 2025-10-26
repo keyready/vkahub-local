@@ -1,0 +1,35 @@
+.ProfileAchievementsPage {
+
+}
+
+.AchievementCardWrapper {
+    position: relative;
+	
+    .achievementDescription {
+        width: fit-content;
+        padding: 10px;
+        border: 2px solid var(--btn-bg-color);
+        border-radius: 0.75rem;
+        backdrop-filter: blur(4px) brightness(0.3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        transition: 200ms;
+        min-width: 100%;
+        z-index: -1;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        opacity: 0;
+        font-style: italic;
+    }
+	
+    &:hover {
+        .achievementDescription {
+            z-index: 100;
+            opacity: 1;
+        }	
+    }
+}
