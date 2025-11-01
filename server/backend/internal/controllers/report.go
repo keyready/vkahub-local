@@ -3,9 +3,10 @@ package controllers
 import (
 	"backend/internal/services"
 	"backend/pkg/app"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type ReportController struct {
@@ -26,5 +27,6 @@ func (rc *ReportController) GenerateReport(ctx *gin.Context) {
 		return
 	}
 
-	appGin.SuccessResponse(http.StatusOK, gin.H{"reportName": reportName})
+	ctx.JSON(http.StatusOK, gin.H{"reportName": "/app/reports/" + reportName})
+	// ctx.File("/app/server/backend/" + reportName)
 }
