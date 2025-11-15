@@ -1,7 +1,7 @@
 import { Button, Image } from '@nextui-org/react';
 import { useNavigate } from 'react-router-dom';
 import { useCallback, useState } from 'react';
-import { RiMenu2Line } from '@remixicon/react';
+import { RiCloseLargeFill, RiMenu2Line } from '@remixicon/react';
 import { useSelector } from 'react-redux';
 
 import classes from './Navbar.module.scss';
@@ -45,10 +45,22 @@ export const Navbar = (props: NavbarProps) => {
             justify="between"
             gap="64px"
         >
-            <button aria-label="Home page" onClick={handleLogoClick} type="button">
+            <button
+                className="flex items-center gap-5"
+                aria-label="Home page"
+                onClick={handleLogoClick}
+                type="button"
+            >
                 <Image
                     className={classes.logo}
                     src={isDark ? '/static/logo.webp' : '/static/logo-light-blue.webp'}
+                />
+                <RiCloseLargeFill className="text-white" size={20} />
+                <Image
+                    height={70}
+                    width={70}
+                    className={classes.logo}
+                    src={isDark ? '/static/vka-dark.webp' : '/static/vka.webp'}
                 />
             </button>
 
