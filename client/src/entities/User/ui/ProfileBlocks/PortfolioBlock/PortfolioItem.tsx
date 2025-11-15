@@ -30,7 +30,7 @@ export const PortfolioItem = ({ file, index, size = 'lg' }: PortfolioItemProps) 
 
     const handleDownloadClick = useCallback(() => {
         const link = document.createElement('a');
-        link.href = `http://localhost:5000/${file.url.split('/app/')[1]}`;
+        link.href = file.url.split('/app')[1];
         link.download = file.name;
 
         document.body.appendChild(link);
@@ -130,7 +130,7 @@ export const PortfolioItem = ({ file, index, size = 'lg' }: PortfolioItemProps) 
             {file.type === 'img' ? (
                 <div className={cn('group relative', getSizes)}>
                     <Image
-                        src={`http://localhost:5000/${file.url.split('/app/')[1]}`}
+                        src={file.url.split('/app')[1]}
                         width={size === 'lg' ? 200 : 100}
                         height={size === 'lg' ? 355 : 177}
                     />
@@ -155,7 +155,12 @@ export const PortfolioItem = ({ file, index, size = 'lg' }: PortfolioItemProps) 
                 </div>
             )}
 
-            <p className={cn('truncate', size === 'lg' ? 'text-l w-[200px]' : 'text-s w-[100px]')}>
+            <p
+                className={cn(
+                    'truncate text-center',
+                    size === 'lg' ? 'text-l w-[200px]' : 'text-s w-[100px]',
+                )}
+            >
                 {file.name}
             </p>
         </motion.div>
