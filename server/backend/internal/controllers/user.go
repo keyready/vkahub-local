@@ -44,7 +44,7 @@ func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
 
 	certificateNames := make([]string, 0)
 	for _, cert := range formData.Certificates {
-		certName := fmt.Sprintf("%s_%s", strings.ReplaceAll(cert.Filename, " ", "_"), formData.EventName)
+		certName := fmt.Sprintf("%s_%s", formData.EventName, strings.ReplaceAll(cert.Filename, " ", "_"))
 		savePath := filepath.Join(CERTIFICATES_STORAGE, certName)
 
 		if saveErr := appGin.Ctx.SaveUploadedFile(cert, savePath); saveErr != nil {

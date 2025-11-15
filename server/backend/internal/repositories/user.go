@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"mime"
 	"net/http"
 	"path/filepath"
 	"slices"
@@ -56,14 +55,10 @@ func (u *UserRepositoryImpl) AddPortfolio(addPortfolio request.AddPortfolioForm,
 	for _, certName := range certificateNames {
 
 		t := ""
-		certType := mime.TypeByExtension(strings.ToLower(filepath.Ext(certName)))
-		switch certType {
-		case "application/pdf":
+		if filepath.Ext(certName) == ".pdf" {
 			t = "pdf"
-		case "image/png", "image/jpeg":
+		} else {
 			t = "img"
-		default:
-			t = "unknown"
 		}
 
 		portfolioFile := models.PortfolioFile{
