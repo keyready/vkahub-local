@@ -1,7 +1,7 @@
 client_max_body_size 3M;
 
 server {
-    listen 81;
+    listen 80;
     server_name localhost;
     root /var/www/html;
     index index.html;

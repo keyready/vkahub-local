@@ -14,7 +14,7 @@ export const eventPlace: { key: EventPlace; label: string }[] = [
     { key: '1st', label: 'Первое место' },
     { key: '2nd', label: 'Второе место' },
     { key: '3rd', label: 'Третье место' },
-    { key: 'participant', label: 'Участик' },
+    { key: 'participant', label: 'Участник' },
 ];
 
 export interface PortfolioFile {
