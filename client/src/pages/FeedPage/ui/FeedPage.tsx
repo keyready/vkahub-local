@@ -13,6 +13,7 @@ import { CreateTeamForm, MyTeamPreviewBlock, TeamReducer } from '@/entities/Team
 import {
     AccountSettings,
     getUserRoles,
+    PortfolioBlock,
     ProfileInfoBlock,
     SkillsBlock,
     UserRoles,
@@ -81,6 +82,9 @@ const FeedPage = memo((props: FeedPageProps) => {
                     </Tab>
                     <Tab key="settings" title="Данные аккаунта">
                         <AccountSettings />
+                    </Tab>
+                    <Tab key="portfolio" title="Портфолио">
+                        <PortfolioBlock />
                     </Tab>
                     <Tab
                         isDisabled={!userRoles?.includes(UserRoles.PROFILE_CONFIRMED)}

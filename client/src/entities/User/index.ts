@@ -1,4 +1,4 @@
-export type { User, Tokens, MembersFilters } from './model/types/User';
+export type { User, Tokens, MembersFilters, EventPlace } from './model/types/User';
 export { UserRoles } from './model/types/User';
 export type { UserSchema } from './model/types/UserSchema';
 export { UserActions, UserReducer } from './model/slice/UserSlice';
@@ -29,4 +29,5 @@ export { InvitationMembersList } from './ui/InvitationMembersList/InvitationMemb
 export { RecoveryPasswordModal } from './ui/RecoveryPasswordModal/RecoveryPasswordModal';
 export { ProfileInfoBlock } from './ui/ProfileBlocks/ProfileInfoBlock/ProfileInfoBlock';
 export { AccountSettings } from './ui/ProfileBlocks/AccountSettings/AccountSettings';
+export { PortfolioBlock } from './ui/ProfileBlocks/PortfolioBlock/PortfolioBlock';
 export { SkillsBlock } from './ui/ProfileBlocks/SkillsBlock/SkillsBlock';

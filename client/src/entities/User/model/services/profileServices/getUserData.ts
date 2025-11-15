@@ -1,15 +1,9 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 
-import { ThunkConfig } from '@/app/providers/StoreProvider/config/StateSchema';
-import { User } from '@/entities/User';
-import { USER_REFRESH_TOKEN } from '@/shared/const';
+import { User } from '../../types/User';
 
-interface UserResponse {
-    data: User;
-    message: string;
-    status: number;
-}
+import { ThunkConfig } from '@/app/providers/StoreProvider/config/StateSchema';
 
 export const getUserDataService = createAsyncThunk<User, void, ThunkConfig<string>>(
     'User/getUserData',
@@ -17,7 +11,6 @@ export const getUserDataService = createAsyncThunk<User, void, ThunkConfig<strin
         const { extra, rejectWithValue } = thunkAPI;
 
         try {
-            console.log(localStorage.getItem(USER_REFRESH_TOKEN));
             const response = await extra.api.get<User>(`/api/get_user_data`);
 
             // const response = {

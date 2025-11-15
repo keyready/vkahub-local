@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: vkahub-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-vkahub}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - vkahub-net
+
+  api:
+    build:
+      context: ./server/backend
+      dockerfile: Dockerfile
+    container_name: vkahub-api
+    depends_on:
+      - db
+    env_file:
+      - ./server/.env
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    networks:
+      - vkahub-net
+
+networks:
+  vkahub-net:
+    name: vkahub-net
+    driver: bridge
+
+volumes:
+  db_data:
+#  pgadmin:
+#  client_dist:

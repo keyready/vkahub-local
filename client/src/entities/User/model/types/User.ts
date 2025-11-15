@@ -8,6 +8,23 @@ export interface Tokens {
     refresh_token: string;
 }
 
+export type EventPlace = '1st' | '2nd' | '3rd' | 'participant';
+
+export const eventPlace: { key: EventPlace; label: string }[] = [
+    { key: '1st', label: 'Первое место' },
+    { key: '2nd', label: 'Второе место' },
+    { key: '3rd', label: 'Третье место' },
+    { key: 'participant', label: 'Участик' },
+];
+
+export interface PortfolioFile {
+    name: string;
+    eventName: string;
+    place: EventPlace;
+    url: string;
+    type: 'img' | 'pdf';
+}
+
 export enum UserRoles {
     ADMIN = 'admin',
     USER = 'user',
@@ -32,6 +49,7 @@ export interface ServerUser {
     password: string;
     avatar: string;
     roles: UserRoles[];
+    portfolio?: PortfolioFile[];
 
     firstname: string;
     lastname: string;

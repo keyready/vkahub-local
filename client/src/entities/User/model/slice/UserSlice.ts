@@ -11,6 +11,7 @@ import { changePassword } from '../services/authServices/changePassword';
 import { confirmEmail } from '../services/authServices/confirmEmail';
 import { changeUserProfile } from '../services/profileServices/changeUserProfile';
 import { logoutService } from '../services/authServices/logoutService';
+import { addPortfolioFile } from '../services/profileServices/addPortfolioFile';
 
 import { USER_ACCESS_TOKEN, USER_REFRESH_TOKEN } from '@/shared/const';
 
@@ -115,6 +116,18 @@ export const UserSlice = createSlice({
                 state.isLoading = false;
             })
             .addCase(changePassword.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+
+            .addCase(addPortfolioFile.pending, (state) => {
+                state.error = undefined;
+                state.isLoading = true;
+            })
+            .addCase(addPortfolioFile.fulfilled, (state) => {
+                state.isLoading = false;
+            })
+            .addCase(addPortfolioFile.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
             })
