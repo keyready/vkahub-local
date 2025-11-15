@@ -1,17 +1,25 @@
 client_max_body_size 3M;
 
 server {
-    listen 80;
+    listen 81;
     server_name localhost;
     root /var/www/html;
     index index.html;
+
+    location /db-admin {
+        proxy_pass http://admin:5001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 
     location / {
         try_files $uri $uri/ /index.html;
     }
 
     location /ws {
-        proxy_pass http://vkahub-api:5000/ws;
+        proxy_pass http://api:5000/ws;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -22,12 +30,13 @@ server {
     }
 
     location ~ ^/api/ {
-        proxy_pass http://vkahub-api:5000;
+        proxy_pass http://api:5000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
+
 #     раскомментить, когда станет не похуй
 #     location /reports {
 #         alias /usr/vkahub-media/reports/;
@@ -50,13 +59,13 @@ server {
 #     }
 }
 
-server {
-    server_name admin.vkahub.ru;
+# server {
+#     server_name admin.vkahub.ru;
 
-    location / {
-        auth_basic "Basic Authentication";
-        auth_basic_user_file /etc/nginx/.htpasswd;
+#     location / {
+#         auth_basic "Basic Authentication";
+#         auth_basic_user_file /etc/nginx/.htpasswd;
 
-        proxy_pass http://localhost:9000;
-    }
-}
+#         proxy_pass http://localhost:9000;
+#     }
+# }

@@ -25,6 +25,8 @@ services:
       - ./server/.env
     ports:
       - "5000:5000"
+    volumes:
+      - ./server/backend/reports:/app/reports
     restart: unless-stopped
     networks:
       - vkahub-net
@@ -45,7 +47,7 @@ services:
       - api
       - client-builder
     ports:
-      - "80:80"
+      - "81:81"
     volumes:
       - ./nginx/default:/etc/nginx/conf.d/default.conf
       - client_dist:/var/www/html

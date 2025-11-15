@@ -3,6 +3,7 @@ package v1
 import (
 	"backend/internal/controllers"
 	"backend/internal/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 

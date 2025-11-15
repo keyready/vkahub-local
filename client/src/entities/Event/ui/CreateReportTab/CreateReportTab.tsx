@@ -112,7 +112,7 @@ export const CreateReportTab = (props: CreateReportTabProps) => {
                                   >
                                       <a
                                           download
-                                          href={`https://storage.yandexcloud.net/vkahub-storage/${downloadLink.link}`}
+                                          href={downloadLink.link}
                                       >
                                           Скачать рапорт
                                       </a>
