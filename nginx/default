@@ -37,11 +37,10 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-#     раскомментить, когда станет не похуй
-#     location /reports {
-#         alias /usr/vkahub-media/reports/;
-#         try_files $uri $uri/ =404;
-#     }
+    location /certificates {
+        alias /certificates/;
+        try_files $uri $uri/ =404;
+    }
 #
 #     location /bugs-reports {
 #         alias /usr/vkahub-media/bugs-media/;

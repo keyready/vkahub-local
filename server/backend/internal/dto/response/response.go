@@ -86,16 +86,17 @@ type FetchAllMembers struct {
 }
 
 type ProfileData struct {
-	ID          int64          `json:"id"`
-	Username    string         `json:"username"`
-	TeamId      int64          `json:"teamId"`
-	Firstname   string         `json:"firstname"`
-	Lastname    string         `json:"lastname"`
-	Description string         `json:"description"`
-	Avatar      string         `json:"avatar"`
-	Skills      pq.StringArray `gorm:"type:varchar[]" json:"skills"`
-	Positions   pq.StringArray `gorm:"type:varchar[]" json:"positions"`
-	CreatedAt   time.Time      `json:"created_at"`
+	ID          int64                  `json:"id"`
+	Username    string                 `json:"username"`
+	TeamId      int64                  `json:"teamId"`
+	Firstname   string                 `json:"firstname"`
+	Lastname    string                 `json:"lastname"`
+	Description string                 `json:"description"`
+	Avatar      string                 `json:"avatar"`
+	Skills      pq.StringArray         `gorm:"type:varchar[]" json:"skills"`
+	Positions   pq.StringArray         `gorm:"type:varchar[]" json:"positions"`
+	CreatedAt   time.Time              `json:"created_at"`
+	Portfolio   []models.PortfolioFile `json:"portfolio"`
 }
 
 type FetchAllTeamsByParams struct {
