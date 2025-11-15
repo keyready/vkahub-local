@@ -19,5 +19,5 @@ func NewUserRouters(r *gin.Engine, uc *controllers.UserController) {
 	userRouters.POST("/user/change_profile", uc.EditProfile)
 	userRouters.GET("/profile-achievements", uc.FetchPersonalAchievements)
 	userRouters.POST("/user/add_portfolio", uc.AddPortfolio)
-	userRouters.POST("/user/delete_porfolio", uc.DeletePortfolio)
+	userRouters.POST("/user/delete_portfolio", uc.DeletePortfolio)
 }
