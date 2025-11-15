@@ -6,20 +6,73 @@ import (
 	"backend/internal/gosocket"
 	"backend/internal/services"
 	"backend/pkg/app"
+	"fmt"
+	"net/http"
+	"path/filepath"
+	"strconv"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"net/http"
-	"strconv"
+)
+
+const (
+	CERTIFICATES_STORAGE = "/app/certificates"
 )
 
 type UserController struct {
-	userService   services.UserService
+	userService services.UserService
 }
 
 func NewUserControllers(service services.UserService) *UserController {
 	return &UserController{
-		userService:   service,
+		userService: service,
 	}
+}
+
+func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
+	formData := request.AddPortfolioForm{}
+
+	if bindErr := gCtx.ShouldBind(&formData); bindErr != nil {
+		appGin.ErrorResponse(
+			http.StatusBadRequest,
+			bindErr,
+		)
+		return
+	}
+
+	certificateNames := make([]string, 0)
+	for _, cert := range formData.Certificates {
+		certName := fmt.Sprintf("%s_%s", strings.ReplaceAll(cert.Filename, " ", "_"), formData.EventName)
+		savePath := filepath.Join(CERTIFICATES_STORAGE, certName)
+
+		if saveErr := appGin.Ctx.SaveUploadedFile(cert, savePath); saveErr != nil {
+			appGin.ErrorResponse(
+				http.StatusInternalServerError,
+				saveErr,
+			)
+			return
+		}
+
+		certificateNames = append(certificateNames, certName)
+	}
+
+	formData.Owner = appGin.Ctx.GetString("username")
+
+	httpCode, err := uc.userService.AddPortfolio(formData, certificateNames)
+	if err != nil {
+		appGin.ErrorResponse(
+			http.StatusInternalServerError,
+			err,
+		)
+		return
+	}
+
+	appGin.SuccessResponse(
+		httpCode,
+		gin.H{},
+	)
 }
 
 func (uc *UserController) FetchAllMessages(ctx *gin.Context) {

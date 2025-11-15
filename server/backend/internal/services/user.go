@@ -18,6 +18,7 @@ type UserService interface {
 	UpdateNotification(updateNtf other.UpdateNotificationData) (httpCode int, err error)
 	GetActualInfo() (httpCode int, err error, info response.ActualInfo)
 	FetchAllMessages(fetchAllMessage request.FetchAllMessages) (httpCode int, err error, messages []response.FetchAllMessagesResponse)
+	AddPortfolio(addPortfolioReq request.AddPortfolioForm, certificateNames []string) (httpCode int, err error)
 }
 
 type UserServiceImpl struct {
@@ -28,6 +29,11 @@ func NewUserServiceImpl(userRepository repositories.UserRepository) UserService 
 	return &UserServiceImpl{
 		UserRepository: userRepository,
 	}
+}
+
+func (u UserServiceImpl) AddPortfolio(addPortfolioReq request.AddPortfolioForm, certificateNames []string) (httpCode int, err error) {
+	httpCode, err = u.UserRepository.AddPortfolio(addPortfolioReq, certificateNames)
+	return httpCode, err
 }
 
 func (u UserServiceImpl) FetchAllMessages(fetchAllMessage request.FetchAllMessages) (httpCode int, err error, messages []response.FetchAllMessagesResponse) {

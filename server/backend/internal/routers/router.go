@@ -6,18 +6,19 @@ import (
 	"backend/internal/repositories"
 	v1 "backend/internal/routers/api/v1"
 	"backend/internal/services"
+
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron"
 	_ "github.com/robfig/cron"
 	"gorm.io/gorm"
 )
 
-
 func InitRouter(db *gorm.DB) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 
+	r.Static("/certificates", "/app/certificates")
 
 	c := cron.New()
 	c.AddFunc("@weekly", gocron.Banned(db))
