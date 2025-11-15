@@ -9,10 +9,9 @@ export const deletePortfolioFile = createAsyncThunk<string, string, ThunkConfig<
         const { extra, rejectWithValue } = thunkAPI;
 
         try {
-            const response = await extra.api.post<string>(
-                '/api/user/delete_portfolio',
+            const response = await extra.api.post<string>('/api/user/delete_portfolio', {
                 certificateName,
-            );
+            });
 
             if (!response.data) {
                 throw new Error();
