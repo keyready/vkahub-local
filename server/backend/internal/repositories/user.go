@@ -247,10 +247,17 @@ func (u *UserRepositoryImpl) EditProfile(EditProf request.EditProfileRequest) (h
 }
 
 func (u *UserRepositoryImpl) GetProfile(username string) (httpCode int, err error, userData response.ProfileData) {
-	dbErr := u.Db.Model(&models.UserModel{}).Where("username = ?", username).First(&userData).Error
+	user := models.UserModel{}
+	dbErr := u.Db.Model(&models.UserModel{}).Where("username = ?", username).First(&user).Error
 	if dbErr != nil {
 		return http.StatusNotFound, gorm.ErrRecordNotFound, userData
 	}
+
+	userData, err = mapper.UserModelToUserProfile(user)
+	if err != nil {
+		return http.StatusInternalServerError, err, response.ProfileData{}
+	}
+
 	return http.StatusOK, nil, userData
 }
 

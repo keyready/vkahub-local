@@ -34,3 +34,27 @@ func UserModelToUserData(userModel models.UserModel) (response.UserData, error) 
 
 	return userData, nil
 }
+
+func UserModelToUserProfile(userModel models.UserModel) (response.ProfileData, error) {
+	portfolio := []models.PortfolioFile{}
+
+	if decodeErr := json.Unmarshal(userModel.Portfolio, &portfolio); decodeErr != nil {
+		return response.ProfileData{}, decodeErr
+	}
+
+	profileData := response.ProfileData{
+		ID:          userModel.ID,
+		Username:    userModel.Username,
+		TeamId:      userModel.TeamId,
+		Firstname:   userModel.Firstname,
+		Lastname:    userModel.Lastname,
+		Description: userModel.Description,
+		Avatar:      userModel.Avatar,
+		Skills:      userModel.Skills,
+		Positions:   userModel.Positions,
+		CreatedAt:   userModel.CreatedAt,
+		Portfolio:   portfolio,
+	}
+
+	return profileData, nil
+}
