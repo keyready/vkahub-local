@@ -63,6 +63,25 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
             <VStack gap="36px" maxW align="start" className="overflow-y-auto relative">
                 <HStack maxW align="start" className="grid grid-cols-5">
                     <div className="col-span-1 sticky top-1">
+                        <h1 className="text-xl leading-tight">Версия 2.1.0 от 15.11.2025 г.</h1>
+                    </div>
+                    <VStack maxW gap="24px" className="col-span-4">
+                        <div>
+                            <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
+                                Новые функции
+                            </h3>
+                            <h4 className="text-l leading-snug">
+                                - Добавили возможность загрузки сертификатов/грамот и пр. в профиль
+                                пользователя, чтобы все видели, какой вы крутой!
+                                <br />- Добавленные файлы может скачать любой пользователь, имеющий
+                                подтвержденную учетную запись на платформе
+                            </h4>
+                        </div>
+                    </VStack>
+                </HStack>
+
+                <HStack maxW align="start" className="grid grid-cols-5">
+                    <div className="col-span-1 sticky top-1">
                         <h1 className="text-xl leading-tight">Версия 2.0.0 от 27.09.2025 г.</h1>
                     </div>
                     <VStack maxW gap="24px" className="col-span-4">

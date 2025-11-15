@@ -16,7 +16,7 @@ import { useSelector } from 'react-redux';
 import { AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
-import { getUserData } from '../../../model/selectors/UserSelectors';
+import { getUserData, getUserIsLoading } from '../../../model/selectors/UserSelectors';
 import { addPortfolioFile } from '../../../model/services/profileServices/addPortfolioFile';
 import { getUserDataService } from '../../../model/services/profileServices/getUserData';
 import { type EventPlace, eventPlace, type PortfolioFile } from '../../../model/types/User';
@@ -28,7 +28,6 @@ import { FileUploader } from '@/shared/ui/FileUploader';
 import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
 import { toastDispatch } from '@/widgets/Toaster';
 import { formatBytes } from '@/shared/lib/formatBytes';
-import { sortByPlace } from '@/shared/lib/sortByPlace';
 
 interface PortfolioBlockProps {
     className?: string;
@@ -42,6 +41,7 @@ export const PortfolioBlock = (props: PortfolioBlockProps) => {
     const [isCertificateModalOpened, setIsCertificateModalOpened] = useState<boolean>(false);
 
     const portfolioFiles = useSelector(getUserData)?.portfolio;
+    const isUserLoading = useSelector(getUserIsLoading);
 
     const dispatch = useAppDispatch();
 
@@ -66,12 +66,17 @@ export const PortfolioBlock = (props: PortfolioBlockProps) => {
         formData.append('eventName', uploadedFileParams?.eventName || '');
         formData.append('place', uploadedFileParams?.place || '');
 
-        await toastDispatch(dispatch(addPortfolioFile(formData)), {
+        const res = await toastDispatch(dispatch(addPortfolioFile(formData)), {
             error: 'Не получилось добавить файл',
             loading: 'В процессе...',
             success: 'Файл успешно добавлен!',
         });
         await dispatch(getUserDataService());
+
+        if (res.meta.requestStatus === 'fulfilled') {
+            setIsCertificateModalOpened(false);
+            setUploadedFileParams({});
+        }
     }, [
         dispatch,
         isFormValid,
@@ -97,8 +102,8 @@ export const PortfolioBlock = (props: PortfolioBlockProps) => {
                     {portfolioFiles?.length ? (
                         <>
                             <Divider className="w-full" />
-                            <div className="flex flex-wrap items-center gap-3">
-                                {portfolioFiles.sort(sortByPlace).map((file, index) => (
+                            <div className="flex flex-wrap items-start gap-3">
+                                {portfolioFiles.map((file, index) => (
                                     <PortfolioItem file={file} index={index} key={index} />
                                 ))}
                             </div>
@@ -192,6 +197,7 @@ export const PortfolioBlock = (props: PortfolioBlockProps) => {
                     </ModalBody>
                     <ModalFooter>
                         <Button
+                            isLoading={isUserLoading}
                             className="bg-accent hover:bg-accent/60 text-white"
                             onPress={confirmUploading}
                             isDisabled={!isFormValid}
