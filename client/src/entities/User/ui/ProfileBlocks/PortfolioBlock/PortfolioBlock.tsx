@@ -11,7 +11,7 @@ import {
     Select,
     SelectItem,
 } from '@nextui-org/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -42,6 +42,11 @@ export const PortfolioBlock = (props: PortfolioBlockProps) => {
 
     const portfolioFiles = useSelector(getUserData)?.portfolio;
     const isUserLoading = useSelector(getUserIsLoading);
+
+    useEffect(() => {
+        console.log(portfolioFiles);
+        
+    }, [portfolioFiles])
 
     const dispatch = useAppDispatch();
 
