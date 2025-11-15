@@ -12,6 +12,7 @@ import { confirmEmail } from '../services/authServices/confirmEmail';
 import { changeUserProfile } from '../services/profileServices/changeUserProfile';
 import { logoutService } from '../services/authServices/logoutService';
 import { addPortfolioFile } from '../services/profileServices/addPortfolioFile';
+import { deletePortfolioFile } from '../services/profileServices/deletePortfolioFile';
 
 import { USER_ACCESS_TOKEN, USER_REFRESH_TOKEN } from '@/shared/const';
 
@@ -128,6 +129,18 @@ export const UserSlice = createSlice({
                 state.isLoading = false;
             })
             .addCase(addPortfolioFile.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+
+            .addCase(deletePortfolioFile.pending, (state) => {
+                state.error = undefined;
+                state.isLoading = true;
+            })
+            .addCase(deletePortfolioFile.fulfilled, (state) => {
+                state.isLoading = false;
+            })
+            .addCase(deletePortfolioFile.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
             })

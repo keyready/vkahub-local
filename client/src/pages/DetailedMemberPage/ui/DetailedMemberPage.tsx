@@ -1,7 +1,14 @@
 import { memo, useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { BreadcrumbItem, Breadcrumbs, Chip, Image } from '@nextui-org/react';
+import {
+    Accordion,
+    AccordionItem,
+    BreadcrumbItem,
+    Breadcrumbs,
+    Chip,
+    Image,
+} from '@nextui-org/react';
 
 import classes from './DetailedMemberPage.module.scss';
 
@@ -18,6 +25,7 @@ import { AppLink } from '@/shared/ui/AppLink';
 import { fetchTeam } from '@/entities/Team';
 import { AchievementsPreviewList } from '@/entities/ProfileAchievement';
 import { useWindowWidth } from '@/shared/lib/hooks/useWindowWidth';
+import { PortfolioItem } from '@/entities/User/ui/ProfileBlocks/PortfolioBlock/PortfolioItem';
 
 interface DetailedMemberPageProps {
     className?: string;
@@ -253,11 +261,36 @@ const DetailedMemberPage = memo((props: DetailedMemberPageProps) => {
                     </VStack>
 
                     <VStack
-                        gap="0"
                         maxW
                         className="h-full flex-grow relative py-0 rounded-xl bg-card-bg overflow-y-auto"
                     >
                         <MemberAchievementsTable name={member?.firstname} userId={member?.id} />
+                    </VStack>
+
+                    <VStack gap="0" maxW className="flex-grow h-full px-2 rounded-xl bg-card-bg">
+                        {!member?.portfolio && !member?.portfolio?.length ? (
+                            <p className="text-m py-5 opacity-30">
+                                {member?.firstname} пока не добавил ни одного сертификата
+                            </p>
+                        ) : (
+                            <Accordion>
+                                <AccordionItem
+                                    classNames={{ title: 'text-sm text-accent' }}
+                                    title="Показать сертификаты"
+                                >
+                                    <div className="flex flex-wrap items-center gap-5">
+                                        {member.portfolio.map((file, index) => (
+                                            <PortfolioItem
+                                                size="sm"
+                                                file={file}
+                                                index={index}
+                                                key={index}
+                                            />
+                                        ))}
+                                    </div>
+                                </AccordionItem>
+                            </Accordion>
+                        )}
                     </VStack>
                 </VStack>
             </HStack>
