@@ -30,6 +30,35 @@ func NewUserControllers(service services.UserService) *UserController {
 	}
 }
 
+func (uc *UserController) DeletePortfolio(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
+	jsonForm := request.DeletePortfolioForm{}
+
+	if bindErr := appGin.Ctx.ShouldBindJSON(&jsonForm); bindErr != nil {
+		appGin.ErrorResponse(
+			http.StatusBadRequest,
+			bindErr,
+		)
+		return
+	}
+
+	ownerName := appGin.Ctx.GetString("username")
+
+	httpCode, err := uc.userService.DeletePortfolio(jsonForm.CertificateName, ownerName)
+	if err != nil {
+		appGin.ErrorResponse(
+			httpCode,
+			err,
+		)
+		return
+	}
+
+	appGin.SuccessResponse(
+		httpCode,
+		gin.H{},
+	)
+}
+
 func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
 	appGin := app.Gin{Ctx: gCtx}
 	formData := request.AddPortfolioForm{}

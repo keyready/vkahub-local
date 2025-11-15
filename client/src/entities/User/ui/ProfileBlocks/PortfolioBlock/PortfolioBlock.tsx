@@ -11,7 +11,7 @@ import {
     Select,
     SelectItem,
 } from '@nextui-org/react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -42,6 +42,11 @@ export const PortfolioBlock = (props: PortfolioBlockProps) => {
     const [isCertificateModalOpened, setIsCertificateModalOpened] = useState<boolean>(false);
 
     const portfolioFiles = useSelector(getUserData)?.portfolio;
+
+    useEffect(() => {
+        console.log(portfolioFiles);
+        
+    }, [portfolioFiles])
 
     const dispatch = useAppDispatch();
 
@@ -98,7 +103,7 @@ export const PortfolioBlock = (props: PortfolioBlockProps) => {
                         <>
                             <Divider className="w-full" />
                             <div className="flex flex-wrap items-center gap-3">
-                                {portfolioFiles.sort(sortByPlace).map((file, index) => (
+                                {portfolioFiles.map((file, index) => (
                                     <PortfolioItem file={file} index={index} key={index} />
                                 ))}
                             </div>

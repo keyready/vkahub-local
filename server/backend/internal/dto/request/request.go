@@ -150,6 +150,10 @@ type AddPortfolioForm struct {
 	Owner        string
 }
 
+type DeletePortfolioForm struct {
+	CertificateName string `json:"certificateName"`
+}
+
 type FetchAllAcRequest struct {
 	Owner   string `json:"owner"`
 	ValueId int64  `json:"valueId"`

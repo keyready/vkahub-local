@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -31,6 +32,7 @@ type UserRepository interface {
 	GetActualInfo() (httpCode int, err error, info response.ActualInfo)
 	FetchAllMessages(fetchAllMessage request.FetchAllMessages) (httpCode int, err error, messages []response.FetchAllMessagesResponse)
 	AddPortfolio(addPortfolioReq request.AddPortfolioForm, certificateNames []string) (httpCode int, err error)
+	DeletePortfolio(certificateName, ownerName string) (httpCode int, err error)
 }
 
 type UserRepositoryImpl struct {
@@ -39,6 +41,40 @@ type UserRepositoryImpl struct {
 
 func NewUserRepositoryImpl(Db *gorm.DB) UserRepository {
 	return &UserRepositoryImpl{Db: Db}
+}
+
+func (u *UserRepositoryImpl) DeletePortfolio(certificateName, ownerName string) (httpCode int, err error) {
+	var owner models.UserModel
+	u.Db.Where("username = ?", ownerName).First(&owner)
+
+	var portfolio []models.PortfolioFile
+	if len(owner.Portfolio) > 0 {
+		if err := json.Unmarshal(owner.Portfolio, &portfolio); err != nil {
+			portfolio = []models.PortfolioFile{}
+		}
+	}
+
+	updPortfolio := []models.PortfolioFile{}
+	for index, cert := range portfolio {
+		if strings.Compare(cert.Name, certificateName) == 0 {
+			updPortfolio = append(portfolio[:index], portfolio[index+1:]...)
+		}
+	}
+
+	jsonDataPortfolio, _ := json.Marshal(updPortfolio)
+	dbTypePortfolio := datatypes.JSON(jsonDataPortfolio)
+
+	owner.Portfolio = dbTypePortfolio
+
+	u.Db.Save(&owner)
+
+	filePath := filepath.Join("/app/certificates", certificateName)
+	err = os.Remove(filePath)
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("failed to delete file: %v", err)
+	}
+
+	return http.StatusOK, nil
 }
 
 func (u *UserRepositoryImpl) AddPortfolio(addPortfolio request.AddPortfolioForm, certificateNames []string) (httpCode int, err error) {
@@ -226,6 +262,9 @@ func (u *UserRepositoryImpl) GetUserData(username string) (httpCode int, err err
 	}
 
 	userData, err = mapper.UserModelToUserData(user)
+	if err != nil {
+		return http.StatusInternalServerError, err, response.UserData{}
+	}
 
 	return http.StatusOK, nil, userData
 }

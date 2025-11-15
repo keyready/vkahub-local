@@ -14,6 +14,7 @@ import (
 	"slices"
 
 	"github.com/golang-jwt/jwt/v5"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -132,7 +133,8 @@ func (a *AuthRepositoryImpl) SignUp(signUp request.SignUpRequest) (httpCode int,
 		Password:    hashPassword,
 		Avatar:      signUp.Avatar.Filename,
 		ConfirmLink: signUp.ConfirmLink,
-		Roles:       []string{"user","mailConfirmed"},
+		Roles:       []string{"user", "mailConfirmed"},
+		Portfolio:   datatypes.JSON([]byte(`[]`)),
 	})
 
 	//privateKey, genKeyErr := encryption.GenerateRSAKeys(10)

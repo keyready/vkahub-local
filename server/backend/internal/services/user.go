@@ -19,6 +19,7 @@ type UserService interface {
 	GetActualInfo() (httpCode int, err error, info response.ActualInfo)
 	FetchAllMessages(fetchAllMessage request.FetchAllMessages) (httpCode int, err error, messages []response.FetchAllMessagesResponse)
 	AddPortfolio(addPortfolioReq request.AddPortfolioForm, certificateNames []string) (httpCode int, err error)
+	DeletePortfolio(certificateName, ownerName string) (httpCode int, err error)
 }
 
 type UserServiceImpl struct {
@@ -29,6 +30,11 @@ func NewUserServiceImpl(userRepository repositories.UserRepository) UserService 
 	return &UserServiceImpl{
 		UserRepository: userRepository,
 	}
+}
+
+func (u UserServiceImpl) DeletePortfolio(certificateName, ownerName string) (httpCode int, err error) {
+	httpCode, err = u.UserRepository.DeletePortfolio(certificateName, ownerName)
+	return httpCode, err
 }
 
 func (u UserServiceImpl) AddPortfolio(addPortfolioReq request.AddPortfolioForm, certificateNames []string) (httpCode int, err error) {
