@@ -5,13 +5,18 @@ import (
 	"backend/internal/dto/request"
 	"backend/internal/dto/response"
 	"backend/internal/models"
+	"backend/mapper"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"mime"
 	"net/http"
+	"path/filepath"
 	"slices"
 	"strings"
 	"unicode/utf8"
 
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -26,6 +31,7 @@ type UserRepository interface {
 	UpdateNotificationStatus(updateNotification other.UpdateNotificationData) (httpCode int, err error)
 	GetActualInfo() (httpCode int, err error, info response.ActualInfo)
 	FetchAllMessages(fetchAllMessage request.FetchAllMessages) (httpCode int, err error, messages []response.FetchAllMessagesResponse)
+	AddPortfolio(addPortfolioReq request.AddPortfolioForm, certificateNames []string) (httpCode int, err error)
 }
 
 type UserRepositoryImpl struct {
@@ -34,6 +40,51 @@ type UserRepositoryImpl struct {
 
 func NewUserRepositoryImpl(Db *gorm.DB) UserRepository {
 	return &UserRepositoryImpl{Db: Db}
+}
+
+func (u *UserRepositoryImpl) AddPortfolio(addPortfolio request.AddPortfolioForm, certificateNames []string) (httpCode int, err error) {
+	var owner models.UserModel
+	u.Db.Where("username = ?", addPortfolio.Owner).First(&owner)
+
+	var portfolio []models.PortfolioFile
+	if len(owner.Portfolio) > 0 {
+		if err := json.Unmarshal(owner.Portfolio, &portfolio); err != nil {
+			portfolio = []models.PortfolioFile{}
+		}
+	}
+
+	for _, certName := range certificateNames {
+
+		t := ""
+		certType := mime.TypeByExtension(strings.ToLower(filepath.Ext(certName)))
+		switch certType {
+		case "application/pdf":
+			t = "pdf"
+		case "image/png", "image/jpeg":
+			t = "img"
+		default:
+			t = "unknown"
+		}
+
+		portfolioFile := models.PortfolioFile{
+			Name:      certName,
+			EventName: addPortfolio.EventName,
+			Place:     addPortfolio.Place,
+			Url:       fmt.Sprintf("/app/certificates/%s", certName),
+			Type:      t,
+		}
+
+		portfolio = append(portfolio, portfolioFile)
+	}
+
+	jsonDataPortfolio, _ := json.Marshal(portfolio)
+	dbTypePortfolio := datatypes.JSON(jsonDataPortfolio)
+
+	owner.Portfolio = dbTypePortfolio
+
+	u.Db.Save(&owner)
+
+	return http.StatusCreated, nil
 }
 
 func (u *UserRepositoryImpl) FetchAllMessages(fetchAllMessage request.FetchAllMessages) (httpCode int, err error, respMessage []response.FetchAllMessagesResponse) {
@@ -173,10 +224,14 @@ func (u *UserRepositoryImpl) GetProfile(username string) (httpCode int, err erro
 }
 
 func (u *UserRepositoryImpl) GetUserData(username string) (httpCode int, err error, userData response.UserData) {
-	dbErr := u.Db.Model(&models.UserModel{}).Where("username = ?", username).First(&userData).Error
+	user := models.UserModel{}
+	dbErr := u.Db.Model(&models.UserModel{}).Where("username = ?", username).First(&user).Error
 	if dbErr != nil {
-		return http.StatusNotFound, gorm.ErrRecordNotFound, userData
+		return http.StatusNotFound, gorm.ErrRecordNotFound, response.UserData{}
 	}
+
+	userData, err = mapper.UserModelToUserData(user)
+
 	return http.StatusOK, nil, userData
 }
 

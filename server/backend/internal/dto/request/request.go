@@ -1,9 +1,10 @@
 package request
 
 import (
-	"github.com/lib/pq"
 	"mime/multipart"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type SignUpRequest struct {
@@ -140,6 +141,13 @@ type AddAchievementReq struct {
 	TeamId  int64  `json:"teamId"`
 	EventId int64  `json:"eventId"`
 	Result  string `json:"result"`
+}
+
+type AddPortfolioForm struct {
+	Certificates []*multipart.FileHeader `form:"certificates"`
+	EventName    string                  `form:"eventName"`
+	Place        string                  `form:"place"`
+	Owner        string
 }
 
 type FetchAllAcRequest struct {

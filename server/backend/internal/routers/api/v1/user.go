@@ -3,6 +3,7 @@ package v1
 import (
 	"backend/internal/controllers"
 	"backend/internal/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,4 +18,5 @@ func NewUserRouters(r *gin.Engine, uc *controllers.UserController) {
 	userRouters.GET("/profile", uc.GetProfile)
 	userRouters.POST("/user/change_profile", uc.EditProfile)
 	userRouters.GET("/profile-achievements", uc.FetchPersonalAchievements)
+	userRouters.POST("/user/add_portfolio", uc.AddPortfolio)
 }

@@ -1,8 +1,11 @@
 package models
 
 import (
-	"github.com/lib/pq"
 	"time"
+
+	"gorm.io/datatypes"
+
+	"github.com/lib/pq"
 )
 
 type UserModel struct {
@@ -39,5 +42,15 @@ type UserModel struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 	MemberSince time.Time `json:"memberSince"`
 
+	Portfolio datatypes.JSON `gorm:"type:jsonb" json:"-"`
+
 	LastOnline time.Time `json:"lastOnline"`
+}
+
+type PortfolioFile struct {
+	Name      string `json:"name"`
+	EventName string `json:"eventName"`
+	Place     string `json:"place"`
+	Url       string `json:"url"`
+	Type      string `json:"type"`
 }
