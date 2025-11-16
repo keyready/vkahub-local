@@ -19,6 +19,7 @@ func InitRouter(db *gorm.DB) *gin.Engine {
 	r.Use(gin.Recovery())
 
 	r.Static("/certificates", "/app/certificates")
+	r.Static("/reports", "/app/reports")
 
 	c := cron.New()
 	c.AddFunc("@weekly", gocron.Banned(db))

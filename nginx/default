@@ -41,30 +41,9 @@ server {
         alias /certificates/;
         try_files $uri $uri/ =404;
     }
-#
-#     location /bugs-reports {
-#         alias /usr/vkahub-media/bugs-media/;
-#         try_files $uri $uri/ =404;
-#     }
-#
-#     location /media {
-#         alias https://storage.yandexcloud.net/vkahub-storage/;
-#         try_files $uri $uri/ =404;
-#     }
-#
-#     location /profile-achievements {
-#         alias /usr/vkahub-media/profile-achievements/;
-#         try_files $uri $uri/ =404;
-#     }
+
+    location /reports {
+        alias /reports/;
+        try_files $uri $uri/ =404;
+    }
 }
-
-# server {
-#     server_name admin.vkahub.ru;
-
-#     location / {
-#         auth_basic "Basic Authentication";
-#         auth_basic_user_file /etc/nginx/.htpasswd;
-
-#         proxy_pass http://localhost:9000;
-#     }
-# }
