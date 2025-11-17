@@ -86,7 +86,7 @@ export const TeamInfoBlock = (props: TeamInfoBlockProps) => {
                         fallbackSrc="/static/fallbacks/team-fallback.webp"
                         classNames={{ wrapper: classes.blurredBackgroundImage }}
                         className="w-full h-full"
-                        src={`${import.meta.env.VITE_MINIO_ENDPOINT}/teams_bucket/${team?.image}`}
+                        src={`/team-images/${team?.image}`}
                         alt={team?.title}
                     />
                 </HStack>
