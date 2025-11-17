@@ -79,6 +79,28 @@ services:
       - vkahub-net
     restart: unless-stopped
 
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    depends_on:
+      - db
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: vkahub
+      PGUSER: admin-61kaf-vkahub
+      PGPASSWORD: admin-61kaf-vkahub
+      PORT: 5002
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./notification-service:/app
+    restart: unless-stopped
+    networks:
+      - vkahub-net
+
 networks:
   vkahub-net:
     name: vkahub-net
