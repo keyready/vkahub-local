@@ -32,7 +32,7 @@ const fetchTeamsApi = rtkApi.injectEndpoints({
                 };
             },
         }),
-        getTeamMembers: build.query<User[], number>({
+        getTeamMembers: build.query<User[], string>({
             query: (teamId) => ({
                 url: `/api/team/members?teamId=${teamId}`,
             }),

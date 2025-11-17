@@ -13,8 +13,8 @@ import { transferCaptainRights } from '@/entities/Team/model/services/transferCa
 import { getUserData } from '@/entities/User';
 
 interface MembersActionsProps {
-    memberId?: number;
-    teamId?: number;
+    memberId?: string;
+    teamId?: string;
 }
 
 export const MembersActions = (props: MembersActionsProps) => {

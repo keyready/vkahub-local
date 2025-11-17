@@ -63,7 +63,7 @@ export const NotificationsList = (props: NotificationsListProps) => {
                                     new Date(a.createdAt).getTime(),
                             )
                             .map((notification: Notification, index: number) => (
-                                <VStack maxW gap="8px">
+                                <VStack key={index} maxW gap="8px">
                                     <NotificationCard
                                         key={notification.id}
                                         notification={notification}
