@@ -168,7 +168,7 @@ const DetailedMemberPage = memo((props: DetailedMemberPageProps) => {
                         <Image
                             fallbackSrc="/static/fallbacks/user-fallback.webp"
                             classNames={{ wrapper: classes.blurredBackgroundImage }}
-                            src={`https://storage.yandexcloud.net/vkahub-storage/${member?.avatar}`}
+                            src={`/user-avatars/${member?.avatar}`}
                             className="w-[400px] h-[400px]"
                             alt={member?.username}
                         />

@@ -246,9 +246,7 @@ export const MyTeamPreviewBlock = (props: MyTeamPreviewBlockProps) => {
                     {!isMobile && (
                         <Image
                             className="w-[100px] h-[100px]"
-                            src={`${import.meta.env.VITE_MINIO_ENDPOINT}/teams_bucket/${
-                                changedTeamData?.image
-                            }`}
+                            src={`/team-images/${changedTeamData?.image}`}
                             fallbackSrc="/static/fallbacks/team-fallback.webp"
                             classNames={{
                                 wrapper: classes.teamImageWrapper,
@@ -360,7 +358,6 @@ export const MyTeamPreviewBlock = (props: MyTeamPreviewBlockProps) => {
                         )}
                         <HStack gap="12px">
                             <Button
-                                onClick={() => ym('reachGoal', 'team-chat-click')}
                                 type="button"
                                 color="warning"
                                 as={AppLink}

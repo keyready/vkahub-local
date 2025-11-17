@@ -93,7 +93,7 @@ export const AvatarDropdown = (props: AvatarDropdownProps) => {
                         width={48}
                         height={48}
                         fallbackSrc="/static/fallbacks/user-fallback.webp"
-                        src={userData?.avatar}
+                        src={`/user-avatars/${userData?.avatar}`}
                         className="rounded-full w-12 h-12"
                     />
                 </DropdownTrigger>
