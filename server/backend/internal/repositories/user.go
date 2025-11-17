@@ -239,9 +239,12 @@ func (u *UserRepositoryImpl) EditProfile(EditProf request.EditProfileInfoForm) (
 		currentUser.Roles = append(currentUser.Roles, "profileConfirmed")
 	}
 	currentUser.IsProfileConfirmed = true
-	currentUser.Skills = EditProf.Skills
-	currentUser.Positions = EditProf.Positions
-
+	if !slices.Contains(EditProf.Skills, "null") {
+		currentUser.Skills = EditProf.Skills
+	}
+	if !slices.Contains(EditProf.Positions, "null") {
+		currentUser.Positions = EditProf.Positions
+	}
 	if EditProf.Avatar != "" {
 		currentUser.Avatar = EditProf.Avatar
 	}
