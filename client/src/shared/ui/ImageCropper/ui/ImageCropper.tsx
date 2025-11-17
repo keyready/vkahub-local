@@ -29,9 +29,14 @@ export const ImageCropper = (props: ImageCropperProps) => {
             const canvas = cropperRef.current.getCanvas();
             if (canvas) {
                 setIsModalOpened(false);
-                canvas.toBlob(
-                    (blob) => blob && setCroppedImage(new File([blob], 'cropped-uploaded-image')),
-                );
+                canvas.toBlob((blob) => {
+                    if (!blob) return undefined;
+                    const filetype = blob.type.split('image/')[1];
+                    return (
+                        blob &&
+                        setCroppedImage(new File([blob], `cropped-uploaded-image.${filetype}`))
+                    );
+                });
             }
         }
     }, [setCroppedImage]);
