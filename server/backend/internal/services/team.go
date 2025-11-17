@@ -16,7 +16,7 @@ type TeamService interface {
 	TransferCaptainRights(TransferCaptain request.TransferCaptainRightsRequest) (httpCode int, err error)
 	LeaveTeam(username string) (httpCode int, err error)
 	PartInTeam(partInTeam request.PartInTeam) (httpCode int, err error)
-	EditTeam(EditTeamReq request.EditTeamRequest) (httpCode int, err error)
+	EditTeam(EditTeamReq request.EditTeamInfoForm) (httpCode int, err error)
 }
 
 type TeamServiceImpl struct {
@@ -29,7 +29,7 @@ func NewTeamServiceImpl(teamRepository repositories.TeamRepository) TeamService 
 	}
 }
 
-func (t TeamServiceImpl) EditTeam(EditTeamReq request.EditTeamRequest) (httpCode int, err error) {
+func (t TeamServiceImpl) EditTeam(EditTeamReq request.EditTeamInfoForm) (httpCode int, err error) {
 	httpCode, err = t.TeamRepository.EditTeam(EditTeamReq)
 	return httpCode, err
 }

@@ -28,25 +28,27 @@ type FetchAllMembersByParamsRequest struct {
 	Skills   string `form:"skills"`
 }
 
-type EditProfileRequest struct {
-	ID int64 `json:"id"`
+type EditProfileInfoForm struct {
+	ID int64 `form:"id"`
 
-	Firstname  string `binding:"required" json:"firstname"`
-	Middlename string `binding:"required" json:"middlename"`
-	Lastname   string `binding:"required" json:"lastname"`
+	Firstname  string `binding:"required" form:"firstname"`
+	Middlename string `binding:"required" form:"middlename"`
+	Lastname   string `binding:"required" form:"lastname"`
 
-	Description string `json:"description"`
+	Description string `form:"description"`
 
-	Rank        string `json:"rank"`
-	GroupNumber string `json:"group_number"`
+	Avatar *multipart.FileHeader `form:"avatar"`
 
-	Skills    []string `json:"skills"`
-	Positions []string `json:"positions"`
+	Rank        string `form:"rank"`
+	GroupNumber string `form:"group_number"`
+
+	Skills    []string `form:"skills"`
+	Positions []string `form:"positions"`
 
 	Owner string
 }
 
-type EditTeamRequest struct {
+type EditTeamInfoForm struct {
 	ID              int64                 `form:"id"`
 	Title           string                `binding:"required" form:"title"`
 	Description     string                `binding:"required" form:"description"`

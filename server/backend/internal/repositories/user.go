@@ -4,8 +4,8 @@ import (
 	"backend/internal/dto/other"
 	"backend/internal/dto/request"
 	"backend/internal/dto/response"
+	"backend/internal/mapper"
 	"backend/internal/models"
-	"backend/mapper"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,7 +25,7 @@ type UserRepository interface {
 	FetchOneMemberByUsername(username string) (httpCode int, err error, member response.FetchAllMembers)
 	GetUserData(username string) (httpCode int, err error, userData response.UserData)
 	GetProfile(username string) (httpCode int, err error, userData response.ProfileData)
-	EditProfile(EditProf request.EditProfileRequest) (httpCode int, err error)
+	EditProfile(EditProf request.EditProfileInfoForm) (httpCode int, err error)
 	FetchPersonalAchievements(username, personalUsername string) (httpCode int, err error, data []response.FetchPersonalAchievementResponse)
 	FetchAllPersonalNotifications(allNtf request.FetchAllNotifications) (httpCode int, err error, ntfs []models.NotificationModel)
 	UpdateNotificationStatus(updateNotification other.UpdateNotificationData) (httpCode int, err error)
@@ -219,7 +219,7 @@ func (u *UserRepositoryImpl) FetchPersonalAchievements(username, personalUsernam
 	return http.StatusOK, nil, data
 }
 
-func (u *UserRepositoryImpl) EditProfile(EditProf request.EditProfileRequest) (httpCode int, err error) {
+func (u *UserRepositoryImpl) EditProfile(EditProf request.EditProfileInfoForm) (httpCode int, err error) {
 	var userExist models.UserModel
 
 	u.Db.Where("id = ?", EditProf.ID).First(&userExist)
@@ -241,6 +241,11 @@ func (u *UserRepositoryImpl) EditProfile(EditProf request.EditProfileRequest) (h
 	currentUser.IsProfileConfirmed = true
 	currentUser.Skills = EditProf.Skills
 	currentUser.Positions = EditProf.Positions
+
+	if EditProf.Avatar != nil {
+		currentUser.Avatar = EditProf.Avatar.Filename
+	}
+
 	u.Db.Save(&currentUser)
 
 	return http.StatusOK, nil

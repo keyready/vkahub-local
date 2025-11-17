@@ -26,7 +26,7 @@ type TeamRepository interface {
 	TransferCaptainRights(TransCaptain request.TransferCaptainRightsRequest) (httpCode int, err error)
 	LeaveTeam(username string) (httpCode int, err error)
 	PartInTeam(partInTeam request.PartInTeam) (httpCode int, err error)
-	EditTeam(EditTeamReq request.EditTeamRequest) (httpCode int, err error)
+	EditTeam(EditTeamReq request.EditTeamInfoForm) (httpCode int, err error)
 }
 
 type TeamRepositoryImpl struct {
@@ -37,7 +37,7 @@ func NewTeamRepositoryImpl(Db *gorm.DB) TeamRepository {
 	return &TeamRepositoryImpl{Db: Db}
 }
 
-func (t *TeamRepositoryImpl) EditTeam(EditTeamReq request.EditTeamRequest) (httpCode int, err error) {
+func (t *TeamRepositoryImpl) EditTeam(EditTeamReq request.EditTeamInfoForm) (httpCode int, err error) {
 	var updateTeam models.TeamModel
 	wantedPositions := strings.Split(EditTeamReq.WantedPositions, ",")
 
@@ -50,7 +50,18 @@ func (t *TeamRepositoryImpl) EditTeam(EditTeamReq request.EditTeamRequest) (http
 		}).Error
 
 	if err != nil {
-		return http.StatusBadRequest, err
+		return http.StatusInternalServerError, err
+	}
+
+	if EditTeamReq.Image != nil {
+		err := t.Db.Where("id = ?", EditTeamReq.ID).
+			Update(
+				"image",
+				EditTeamReq.Image.Filename,
+			)
+		if err != nil {
+			return http.StatusInternalServerError, fmt.Errorf("failed to upd team image: %v", err)
+		}
 	}
 
 	t.Db.Create(&models.NotificationModel{

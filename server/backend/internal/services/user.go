@@ -12,7 +12,7 @@ type UserService interface {
 	FetchAllMembersByParams(FetchAllMem request.FetchAllMembersByParamsRequest) (httpCode int, err error, members []response.FetchAllMembers)
 	GetUserData(username string) (httpCode int, err error, userData response.UserData)
 	GetProfile(username string) (httpCode int, err error, userData response.ProfileData)
-	EditProfile(EditProfReq request.EditProfileRequest) (httpCode int, err error)
+	EditProfile(EditProfReq request.EditProfileInfoForm) (httpCode int, err error)
 	FetchPersonalAchievements(username, personalUsername string) (httpCode int, err error, data []response.FetchPersonalAchievementResponse)
 	FetchAllPersonalNotifications(allNtf request.FetchAllNotifications) (httpCode int, err error, ntfs []models.NotificationModel)
 	UpdateNotification(updateNtf other.UpdateNotificationData) (httpCode int, err error)
@@ -67,7 +67,7 @@ func (u UserServiceImpl) FetchPersonalAchievements(username, personalUsername st
 	return httpCode, err, data
 }
 
-func (u UserServiceImpl) EditProfile(EditProfReq request.EditProfileRequest) (httpCode int, err error) {
+func (u UserServiceImpl) EditProfile(EditProfReq request.EditProfileInfoForm) (httpCode int, err error) {
 	httpCode, err = u.UserRepository.EditProfile(EditProfReq)
 	return httpCode, err
 }

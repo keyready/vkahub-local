@@ -3,8 +3,10 @@ package controllers
 import (
 	"backend/internal/dto/request"
 	"backend/internal/services"
+	"backend/internal/utils"
 	"backend/pkg/app"
 	"fmt"
+	"log"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -30,15 +32,39 @@ func NewTeamController(service services.TeamService) *TeamController {
 
 func (tc *TeamController) EditTeam(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var editTeamRequest request.EditTeamRequest
+	formData := request.EditTeamInfoForm{}
 
-	bindErr := ctx.ShouldBind(&editTeamRequest)
+	bindErr := ctx.ShouldBind(&formData)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	httpCode, err := tc.teamService.EditTeam(editTeamRequest)
+	if formData.Image != nil {
+		delErr := utils.FindAndDeleteFile(TEAM_IMAGE_STORAGE, formData.Title)
+		if delErr != nil {
+			log.Println("failed to remove old image", delErr.Error())
+		}
+
+		fileName := fmt.Sprintf(
+			"%s_%s",
+			strings.ReplaceAll(formData.Title, " ", "_"),
+			strings.ReplaceAll(formData.Image.Filename, " ", "_"),
+		)
+		formData.Image.Filename = fileName
+
+		savePath := filepath.Join(TEAM_IMAGE_STORAGE, fileName)
+
+		if saveErr := appGin.Ctx.SaveUploadedFile(formData.Image, savePath); bindErr != nil {
+			appGin.ErrorResponse(
+				http.StatusInternalServerError,
+				saveErr,
+			)
+			return
+		}
+	}
+
+	httpCode, err := tc.teamService.EditTeam(formData)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return

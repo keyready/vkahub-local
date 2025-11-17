@@ -5,8 +5,10 @@ import (
 	"backend/internal/dto/request"
 	"backend/internal/gosocket"
 	"backend/internal/services"
+	"backend/internal/utils"
 	"backend/pkg/app"
 	"fmt"
+	"log"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -265,17 +267,48 @@ func (uc *UserController) FetchAllMembersByParams(ctx *gin.Context) {
 
 func (uc *UserController) EditProfile(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var EditProfReq request.EditProfileRequest
+	formData := request.EditProfileInfoForm{}
 
-	EditProfReq.Owner = ctx.GetString("username")
+	formData.Owner = ctx.GetString("username")
 
-	bindErr := ctx.ShouldBindJSON(&EditProfReq)
+	bindErr := ctx.ShouldBind(&formData)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	httpCode, serviceErr := uc.userService.EditProfile(EditProfReq)
+	if formData.Avatar != nil {
+		delErr := utils.FindAndDeleteFile(
+			USER_AVATARS_STORAGE,
+			fmt.Sprintf(
+				"%s_%s",
+				appGin.Ctx.GetString("username"),
+				"avatar",
+			),
+		)
+		if delErr != nil {
+			log.Println("failed to delete old avatar", delErr.Error())
+		}
+
+		fileName := fmt.Sprintf(
+			"%s_%s_%s",
+			appGin.Ctx.GetString("username"),
+			"avatar",
+			strings.ReplaceAll(formData.Avatar.Filename, " ", "_"),
+		)
+		formData.Avatar.Filename = fileName
+
+		savePath := filepath.Join(USER_AVATARS_STORAGE, fileName)
+		if saveErr := appGin.Ctx.SaveUploadedFile(formData.Avatar, savePath); saveErr != nil {
+			appGin.ErrorResponse(
+				http.StatusInternalServerError,
+				saveErr,
+			)
+			return
+		}
+	}
+
+	httpCode, serviceErr := uc.userService.EditProfile(formData)
 	if serviceErr != nil {
 		appGin.ErrorResponse(httpCode, serviceErr)
 		return
