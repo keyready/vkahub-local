@@ -28,5 +28,4 @@ func (rc *ReportController) GenerateReport(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"reportName": "/app/reports/" + reportName})
-	// ctx.File("/app/server/backend/" + reportName)
 }

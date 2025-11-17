@@ -54,11 +54,13 @@ func (t *TeamRepositoryImpl) EditTeam(EditTeamReq request.EditTeamInfoForm) (htt
 	}
 
 	if EditTeamReq.Image != "" {
-		err := t.Db.Where("id = ?", EditTeamReq.ID).
+		err := t.Db.
+			Model(&models.TeamModel{}).
+			Where("id = ?", EditTeamReq.ID).
 			Update(
 				"image",
 				EditTeamReq.Image,
-			)
+			).Error
 		if err != nil {
 			return http.StatusInternalServerError, fmt.Errorf("failed to upd team image: %v", err)
 		}

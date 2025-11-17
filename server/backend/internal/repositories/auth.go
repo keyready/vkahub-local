@@ -115,6 +115,8 @@ func (a *AuthRepositoryImpl) SignUp(signUp request.SignUpRequest) (httpCode int,
 		ConfirmLink: signUp.ConfirmLink,
 		Roles:       []string{"user", "mailConfirmed"},
 		Portfolio:   datatypes.JSON([]byte(`[]`)),
+		Skills:      []string{},
+		Positions:   []string{},
 	})
 
 	//privateKey, genKeyErr := encryption.GenerateRSAKeys(10)
