@@ -1,3 +1,4 @@
 /client/node_modules
 /.idea
 /server/backend/user-avatars
+/server/backend/team-images

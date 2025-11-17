@@ -4,9 +4,9 @@ import { AxiosError } from 'axios';
 import { ThunkConfig } from '@/app/providers/StoreProvider/config/StateSchema';
 
 interface TransferCaptainRightsParams {
-    memberId: number; // куда передать права
-    teamId: number; // команда, которую меняем
-    originalCaptainId: number; // кто был капитаном до передачи
+    memberId: string; // куда передать права
+    teamId: string; // команда, которую меняем
+    originalCaptainId: string; // кто был капитаном до передачи
 }
 
 export const transferCaptainRights = createAsyncThunk<

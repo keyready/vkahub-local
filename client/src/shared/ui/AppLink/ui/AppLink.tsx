@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { forwardRef, ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 import classes from './AppLink.module.scss';
@@ -12,7 +12,7 @@ interface AppLinkProps {
     target?: string;
 }
 
-export const AppLink = (props: AppLinkProps) => {
+export const AppLink = forwardRef((props: AppLinkProps) => {
     const { className, target, children, to } = props;
 
     const { pathname } = useLocation();
@@ -30,4 +30,4 @@ export const AppLink = (props: AppLinkProps) => {
             {children}
         </Link>
     );
-};
+});

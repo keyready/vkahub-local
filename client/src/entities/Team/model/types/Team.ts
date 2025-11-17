@@ -1,11 +1,12 @@
 export interface Team {
-    id: number;
+    id: string;
 
     title: string;
     description: string;
     image: string;
+    newImage?: File;
 
-    captain_id: number;
+    captain_id: string;
     members: number[];
     eventLocation: string;
 

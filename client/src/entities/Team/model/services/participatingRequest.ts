@@ -4,8 +4,8 @@ import { AxiosError } from 'axios';
 import { ThunkConfig } from '@/app/providers/StoreProvider/config/StateSchema';
 
 interface InviteMemberProps {
-    memberId?: number;
-    teamId?: number;
+    memberId?: string;
+    teamId?: string;
     message?: string;
 }
 

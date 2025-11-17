@@ -30,6 +30,8 @@ import { AutoCompleteTags } from '@/shared/ui/AutoCompleteTags';
 import { ExtendedTag } from '@/entities/Skill';
 import { usePositions } from '@/entities/Positions';
 import { useWindowWidth } from '@/shared/lib/hooks/useWindowWidth';
+import { ImageUpload } from '@/shared/ui/ImageUpload';
+import { objectToFormData } from '@/shared/lib/objFormdata';
 
 interface MyTeamPreviewBlockProps {
     className?: string;
@@ -54,7 +56,7 @@ export const MyTeamPreviewBlock = (props: MyTeamPreviewBlockProps) => {
     const [changedTeamData, setChangedTeamData] = useState<Partial<Team>>({});
     const [selectedPositions, setSelectedPositions] = useState<ExtendedTag[]>([]);
 
-    const { data: oldEvents, isLoading: isOldEventsLoading } = useEvents('old');
+    const { data: oldEvents } = useEvents('old');
     const { data: positions } = usePositions(undefined, { refetchOnMountOrArgChange: true });
 
     useEffect(() => {
@@ -108,25 +110,29 @@ export const MyTeamPreviewBlock = (props: MyTeamPreviewBlockProps) => {
         });
     }, [dispatch]);
 
+    const handleChangeTeamImage = useCallback((file: File) => {
+        setChangedTeamData((ps) => ({
+            ...ps,
+            newImage: file,
+        }));
+    }, []);
+
     const handleChangeTeamData = useCallback(async () => {
         if (isEditorMode) {
-            // const isProfilesEqual = JSON.stringify(teamData) === JSON.stringify(changedTeamData);
-            // if (isProfilesEqual) {
-            //     setIsEditorMode(false);
-            //     return;
-            // }
+            let formData = new FormData();
 
-            const formData = new FormData();
-            Object.entries(changedTeamData).forEach(([key, value]) => {
-                if (['title', 'description', 'id', 'eventLocation'].includes(key)) {
-                    formData.append(key, value.toString());
-                }
-            });
-
-            formData.append(
-                'wantedPositions',
-                selectedPositions.map((position) => position.value).join(','),
-            );
+            if (changedTeamData?.newImage) {
+                const team = {
+                    ...changedTeamData,
+                    image: changedTeamData.newImage,
+                };
+                delete team.newImage;
+                formData = objectToFormData(team);
+            } else {
+                formData = objectToFormData(changedTeamData);
+                formData.set('image', 'null');
+                formData.delete('newImage');
+            }
 
             const result = await toastDispatch(dispatch(changeTeam(formData)), {
                 loading: 'Сохраняем изменения...',
@@ -243,16 +249,31 @@ export const MyTeamPreviewBlock = (props: MyTeamPreviewBlockProps) => {
                 className={classNames(classes.MyTeamPreviewBlock, {}, [className])}
             >
                 <HStack maxW gap="24px" align="start">
-                    {!isMobile && (
-                        <Image
-                            className="w-[100px] h-[100px]"
-                            src={`/team-images/${changedTeamData?.image}`}
-                            fallbackSrc="/static/fallbacks/team-fallback.webp"
-                            classNames={{
-                                wrapper: classes.teamImageWrapper,
-                            }}
-                        />
-                    )}
+                    {!isMobile &&
+                        (isEditorMode ? (
+                            <ImageUpload
+                                className="w-[100px] h-[100px]"
+                                initialImage={
+                                    import.meta.env.DEV
+                                        ? `http://localhost/team-images/${changedTeamData?.image}`
+                                        : `/team-images/${changedTeamData?.image}`
+                                }
+                                onChange={handleChangeTeamImage}
+                            />
+                        ) : (
+                            <Image
+                                className="w-[100px] h-[100px]"
+                                src={
+                                    import.meta.env.DEV
+                                        ? `http://localhost/team-images/${changedTeamData?.image}`
+                                        : `/team-images/${changedTeamData?.image}`
+                                }
+                                fallbackSrc="/static/fallbacks/team-fallback.webp"
+                                classNames={{
+                                    wrapper: classes.teamImageWrapper,
+                                }}
+                            />
+                        ))}
 
                     <VStack gap="12px" maxW>
                         <HStack
