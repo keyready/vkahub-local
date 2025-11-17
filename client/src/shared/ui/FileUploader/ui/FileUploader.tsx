@@ -17,7 +17,6 @@ export const FileUploader = (props: FileUploaderProps) => {
             const { files } = ev.target;
             if (files?.length) {
                 onUpload(Array.from(files)[0]);
-                // Сброс значения input для корректного повторного выбора того же файла
                 if (inputRef.current) {
                     inputRef.current.value = '';
                 }
@@ -45,7 +44,6 @@ export const FileUploader = (props: FileUploaderProps) => {
     const handleDragLeave = useCallback((ev: React.DragEvent<HTMLDivElement>) => {
         ev.preventDefault();
         ev.stopPropagation();
-        // Проверяем, что ушли за пределы drop-зоны
         if (ev.currentTarget.contains(ev.relatedTarget as Node)) return;
         setIsDragging(false);
     }, []);
