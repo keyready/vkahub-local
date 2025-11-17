@@ -40,7 +40,8 @@ func (tc *TeamController) EditTeam(ctx *gin.Context) {
 		return
 	}
 
-	if formData.Image != nil {
+	image, err := appGin.Ctx.FormFile("image")
+	if err != http.ErrMissingFile {
 		delErr := utils.FindAndDeleteFile(TEAM_IMAGE_STORAGE, formData.Title)
 		if delErr != nil {
 			log.Println("failed to remove old image", delErr.Error())
@@ -49,19 +50,23 @@ func (tc *TeamController) EditTeam(ctx *gin.Context) {
 		fileName := fmt.Sprintf(
 			"%s_%s",
 			strings.ReplaceAll(formData.Title, " ", "_"),
-			strings.ReplaceAll(formData.Image.Filename, " ", "_"),
+			strings.ReplaceAll(image.Filename, " ", "_"),
 		)
-		formData.Image.Filename = fileName
 
+		image.Filename = fileName
 		savePath := filepath.Join(TEAM_IMAGE_STORAGE, fileName)
 
-		if saveErr := appGin.Ctx.SaveUploadedFile(formData.Image, savePath); bindErr != nil {
+		if saveErr := appGin.Ctx.SaveUploadedFile(image, savePath); bindErr != nil {
 			appGin.ErrorResponse(
 				http.StatusInternalServerError,
 				saveErr,
 			)
 			return
 		}
+
+		formData.Image = fileName
+	} else {
+		formData.Image = ""
 	}
 
 	httpCode, err := tc.teamService.EditTeam(formData)

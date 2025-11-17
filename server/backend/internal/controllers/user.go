@@ -269,15 +269,16 @@ func (uc *UserController) EditProfile(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
 	formData := request.EditProfileInfoForm{}
 
-	formData.Owner = ctx.GetString("username")
-
 	bindErr := ctx.ShouldBind(&formData)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	if formData.Avatar != nil {
+	formData.Owner = appGin.Ctx.GetString("username")
+
+	avatar, err := appGin.Ctx.FormFile("avatar")
+	if err != http.ErrMissingFile {
 		delErr := utils.FindAndDeleteFile(
 			USER_AVATARS_STORAGE,
 			fmt.Sprintf(
@@ -294,18 +295,22 @@ func (uc *UserController) EditProfile(ctx *gin.Context) {
 			"%s_%s_%s",
 			appGin.Ctx.GetString("username"),
 			"avatar",
-			strings.ReplaceAll(formData.Avatar.Filename, " ", "_"),
+			strings.ReplaceAll(avatar.Filename, " ", "_"),
 		)
-		formData.Avatar.Filename = fileName
+		avatar.Filename = fileName
 
 		savePath := filepath.Join(USER_AVATARS_STORAGE, fileName)
-		if saveErr := appGin.Ctx.SaveUploadedFile(formData.Avatar, savePath); saveErr != nil {
+		if saveErr := appGin.Ctx.SaveUploadedFile(avatar, savePath); saveErr != nil {
 			appGin.ErrorResponse(
 				http.StatusInternalServerError,
 				saveErr,
 			)
 			return
 		}
+
+		formData.Avatar = fileName
+	} else {
+		formData.Avatar = ""
 	}
 
 	httpCode, serviceErr := uc.userService.EditProfile(formData)

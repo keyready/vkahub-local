@@ -37,7 +37,8 @@ type EditProfileInfoForm struct {
 
 	Description string `form:"description"`
 
-	Avatar *multipart.FileHeader `form:"avatar"`
+	// Avatar *multipart.FileHeader `form:"avatar"`
+	Avatar string
 
 	Rank        string `form:"rank"`
 	GroupNumber string `form:"group_number"`
@@ -49,12 +50,12 @@ type EditProfileInfoForm struct {
 }
 
 type EditTeamInfoForm struct {
-	ID              int64                 `form:"id"`
-	Title           string                `binding:"required" form:"title"`
-	Description     string                `binding:"required" form:"description"`
-	Image           *multipart.FileHeader `form:"image"`
-	EventLocation   string                `form:"eventLocation"`
-	WantedPositions string                `form:"wantedPositions"`
+	ID              int64  `form:"id"`
+	Title           string `binding:"required" form:"title"`
+	Description     string `binding:"required" form:"description"`
+	Image           string
+	EventLocation   string `form:"eventLocation"`
+	WantedPositions string `form:"wantedPositions"`
 }
 
 type RegisterTeamForm struct {

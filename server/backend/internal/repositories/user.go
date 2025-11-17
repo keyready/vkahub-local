@@ -242,8 +242,8 @@ func (u *UserRepositoryImpl) EditProfile(EditProf request.EditProfileInfoForm) (
 	currentUser.Skills = EditProf.Skills
 	currentUser.Positions = EditProf.Positions
 
-	if EditProf.Avatar != nil {
-		currentUser.Avatar = EditProf.Avatar.Filename
+	if EditProf.Avatar != "" {
+		currentUser.Avatar = EditProf.Avatar
 	}
 
 	u.Db.Save(&currentUser)
