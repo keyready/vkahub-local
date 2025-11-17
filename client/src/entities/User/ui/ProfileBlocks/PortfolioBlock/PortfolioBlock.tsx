@@ -11,7 +11,7 @@ import {
     Select,
     SelectItem,
 } from '@nextui-org/react';
-import { useCallback, useMemo, useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -45,8 +45,7 @@ export const PortfolioBlock = (props: PortfolioBlockProps) => {
 
     useEffect(() => {
         console.log(portfolioFiles);
-        
-    }, [portfolioFiles])
+    }, [portfolioFiles]);
 
     const dispatch = useAppDispatch();
 
@@ -109,7 +108,12 @@ export const PortfolioBlock = (props: PortfolioBlockProps) => {
                             <Divider className="w-full" />
                             <div className="flex flex-wrap items-start gap-3">
                                 {portfolioFiles.map((file, index) => (
-                                    <PortfolioItem file={file} index={index} key={index} />
+                                    <PortfolioItem
+                                        showDeleteButton
+                                        file={file}
+                                        index={index}
+                                        key={index}
+                                    />
                                 ))}
                             </div>
                         </>

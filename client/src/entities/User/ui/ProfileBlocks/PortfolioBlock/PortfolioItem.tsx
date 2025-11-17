@@ -14,16 +14,22 @@ interface PortfolioItemProps {
     file: PortfolioFile;
     index: number;
     size?: 'lg' | 'sm';
+    showDeleteButton?: boolean;
 }
 
-export const PortfolioItem = ({ file, index, size = 'lg' }: PortfolioItemProps) => {
+export const PortfolioItem = ({
+    showDeleteButton = false,
+    file,
+    index,
+    size = 'lg',
+}: PortfolioItemProps) => {
     const dispatch = useAppDispatch();
 
     const getSizes = useMemo(() => {
         switch (size) {
             case 'lg':
                 return 'w-[200px] h-[355px]';
-            case 'sm':
+            default:
                 return 'w-[100px] h-[177px]';
         }
     }, [size]);
@@ -79,7 +85,7 @@ export const PortfolioItem = ({ file, index, size = 'lg' }: PortfolioItemProps) 
                 <span className="whitespace-nowrap text-sm">Скачать</span>
             </motion.button>
         ),
-        [handleDownloadClick],
+        [handleDownloadClick, size],
     );
 
     const renderDeleteButton = useMemo(
@@ -101,7 +107,7 @@ export const PortfolioItem = ({ file, index, size = 'lg' }: PortfolioItemProps) 
                 <span className="whitespace-nowrap text-sm">Удалить</span>
             </motion.button>
         ),
-        [handleDeleteClick],
+        [handleDeleteClick, size],
     );
 
     return (
@@ -136,7 +142,7 @@ export const PortfolioItem = ({ file, index, size = 'lg' }: PortfolioItemProps) 
                     />
                     <div className="flex items-center absolute z-50 top-1 right-1">
                         {renderDownloadButton}
-                        {renderDeleteButton}
+                        {showDeleteButton && renderDeleteButton}
                     </div>
                 </div>
             ) : (
@@ -150,7 +156,7 @@ export const PortfolioItem = ({ file, index, size = 'lg' }: PortfolioItemProps) 
                     <RiFilePdf2Line size={128} />
                     <div className="flex items-center absolute z-50 top-1 right-1">
                         {renderDownloadButton}
-                        {renderDeleteButton}
+                        {showDeleteButton && renderDeleteButton}
                     </div>
                 </div>
             )}

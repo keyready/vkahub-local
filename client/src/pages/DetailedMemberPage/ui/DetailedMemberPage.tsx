@@ -268,11 +268,7 @@ const DetailedMemberPage = memo((props: DetailedMemberPageProps) => {
                     </VStack>
 
                     <VStack gap="0" maxW className="flex-grow h-full px-2 rounded-xl bg-card-bg">
-                        {!member?.portfolio && !member?.portfolio?.length ? (
-                            <p className="text-m py-5 opacity-30">
-                                {member?.firstname} пока не добавил ни одного сертификата
-                            </p>
-                        ) : (
+                        {member?.portfolio?.length ? (
                             <Accordion>
                                 <AccordionItem
                                     classNames={{ title: 'text-sm text-accent' }}
@@ -290,6 +286,10 @@ const DetailedMemberPage = memo((props: DetailedMemberPageProps) => {
                                     </div>
                                 </AccordionItem>
                             </Accordion>
+                        ) : (
+                            <p className="text-m py-5 opacity-30">
+                                {member?.firstname} пока не добавил ни одного сертификата
+                            </p>
                         )}
                     </VStack>
                 </VStack>

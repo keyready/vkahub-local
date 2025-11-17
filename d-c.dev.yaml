@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:15-alpine
-    container_name: vkahub-db
+    container_name: vkahub-db-dev
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -18,7 +18,7 @@ services:
     build:
       context: ./server/backend
       dockerfile: Dockerfile
-    container_name: vkahub-api
+    container_name: vkahub-api-dev
     depends_on:
       - db
     env_file:
@@ -36,5 +36,3 @@ networks:
 
 volumes:
   db_data:
-#  pgadmin:
-#  client_dist:
