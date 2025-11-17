@@ -8,7 +8,7 @@ import (
 
 type TeamService interface {
 	FetchTeamMembers(teamId int64) (httpCode int, err error, members []response.FetchAllMembers)
-	AddTeam(AddTeamReq request.AddTeamRequest) (httpCode int, err error)
+	RegisterTeam(formData request.RegisterTeamForm) (httpCode int, err error)
 	FetchOneTeamById(teamId int64) (httpCode int, err error, findTeam response.FetchAllTeamsByParams)
 	FetchAllTeamsByParams(FetchAllTeams request.FetchAllTeamsByParamsRequest) (httpCode int, err error, teams []response.FetchAllTeamsByParams)
 	AddMembersInTeam(AddMemInTeam request.AddMembersInTeamRequest) (httpCode int, err error)
@@ -59,8 +59,8 @@ func (t TeamServiceImpl) AddMembersInTeam(AddMemInTeam request.AddMembersInTeamR
 	return httpCode, err
 }
 
-func (t TeamServiceImpl) AddTeam(AddTeamReq request.AddTeamRequest) (httpCode int, err error) {
-	httpCode, err = t.TeamRepository.AddTeam(AddTeamReq)
+func (t TeamServiceImpl) RegisterTeam(formData request.RegisterTeamForm) (httpCode int, err error) {
+	httpCode, err = t.TeamRepository.RegisterTeam(formData)
 	return httpCode, err
 }
 

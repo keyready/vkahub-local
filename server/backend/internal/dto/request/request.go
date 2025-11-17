@@ -55,11 +55,11 @@ type EditTeamRequest struct {
 	WantedPositions string                `form:"wantedPositions"`
 }
 
-type AddTeamRequest struct {
-	Title       string                `binding:"required" form:"title"`
-	Description string                `binding:"required" form:"description"`
-	CaptainId   int64                 `form:"captain_id"`
-	Image       *multipart.FileHeader `form:"image"`
+type RegisterTeamForm struct {
+	Title       string                `form:"title" binding:"required"`
+	Description string                `form:"description" binding:"required"`
+	CaptainID   int64                 `form:"captain_id" binding:"required"`
+	Image       *multipart.FileHeader `form:"image" binding:"required"`
 }
 
 type FetchAllTeamsByParamsRequest struct {

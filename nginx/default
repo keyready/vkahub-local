@@ -46,4 +46,14 @@ server {
         alias /reports/;
         try_files $uri $uri/ =404;
     }
+
+    location /user-avatars {
+        alias /user-avatars/;
+        try_files $uri $uri/ =404;
+    }
+
+    location /team-images {
+        alias /team-images/;
+        try_files $uri $uri/ =404;
+    }    
 }

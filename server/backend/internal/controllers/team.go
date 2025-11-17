@@ -4,20 +4,27 @@ import (
 	"backend/internal/dto/request"
 	"backend/internal/services"
 	"backend/pkg/app"
+	"fmt"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
 
+const (
+	TEAM_IMAGE_STORAGE = "/app/team-images"
+)
+
 type TeamController struct {
-	teamService   services.TeamService
+	teamService services.TeamService
 }
 
 func NewTeamController(service services.TeamService) *TeamController {
 	return &TeamController{
-		teamService:   service,
+		teamService: service,
 	}
 }
 
@@ -99,39 +106,34 @@ func (tc *TeamController) DeleteMember(ctx *gin.Context) {
 	appGin.SuccessResponse(http.StatusOK, gin.H{})
 }
 
-func (tc *TeamController) AddTeam(ctx *gin.Context) {
+func (tc *TeamController) RegisterTeam(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	v := validator.New()
-	var AddTeamReq request.AddTeamRequest
 
-	bindErr := ctx.ShouldBind(&AddTeamReq)
+	formData := request.RegisterTeamForm{}
+
+	bindErr := ctx.ShouldBind(&formData)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	validErr := v.Struct(AddTeamReq)
-	if validErr != nil {
-		appGin.ErrorResponse(http.StatusBadRequest, validErr)
-		return
-	}
+	fileName := fmt.Sprintf("%s_%s", formData.Title, strings.ReplaceAll(formData.Image.Filename, " ", "_"))
+	formData.Image.Filename = fileName
 
-	// extFile := strings.Split(AddTeamReq.Image.Filename, ".")[len(strings.Split(AddTeamReq.Image.Filename, "."))-1]
-	// AddTeamReq.Image.Filename = "teams/" + uuid.NewString() + "." + extFile
-
-	httpCode, serviceErr := tc.teamService.AddTeam(AddTeamReq)
+	httpCode, serviceErr := tc.teamService.RegisterTeam(formData)
 	if serviceErr != nil {
 		appGin.ErrorResponse(httpCode, serviceErr)
 		return
 	}
 
-	// bodyFile, _ := AddTeamReq.Image.Open()
-	// defer bodyFile.Close()
-	// tc.YaCloudClient.PutObject(context.TODO(), &s3.PutObjectInput{
-	// 	Bucket: aws.String(os.Getenv("BUCKET_NAME")),
-	// 	Key:    aws.String(AddTeamReq.Image.Filename),
-	// 	Body:   bodyFile,
-	// })
+	savePath := filepath.Join(TEAM_IMAGE_STORAGE, fileName)
+	if saveErr := appGin.Ctx.SaveUploadedFile(formData.Image, savePath); saveErr != nil {
+		appGin.ErrorResponse(
+			http.StatusInternalServerError,
+			saveErr,
+		)
+		return
+	}
 
 	appGin.SuccessResponse(http.StatusCreated, gin.H{})
 }

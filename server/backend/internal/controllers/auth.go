@@ -6,7 +6,9 @@ import (
 	"backend/internal/services"
 	"backend/pkg/app"
 	"backend/pkg/utils/jsonwebtoken"
+	"fmt"
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/gin-contrib/sessions"
@@ -16,66 +18,56 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	USER_AVATARS_STORAGE = "/app/user-avatars"
+)
+
 type AuthController struct {
-	authService     services.AuthService
+	authService services.AuthService
 }
 
 func NewAuthController(service services.AuthService) *AuthController {
 	return &AuthController{
-		authService:     service,
+		authService: service,
 	}
 }
 
 func (ac *AuthController) SignUp(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	v := validator.New()
-	var sue request.SignUpRequest
+	formData := request.SignUpRequest{}
 
-	bindErr := ctx.ShouldBind(&sue)
+	bindErr := ctx.ShouldBind(&formData)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	validErr := v.Struct(sue)
-	if validErr != nil {
-		appGin.ErrorResponse(http.StatusBadRequest, validErr)
-		return
-	}
-
 	confirmLink := uuid.NewString()
-	sue.ConfirmLink = confirmLink
+	formData.ConfirmLink = confirmLink
 
-	// extFile := strings.Split(sue.Avatar.Filename, ".")[len(strings.Split(sue.Avatar.Filename, "."))-1]
-	// sue.Avatar.Filename = "users/" + uuid.NewString() + "." + extFile
+	fileName := fmt.Sprintf(
+		"%s_%s_%s",
+		formData.Username,
+		"avatar",
+		strings.ReplaceAll(formData.Avatar.Filename, " ", "_"),
+	)
+	formData.Avatar.Filename = fileName
 
-	httpCode, serviceErr := ac.authService.SignUp(sue)
+	httpCode, serviceErr := ac.authService.SignUp(formData)
 	if serviceErr != nil {
 		appGin.ErrorResponse(httpCode, serviceErr)
 		return
 	}
 
-	// bodyFile, _ := sue.Avatar.Open()
-	// ac.YaCloudUploader.PutObject(context.TODO(), &s3.PutObjectInput{
-	// 	Bucket: aws.String(os.Getenv("BUCKET_NAME")),
-	// 	Key:    aws.String(sue.Avatar.Filename),
-	// 	Body:   bodyFile,
-	// })
+	savePath := filepath.Join(USER_AVATARS_STORAGE, fileName)
+	if saveErr := appGin.Ctx.SaveUploadedFile(formData.Avatar, savePath); saveErr != nil {
+		appGin.ErrorResponse(
+			http.StatusInternalServerError,
+			saveErr,
+		)
 
-	// mailData := other.MailDto{
-	// 	MailName: "ConfirmMail",
-	// 	Receiver: sue.Mail,
-	// 	Msg: other.MailBody{
-	// 		TypeMsg:     "text/html",
-	// 		UniqueField: confirmLink,
-	// 	},
-	// }
-
-	// mailError := appmail.SendMail(mailData)
-	// if mailError != nil {
-	// 	appGin.ErrorResponse(http.StatusInternalServerError, mailError)
-	// 	return
-	// }
+		return
+	}
 
 	appGin.SuccessResponse(http.StatusCreated, gin.H{})
 }

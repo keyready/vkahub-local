@@ -97,26 +97,6 @@ func (a *AuthRepositoryImpl) ResetPassword(mail string) (int, error) {
 		return http.StatusNotFound, err
 	}
 
-	// token := jsonwebtoken.GenerateTokenRecPassword(mail)
-
-	// go func() {
-	// 	msgData := other.MailDto{
-	// 		MailName: "ResetPassword",
-	// 		Receiver: mail,
-	// 		Msg: other.MailBody{
-	// 			TypeMsg:     "text/html",
-	// 			Name:        resetPasswordUser.Firstname,
-	// 			UniqueField: token,
-	// 		},
-	// 	}
-
-	// 	mailError := appmail.SendMail(msgData)
-	// 	if mailError != nil {
-	// 		log.Fatal(mailError)
-	// 		return
-	// 	}
-	// }()
-
 	return http.StatusOK, err
 }
 
@@ -129,7 +109,7 @@ func (a *AuthRepositoryImpl) SignUp(signUp request.SignUpRequest) (httpCode int,
 	hashPassword, _ := hash.HashData(signUp.Password)
 	a.Db.Create(&models.UserModel{
 		Username:    signUp.Username,
-		Mail:        "signUp.Mail",
+		Mail:        "default-mail-vkahub@vkahub.ru",
 		Password:    hashPassword,
 		Avatar:      signUp.Avatar.Filename,
 		ConfirmLink: signUp.ConfirmLink,

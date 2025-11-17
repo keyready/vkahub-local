@@ -2,13 +2,14 @@ package database
 
 import (
 	"backend/internal/models"
+	"log"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"log"
 )
 
 func DatabaseConnect() *gorm.DB {
-	dsn := "host=db port=5432 user=postgres password=postgres dbname=vkahub sslmode=disable"
+	dsn := "host=db port=5432 user=admin-61kaf-vkahub password=admin-61kaf-vkahub dbname=vkahub sslmode=disable"
 	// dsn := fmt.Sprintf("host = %s port = %s user = %s password = %s dbname = %s sslmode=disable",
 	// 	os.Getenv("DB_HOST"),
 	// 	os.Getenv("DB_PORT"),

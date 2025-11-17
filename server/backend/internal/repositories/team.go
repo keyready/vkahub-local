@@ -5,19 +5,20 @@ import (
 	"backend/internal/dto/response"
 	"backend/internal/models"
 	"fmt"
-	"github.com/lib/pq"
-	"golang.org/x/crypto/openpgp/errors"
-	"gorm.io/gorm"
 	"net/http"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/lib/pq"
+	"golang.org/x/crypto/openpgp/errors"
+	"gorm.io/gorm"
 )
 
 type TeamRepository interface {
 	FetchTeamMembers(teamId int64) (httpCode int, err error, teamMembers []response.FetchAllMembers)
-	AddTeam(AddTeamReq request.AddTeamRequest) (httpCode int, err error)
+	RegisterTeam(formData request.RegisterTeamForm) (httpCode int, err error)
 	FetchOneTeamById(teamId int64) (httpCode int, err error, findTeam response.FetchAllTeamsByParams)
 	FetchAllTeamsByParams(FetchAllTeams request.FetchAllTeamsByParamsRequest) (httpCode int, err error, teams []response.FetchAllTeamsByParams)
 	AddMembersInTeam(AddMemInTeam request.AddMembersInTeamRequest) (httpCode int, err error)
@@ -303,7 +304,7 @@ func (t *TeamRepositoryImpl) FetchTeamMembers(teamId int64) (httpCode int, err e
 	return http.StatusOK, nil, members
 }
 
-func (t *TeamRepositoryImpl) AddTeam(AddTeamReq request.AddTeamRequest) (int, error) {
+func (t *TeamRepositoryImpl) RegisterTeam(AddTeamReq request.RegisterTeamForm) (int, error) {
 	var existTeam models.TeamModel
 
 	teamExist := t.Db.Where("title = ?", AddTeamReq.Title).First(&existTeam).Error
@@ -314,8 +315,8 @@ func (t *TeamRepositoryImpl) AddTeam(AddTeamReq request.AddTeamRequest) (int, er
 	newTeam := &models.TeamModel{
 		Title:       AddTeamReq.Title,
 		Description: AddTeamReq.Description,
-		CaptainId:   AddTeamReq.CaptainId,
-		MembersId:   pq.Int64Array{AddTeamReq.CaptainId},
+		CaptainId:   AddTeamReq.CaptainID,
+		MembersId:   pq.Int64Array{AddTeamReq.CaptainID},
 		Image:       AddTeamReq.Image.Filename,
 	}
 	err := t.Db.Create(&newTeam).Error
@@ -325,24 +326,24 @@ func (t *TeamRepositoryImpl) AddTeam(AddTeamReq request.AddTeamRequest) (int, er
 	}
 
 	memberSince, _ := time.Parse(time.RFC3339, time.Now().String())
-	t.Db.Where("id = ?", AddTeamReq.CaptainId).
+	t.Db.Where("id = ?", AddTeamReq.CaptainID).
 		Updates(&models.UserModel{
 			TeamId:      newTeam.ID,
 			MemberSince: memberSince,
 		})
 
 	t.Db.Create(&models.NotificationModel{
-		OwnerId: AddTeamReq.CaptainId,
+		OwnerId: AddTeamReq.CaptainID,
 		Message: fmt.Sprintf("Поздравляем, вы создали команду %s", newTeam.Title),
 	})
 
 	var persAchievement models.PersonalAchievementModel
 	t.Db.Where("key = ?", "member").First(&persAchievement)
-	if !slices.Contains(persAchievement.OwnerIds, AddTeamReq.CaptainId) {
-		persAchievement.OwnerIds = append(persAchievement.OwnerIds, AddTeamReq.CaptainId)
+	if !slices.Contains(persAchievement.OwnerIds, AddTeamReq.CaptainID) {
+		persAchievement.OwnerIds = append(persAchievement.OwnerIds, AddTeamReq.CaptainID)
 		t.Db.Save(&persAchievement)
 		t.Db.Create(&models.NotificationModel{
-			OwnerId: AddTeamReq.CaptainId,
+			OwnerId: AddTeamReq.CaptainID,
 			Message: fmt.Sprintf("Вы получили достижение: %s", persAchievement.Title),
 		})
 	}
@@ -350,10 +351,10 @@ func (t *TeamRepositoryImpl) AddTeam(AddTeamReq request.AddTeamRequest) (int, er
 	t.Db.Create(&models.TeamChatModel{
 		TeamId:    newTeam.ID,
 		Title:     fmt.Sprintf("%s_chat", AddTeamReq.Title),
-		MembersId: pq.Int64Array{AddTeamReq.CaptainId},
+		MembersId: pq.Int64Array{AddTeamReq.CaptainID},
 	})
 	t.Db.Create(&models.NotificationModel{
-		OwnerId: AddTeamReq.CaptainId,
+		OwnerId: AddTeamReq.CaptainID,
 		Message: fmt.Sprintf("Теперь у вашей команды %s есть собственный командный чат %s_chat", AddTeamReq.Title, AddTeamReq.Title),
 	})
 

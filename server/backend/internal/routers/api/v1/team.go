@@ -3,6 +3,7 @@ package v1
 import (
 	"backend/internal/controllers"
 	"backend/internal/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,7 +12,7 @@ func NewTeamRouters(r *gin.Engine, tc *controllers.TeamController) {
 
 	teamRouters.Use(middleware.AuthMiddleware())
 
-	teamRouters.POST("/add", tc.AddTeam)
+	teamRouters.POST("/add", tc.RegisterTeam)
 	teamRouters.GET("/fetch_team", tc.FetchOneTeamById)
 	teamRouters.GET("/teams", tc.FetchAllTeamsByParams)
 	teamRouters.GET("/members", tc.FetchTeamMembers)
