@@ -204,7 +204,7 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                         width={200}
                         height={200}
                         classNames={{ wrapper: classes.profileAvatar }}
-                        src={userData?.avatar}
+                        src={`/user-avatars/${userData?.avatar}`}
                         alt="Аватар пользователя"
                     />
                     <VStack maxW gap="12px">

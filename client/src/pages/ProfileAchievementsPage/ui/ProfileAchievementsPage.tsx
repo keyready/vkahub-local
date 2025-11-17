@@ -115,7 +115,11 @@ const ProfileAchievementsPage = memo((props: ProfileAchievementsPageProps) => {
                             >
                                 <div className="rounded-xl w-24 h-24 md:w-48 md:h-48">
                                     <Image
-                                        src={`https://storage.yandexcloud.net/vkahub-storage/${profileAchievement.image}`}
+                                        src={`/static/achievements/${
+                                            profileAchievement.image.split(
+                                                'personal-achievements/',
+                                            )[1]
+                                        }`}
                                     />
                                 </div>
                                 <h1 className="text-center w-full">{profileAchievement.title}</h1>

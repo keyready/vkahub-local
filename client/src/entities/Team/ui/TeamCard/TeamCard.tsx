@@ -78,7 +78,7 @@ export const TeamCard = memo((props: TeamCardProps) => {
                         width="100%"
                         height="100%"
                         fallbackSrc="/static/fallbacks/team-fallback.webp"
-                        src={`${import.meta.env.VITE_MINIO_ENDPOINT}/teams_bucket/${team?.image}`}
+                        src={`/team-images/${team?.image}`}
                         classNames={{ wrapper: classes.compactTeamImg }}
                     />
                     <HStack maxW justify="end" className="p-2.5">
@@ -108,7 +108,7 @@ export const TeamCard = memo((props: TeamCardProps) => {
                     width={isMobile ? 60 : 80}
                     height={isMobile ? 60 : 80}
                     fallbackSrc="/static/fallbacks/team-fallback.webp"
-                    src={team?.image}
+                    src={`/team-images/${team?.image}`}
                     classNames={{ wrapper: classes.teamCardImg }}
                 />
                 <VStack maxW>
