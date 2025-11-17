@@ -1,4 +1,4 @@
-import { ChangeEvent, useCallback, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 
 import classes from './ImageUpload.module.scss';
 
@@ -9,14 +9,21 @@ interface ImageUploadProps {
     className?: string;
     onChange: (file: File) => void;
     isLoading?: boolean;
+    initialImage?: string;
 }
 
 export const ImageUpload = (props: ImageUploadProps) => {
-    const { className, isLoading, onChange } = props;
+    const { className, isLoading, initialImage, onChange } = props;
 
     const [uploadedImageSrc, setUploadedImageSrc] = useState<string>();
     const [isDragStart, setIsDragStart] = useState<boolean>(false);
     const [croppedImage, setCroppedImage] = useState<string>('');
+
+    useEffect(() => {
+        if (initialImage) {
+            setCroppedImage(initialImage);
+        }
+    }, [initialImage]);
 
     const handleUploadFile = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         event.preventDefault();

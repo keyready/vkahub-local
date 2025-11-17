@@ -28,6 +28,7 @@ import { toastDispatch } from '@/widgets/Toaster';
 import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
 import { getUserDataService, getUserRoles } from '@/entities/User';
 import { useWindowWidth } from '@/shared/lib/hooks/useWindowWidth';
+import { ImageUpload } from '@/shared/ui/ImageUpload';
 
 interface ProfileInfoBlockProps {
     className?: string;
@@ -134,6 +135,13 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
         setChangedUserData(userData);
     }, [userData]);
 
+    const handleChangeImage = useCallback((file: File) => {
+        setChangedUserData((ps) => ({
+            ...ps,
+            newAvatar: file,
+        }));
+    }, []);
+
     return (
         <form
             onSubmit={handleChangeProfile}
@@ -199,14 +207,31 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                     align="start"
                     gap="24px"
                 >
-                    <Image
-                        fallbackSrc="/static/fallbacks/user-fallback.webp"
-                        width={200}
-                        height={200}
-                        classNames={{ wrapper: classes.profileAvatar }}
-                        src={`/user-avatars/${userData?.avatar}`}
-                        alt="Аватар пользователя"
-                    />
+                    {isEditorMode ? (
+                        <ImageUpload
+                            className="w-[200px] h-[200px]"
+                            initialImage={
+                                import.meta.env.DEV
+                                    ? `http://localhost/user-avatars/${userData?.avatar}`
+                                    : `/user-avatars/${userData?.avatar}`
+                            }
+                            onChange={handleChangeImage}
+                        />
+                    ) : (
+                        <Image
+                            fallbackSrc="/static/fallbacks/user-fallback.webp"
+                            width={200}
+                            height={200}
+                            classNames={{ wrapper: classes.profileAvatar }}
+                            src={
+                                import.meta.env.DEV
+                                    ? `http://localhost/user-avatars/${userData?.avatar}`
+                                    : `/user-avatars/${userData?.avatar}`
+                            }
+                            alt="Аватар пользователя"
+                        />
+                    )}
+
                     <VStack maxW gap="12px">
                         <Input
                             isRequired

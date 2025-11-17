@@ -4,6 +4,11 @@ import { AxiosError } from 'axios';
 import { User } from '../../types/User';
 
 import { ThunkConfig } from '@/app/providers/StoreProvider/config/StateSchema';
+import { objectToFormData } from '@/shared/lib/objFormdata';
+
+type UpdatedAvatarProfile = Omit<User, 'avatar'> & {
+    avatar: File | undefined;
+};
 
 export const changeUserProfile = createAsyncThunk<string, Partial<User>, ThunkConfig<string>>(
     'User/changeUserProfile',
@@ -11,7 +16,33 @@ export const changeUserProfile = createAsyncThunk<string, Partial<User>, ThunkCo
         const { extra, rejectWithValue } = thunkAPI;
 
         try {
-            const response = await extra.api.post<string>('/api/user/change_profile', profile);
+            let formdata = new FormData();
+
+            if (profile.newAvatar) {
+                const newProfile: UpdatedAvatarProfile = {
+                    ...profile,
+                    avatar: profile.newAvatar,
+                };
+                delete newProfile.newAvatar;
+                formdata = objectToFormData(newProfile);
+            } else {
+                formdata = objectToFormData(
+                    {
+                        ...profile,
+                        avatar: null,
+                    },
+                    {
+                        nullValueHandling: 'stringify',
+                        undefinedValueHandling: 'stringify',
+                    },
+                );
+            }
+
+            const response = await extra.api.post<string>('/api/user/change_profile', formdata, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
 
             if (!response.data) {
                 throw new Error();

@@ -48,6 +48,7 @@ export interface ServerUser {
     username: string;
     password: string;
     avatar: string;
+    newAvatar?: File;
     roles: UserRoles[];
     portfolio?: PortfolioFile[];
 
