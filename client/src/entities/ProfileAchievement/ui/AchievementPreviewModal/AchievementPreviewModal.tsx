@@ -73,7 +73,7 @@ export const AchievementPreviewModal = (props: AchievementPreviewModalProps) => 
                     onClick={() => setIsModalOpened(true)}
                     className="cursor-pointer w-7 h-7 md:w-10 md:h-10 rounded-full hover:scale-150"
                     classNames={{ wrapper: classes.achievementImg }}
-                    src={`${import.meta.env.VITE_MINIO_ENDPOINT}/achievements_bucket/${profileAchievement.image}`}
+                    src={`/static/achievements/${profileAchievement.image}`}
                     fallbackSrc="/static/fallbacks/team-fallback.webp"
                 />
             </Tooltip>
@@ -89,7 +89,7 @@ export const AchievementPreviewModal = (props: AchievementPreviewModalProps) => 
                         <Image
                             className="w-96 h-96 rounded-xl"
                             classNames={{ wrapper: classes.achievementImg }}
-                            src={`${import.meta.env.VITE_MINIO_ENDPOINT}/achievements_bucket/${profileAchievement.image}`}
+                            src={`/static/achievements/${profileAchievement.image}`}
                             fallbackSrc="/static/fallbacks/team-fallback.webp"
                         />
                     </HStack>
