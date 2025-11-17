@@ -55,5 +55,5 @@ server {
     location /team-images {
         alias /team-images/;
         try_files $uri $uri/ =404;
-    }    
+    } 
 }
