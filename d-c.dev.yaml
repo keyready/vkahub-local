@@ -3,8 +3,8 @@ services:
     image: postgres:15-alpine
     container_name: vkahub-db-dev
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-admin-61kaf-vkahub}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin-61kaf-vkahub}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-vkahub}
     volumes:
       - db_data:/var/lib/postgresql/data
