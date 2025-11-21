@@ -112,7 +112,7 @@ export const TeamInfoBlock = (props: TeamInfoBlockProps) => {
                             ))}
                         </VStack>
                     ) : (
-                        <AchievementsTable teamId={team?.id || -1} />
+                        <AchievementsTable teamId={team?.id || ''} />
                     )}
                 </VStack>
             </VStack>

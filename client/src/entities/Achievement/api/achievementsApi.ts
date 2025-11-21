@@ -4,7 +4,7 @@ import { rtkApi } from '@/shared/api/rtkApi';
 
 const fetchTeamsApi = rtkApi.injectEndpoints({
     endpoints: (build) => ({
-        getTeamAchievements: build.query<Achievement[], number>({
+        getTeamAchievements: build.query<Achievement[], string>({
             query: (teamId) => ({
                 url: `/api/achievements?teamId=${teamId}`,
             }),
