@@ -18,6 +18,5 @@ WORKDIR /app
 
 COPY --from=builder /build/main /app/main
 COPY --from=builder /build/reports /app/reports
-COPY --from=builder /build/static /app/static
 
 CMD ["/app/main"]
