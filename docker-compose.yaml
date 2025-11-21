@@ -30,6 +30,8 @@ services:
       - ./server/backend/certificates:/app/certificates
       - ./server/backend/team-images:/app/team-images
       - ./server/backend/user-avatars:/app/user-avatars
+      - ./server/backend/bugs:/app/bugs
+      - ./server/backend/events:/app/events
     restart: unless-stopped
     networks:
       - vkahub-net
