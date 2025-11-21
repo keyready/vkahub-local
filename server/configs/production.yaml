@@ -1,0 +1,11 @@
+database:
+  username: postgres
+  password: postgres
+  host: db
+  port: 5432
+  databaseName: vkahub
+  sslMode: false
+
+authorizer:
+  accessSecretKey: access-secret-key
+  refreshSecretKey: refresh-secret-key
