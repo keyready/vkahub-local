@@ -8,33 +8,6 @@ import (
 	"time"
 )
 
-// func MassReminder(db *gorm.DB) func() {
-// 	return func() {
-// 		var longTimeOnlineMembers []models.UserModel
-// 		db.Where("last_online < ?", time.Now().AddDate(0, 0, -7)).Find(&longTimeOnlineMembers)
-// 		//TODO - если тип был последний онлайн более недели, то ловит предупреждение
-// 		for _, member := range longTimeOnlineMembers {
-// 			remindMail := other.MailDto{
-// 				MailName: "MassReminder",
-// 				Receiver: member.Mail,
-// 				Msg: other.MailBody{
-// 					TypeMsg: "text/html",
-// 					Message: fmt.Sprintf(
-// 						"Привет, %s! \n Что-то давненько не видели тебя онлайн на нашем сервисе VKAHUB. \n Заходи на %s, находи себе команду регистрируйся и побеждай!",
-// 						os.Getenv("BASE_URL"),
-// 						member.Username,
-// 					),
-// 				},
-// 			}
-// 			mailErr := appmail.SendMail(remindMail)
-// 			if mailErr != nil {
-// 				panic(mailErr)
-// 				return
-// 			}
-// 		}
-// 	}
-// }
-
 func ClearNotifications(db *gorm.DB) func() {
 	return func() {
 		err := db.Exec("TRUNCATE TABLE notification_models;").Error

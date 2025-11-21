@@ -20,6 +20,7 @@ type UserService interface {
 	FetchAllMessages(fetchAllMessage request.FetchAllMessages) (httpCode int, err error, messages []response.FetchAllMessagesResponse)
 	AddPortfolio(addPortfolioReq request.AddPortfolioForm, certificateNames []string) (httpCode int, err error)
 	DeletePortfolio(certificateName, ownerName string) (httpCode int, err error)
+	GetBannedReason(ownerID int64) (httpCode int, err error, banned models.BanModel)
 }
 
 type UserServiceImpl struct {
@@ -30,6 +31,11 @@ func NewUserServiceImpl(userRepository repositories.UserRepository) UserService 
 	return &UserServiceImpl{
 		UserRepository: userRepository,
 	}
+}
+
+func (u UserServiceImpl) GetBannedReason(ownerID int64) (httpCode int, err error, banned models.BanModel) {
+	httpCode, err, banned = u.UserRepository.GetBannedReason(ownerID)
+	return httpCode, err, banned
 }
 
 func (u UserServiceImpl) DeletePortfolio(certificateName, ownerName string) (httpCode int, err error) {

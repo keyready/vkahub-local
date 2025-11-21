@@ -18,15 +18,9 @@ func InitRouter(db *gorm.DB) *gin.Engine {
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 
-	r.Static("/certificates", "/app/certificates")
-	r.Static("/reports", "/app/reports")
-	r.Static("/team-images", "/app/team-images")
-	r.Static("/user-avatars", "/app/user-avatars")
-
 	c := cron.New()
-	c.AddFunc("@weekly", gocron.Banned(db))
+	// c.AddFunc("@weekly", gocron.Banned(db))
 	c.AddFunc("@monthly", gocron.ClearNotifications(db))
-	// c.AddFunc("@weekly", gocron.MassReminder(db))
 	c.Start()
 
 	ar := repositories.NewAuthRepositoryImpl(db)

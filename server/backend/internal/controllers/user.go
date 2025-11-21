@@ -32,6 +32,22 @@ func NewUserControllers(service services.UserService) *UserController {
 	}
 }
 
+func (uc *UserController) GetBannedReason(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
+
+	ownerID := int64(1)
+	httpCode, err, banned := uc.userService.GetBannedReason(ownerID)
+	if err != nil {
+		appGin.ErrorResponse(
+			httpCode,
+			err,
+		)
+		return
+	}
+
+	gCtx.JSON(httpCode, banned)
+}
+
 func (uc *UserController) DeletePortfolio(gCtx *gin.Context) {
 	appGin := app.Gin{Ctx: gCtx}
 	jsonForm := request.DeletePortfolioForm{}

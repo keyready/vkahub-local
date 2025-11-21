@@ -33,6 +33,7 @@ type UserRepository interface {
 	FetchAllMessages(fetchAllMessage request.FetchAllMessages) (httpCode int, err error, messages []response.FetchAllMessagesResponse)
 	AddPortfolio(addPortfolioReq request.AddPortfolioForm, certificateNames []string) (httpCode int, err error)
 	DeletePortfolio(certificateName, ownerName string) (httpCode int, err error)
+	GetBannedReason(ownerID int64) (httpCode int, err error, banned models.BanModel)
 }
 
 type UserRepositoryImpl struct {
@@ -41,6 +42,11 @@ type UserRepositoryImpl struct {
 
 func NewUserRepositoryImpl(Db *gorm.DB) UserRepository {
 	return &UserRepositoryImpl{Db: Db}
+}
+
+func (u *UserRepositoryImpl) GetBannedReason(ownerID int64) (httpCode int, err error, banned models.BanModel) {
+	u.Db.Where("owner_id = ?", ownerID).First(&banned)
+	return http.StatusOK, nil, banned
 }
 
 func (u *UserRepositoryImpl) DeletePortfolio(certificateName, ownerName string) (httpCode int, err error) {
