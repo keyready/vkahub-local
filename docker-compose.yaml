@@ -58,6 +58,8 @@ services:
       - ./server/backend/reports:/reports
       - ./server/backend/user-avatars:/user-avatars
       - ./server/backend/team-images:/team-images
+      - ./server/backend/bugs:/bugs
+      - ./server/backend/events:/events
     restart: unless-stopped
     networks:
       - vkahub-net
