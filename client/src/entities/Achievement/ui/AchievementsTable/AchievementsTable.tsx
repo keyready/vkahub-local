@@ -27,7 +27,7 @@ const columns = [
 
 interface AchievementsTableProps {
     className?: string;
-    teamId: number;
+    teamId: string;
 }
 
 export const AchievementsTable = (props: AchievementsTableProps) => {

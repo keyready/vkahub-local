@@ -34,23 +34,6 @@ services:
     networks:
       - vkahub-net
 
-  nginx:
-    image: nginx:alpine
-    container_name: vkahub-nginx-dev
-    depends_on:
-      - api
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/default:/etc/nginx/conf.d/default.conf
-      - ./server/backend/certificates:/certificates
-      - ./server/backend/reports:/reports
-      - ./server/backend/user-avatars:/user-avatars
-      - ./server/backend/team-images:/team-images
-    restart: unless-stopped
-    networks:
-      - vkahub-net
-
 networks:
   vkahub-net:
     name: vkahub-net

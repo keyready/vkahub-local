@@ -119,7 +119,7 @@ export const MyTeamPreviewBlock = (props: MyTeamPreviewBlockProps) => {
 
     const handleChangeTeamData = useCallback(async () => {
         if (isEditorMode) {
-            let formData = new FormData();
+            let formData = new FormData();            
 
             if (changedTeamData?.newImage) {
                 const team = {
@@ -133,6 +133,11 @@ export const MyTeamPreviewBlock = (props: MyTeamPreviewBlockProps) => {
                 formData.set('image', 'null');
                 formData.delete('newImage');
             }
+
+            formData.append(
+                'wantedPositions',
+                selectedPositions.map((position) => position.value).join(','),
+            );            
 
             const result = await toastDispatch(dispatch(changeTeam(formData)), {
                 loading: 'Сохраняем изменения...',

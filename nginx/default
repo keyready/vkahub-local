@@ -55,4 +55,14 @@ server {
         alias /home/rasp/vkahub-local/server/backend/team-images/;
         try_files $uri $uri/ =404;
     } 
+
+    location /bugs {
+        alias /home/rasp/vkahub-local/server/backend/bugs/;
+        try_files $uri $uri/ =404;
+    } 
+
+    location /events {
+        alias /home/rasp/vkahub-local/server/backend/events/;
+        try_files $uri $uri/ =404;
+    } 
 }
