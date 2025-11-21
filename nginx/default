@@ -2,12 +2,10 @@ client_max_body_size 3M;
 
 server {
     listen 80;
-    server_name localhost;
-    root /var/www/html;
-    index index.html;
+    server_name ithub.61kaf2021.vka;
 
     location /db-admin {
-        proxy_pass http://admin:5001;
+        proxy_pass http://localhost:5001;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -15,11 +13,12 @@ server {
     }
 
     location / {
+        root /home/rasp/vkahub-local/client-files/;
         try_files $uri $uri/ /index.html;
     }
 
     location /ws {
-        proxy_pass http://api:5000/ws;
+        proxy_pass http://localhost:5000/ws;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -30,7 +29,7 @@ server {
     }
 
     location ~ ^/api/ {
-        proxy_pass http://api:5000;
+        proxy_pass http://localhost:5000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -38,22 +37,22 @@ server {
     }
 
     location /certificates {
-        alias /certificates/;
+        alias /home/rasp/vkahub-local/server/backend/certificates/;
         try_files $uri $uri/ =404;
     }
 
     location /reports {
-        alias /reports/;
+        alias /home/rasp/vkahub-local/server/backend/reports/;
         try_files $uri $uri/ =404;
     }
 
     location /user-avatars {
-        alias /user-avatars/;
+        alias /home/rasp/vkahub-local/server/backend/user-avatars/;
         try_files $uri $uri/ =404;
     }
 
     location /team-images {
-        alias /team-images/;
+        alias /home/rasp/vkahub-local/server/backend/team-images/;
         try_files $uri $uri/ =404;
     } 
 }

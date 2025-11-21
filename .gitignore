@@ -1,4 +1,7 @@
 /client/node_modules
+/client-files
 /.idea
 /server/backend/user-avatars
 /server/backend/team-images
+/server/backend/certificates
+/server/backend/reports

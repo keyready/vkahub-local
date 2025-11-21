@@ -68,6 +68,15 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                     <VStack maxW gap="24px" className="col-span-4">
                         <div>
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
+                                Новые функции
+                            </h3>
+                            <h4 className="text-l leading-snug">
+                                - Добавили возможность редактирование аватарки профиля поользователя
+                                и команды. (Почему не сделали сразу?)
+                            </h4>
+                        </div>
+                        <div>
+                            <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Исправление ошибок
                             </h3>
                             <h4 className="text-l leading-snug">
@@ -75,6 +84,8 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                                 отсутствии сертификатов на странице пользователя
                                 <br />- Исправили ошибку, при которой любой (-_-) вользователь мог
                                 удалить сертификат другого пользователя
+                                <br />- Исправили ошибку, при которое некорректно ообновлялась
+                                информация о пользователе (скиллы и позиции)
                             </h4>
                         </div>
                     </VStack>

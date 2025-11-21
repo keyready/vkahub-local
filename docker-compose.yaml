@@ -3,8 +3,8 @@ services:
     image: postgres:15-alpine
     container_name: vkahub-db
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-admin-61kaf-vkahub}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin-61kaf-vkahub}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-vkahub}
     volumes:
       - db_data:/var/lib/postgresql/data
@@ -65,13 +65,13 @@ services:
       - vkahub-net
 
   admin:
-    container_name: vkahub-admin
     image: dpage/pgadmin4:6.19
+    container_name: vkahub-admin
     depends_on:
       - db
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-vkahub-admin@vkahub.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin-61kaf-vkahub}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-postgres}
       PGADMIN_LISTEN_PORT: 5001
     ports:
       - "5001:5001"
@@ -89,4 +89,3 @@ networks:
 volumes:
   db_data:
   pgadmin:
-  client_dist:
