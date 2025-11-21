@@ -4,6 +4,7 @@ import (
 	"backend/internal/dto/request"
 	"backend/internal/dto/response"
 	"backend/internal/models"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -12,7 +13,6 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-	"golang.org/x/crypto/openpgp/errors"
 	"gorm.io/gorm"
 )
 
@@ -322,15 +322,16 @@ func (t *TeamRepositoryImpl) RegisterTeam(AddTeamReq request.RegisterTeamForm) (
 
 	teamExist := t.Db.Where("title = ?", AddTeamReq.Title).First(&existTeam).Error
 	if teamExist == nil {
-		return http.StatusBadRequest, errors.ErrKeyIncorrect
+		return http.StatusBadRequest, errors.New("team already exists")
 	}
 
 	newTeam := &models.TeamModel{
-		Title:       AddTeamReq.Title,
-		Description: AddTeamReq.Description,
-		CaptainId:   AddTeamReq.CaptainID,
-		MembersId:   pq.Int64Array{AddTeamReq.CaptainID},
-		Image:       AddTeamReq.Image.Filename,
+		Title:           AddTeamReq.Title,
+		Description:     AddTeamReq.Description,
+		CaptainId:       AddTeamReq.CaptainID,
+		MembersId:       pq.Int64Array{AddTeamReq.CaptainID},
+		WantedPositions: pq.StringArray{},
+		Image:           AddTeamReq.Image.Filename,
 	}
 	err := t.Db.Create(&newTeam).Error
 
