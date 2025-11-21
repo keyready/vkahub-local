@@ -17,7 +17,7 @@ root.render(
     <BrowserRouter>
         <StoreProvider>
             <ErrorBoundary>
-                ЩА СЛОМАЕМ ЭТОТ КЛИЕНТ
+                ЩА СЛОМАЕМ ЭТОТ !!!!!
                 <HelmetProvider>
                     <App />
                 </HelmetProvider>
