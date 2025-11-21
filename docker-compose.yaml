@@ -30,6 +30,38 @@ services:
       - ./server/backend/certificates:/app/certificates
       - ./server/backend/team-images:/app/team-images
       - ./server/backend/user-avatars:/app/user-avatars
+      - ./server/backend/bugs:/app/bugs
+      - ./server/backend/events:/app/events
+    restart: unless-stopped
+    networks:
+      - vkahub-net
+
+  client-builder:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: vkahub-client-builder
+    volumes:
+      - client_dist:/app/dist
+    command: sh -c "npm run build && cp -r dist/* /app/dist/"
+
+  nginx:
+    image: nginx:alpine
+    container_name: vkahub-nginx
+    depends_on:
+      - api
+      - client-builder
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default:/etc/nginx/conf.d/default.conf
+      - client_dist:/var/www/html
+      - ./server/backend/certificates:/certificates
+      - ./server/backend/reports:/reports
+      - ./server/backend/user-avatars:/user-avatars
+      - ./server/backend/team-images:/team-images
+      - ./server/backend/bugs:/bugs
+      - ./server/backend/events:/events
     restart: unless-stopped
     networks:
       - vkahub-net
@@ -50,15 +82,6 @@ services:
     networks:
       - vkahub-net
     restart: unless-stopped
-
-  client-builder:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
-    container_name: vkahub-client-builder
-    volumes:
-      - ./client-files:/dist
-    command: sh -c "npm run build"
 
 networks:
   vkahub-net:

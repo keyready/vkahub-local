@@ -4,12 +4,20 @@ import (
 	"backend/internal/dto/request"
 	"backend/internal/services"
 	"backend/pkg/app"
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"net/http"
+	"path/filepath"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
+
+const (
+	BUGS_STORAGE = "/app/bugs"
 )
 
 type BugController struct {
-	bugService    services.BugService
+	bugService services.BugService
 }
 
 func NewBugControllers(s services.BugService) *BugController {
@@ -18,28 +26,45 @@ func NewBugControllers(s services.BugService) *BugController {
 
 func (bc *BugController) AddBug(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var addBug request.AddBugReq
+	formData := request.AddBugReq{}
 
-	addBug.Author = ctx.GetString("username")
+	formData.Author = ctx.GetString("username")
 
-	bindErr := ctx.ShouldBind(&addBug)
-	if bindErr != nil {
+	if bindErr := ctx.ShouldBind(&formData); bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	// for _, img := range addBug.Media {
-	// 	img.Filename = "bugs/" + uuid.NewString() + "." + strings.Split(img.Filename, ".")[len(strings.Split(img.Filename, "."))-1]
-	// 	addBug.MediaNames = append(addBug.MediaNames, img.Filename)
-	// 	bodyFile, _ := img.Open()
-	// 	bc.YaCloudClient.PutObject(context.TODO(), &s3.PutObjectInput{
-	// 		Bucket: aws.String(os.Getenv("BUCKET_NAME")),
-	// 		Key:    aws.String(img.Filename),
-	// 		Body:   bodyFile,
-	// 	})
-	// }
+	multipartForm, mpfdErr := ctx.MultipartForm()
+	if mpfdErr != nil {
+		appGin.ErrorResponse(
+			http.StatusBadRequest,
+			mpfdErr,
+		)
+	}
 
-	httpCode, err := bc.bugService.AddBug(addBug)
+	mediaNames := []string{}
+	for _, img := range multipartForm.File["media"] {
+		fileName := fmt.Sprintf("%s%s", uuid.NewString(), filepath.Ext(img.Filename))
+		img.Filename = fileName
+
+		if saveErr := appGin.Ctx.SaveUploadedFile(
+			img,
+			filepath.Join(
+				BUGS_STORAGE,
+				img.Filename,
+			),
+		); saveErr != nil {
+			appGin.ErrorResponse(
+				http.StatusInternalServerError,
+				saveErr,
+			)
+		}
+
+		mediaNames = append(mediaNames, fileName)
+	}
+
+	httpCode, err := bc.bugService.AddBug(formData, mediaNames)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return

@@ -3,10 +3,11 @@ package repositories
 import (
 	"backend/internal/dto/request"
 	"backend/internal/models"
-	"gorm.io/gorm"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 type SkillRepository interface {
@@ -15,7 +16,7 @@ type SkillRepository interface {
 }
 
 type SkillRepositoryImpl struct {
-	Db          *gorm.DB
+	Db *gorm.DB
 }
 
 func NewSkillRepositoryImpl(db *gorm.DB) SkillRepository {
@@ -31,13 +32,6 @@ func (s SkillRepositoryImpl) AddSkill(addSkill request.AddSkillReq) (httpCode in
 		return http.StatusBadRequest, addDbErr
 	}
 
-	// deletedKeys, _ := s.redisClient.Keys(context.TODO(), "skillsCache:*").Result()
-	// if len(deletedKeys) > 0 {
-	// 	_, err = s.redisClient.Del(context.TODO(), deletedKeys...).Result()
-	// 	if err != nil {
-	// 		return http.StatusInternalServerError, err
-	// 	}
-	// }
 	return http.StatusOK, nil
 }
 
@@ -52,9 +46,9 @@ func (s SkillRepositoryImpl) FetchAllSkills(skillIdsString string) (httpCode int
 
 		s.Db.Where("id IN ?", skillIds).Find(&skills)
 
-	}else{
+	} else {
 		s.Db.Find(&skills)
 	}
-	
+
 	return http.StatusOK, nil, skills
 }

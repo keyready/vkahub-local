@@ -3,8 +3,6 @@ package request
 import (
 	"mime/multipart"
 	"time"
-
-	"github.com/lib/pq"
 )
 
 type SignUpRequest struct {
@@ -173,14 +171,12 @@ type AddPositionReq struct {
 }
 
 type AddBugReq struct {
-	Description string                  `form:"description"`
-	Produce     string                  `form:"produce"`
-	Expected    string                  `form:"expected"`
-	Media       []*multipart.FileHeader `form:"media"`
-	Additional  string                  `form:"additional"`
-	Status      string                  `form:"status"`
+	Description string `form:"description"`
+	Produce     string `form:"produce"`
+	Expected    string `form:"expected"`
+	Additional  string `form:"additional"`
+	Status      string `form:"status"`
 	Author      string
-	MediaNames  pq.StringArray
 }
 
 type UpdateBugReq struct {

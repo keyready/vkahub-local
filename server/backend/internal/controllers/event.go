@@ -4,13 +4,21 @@ import (
 	"backend/internal/dto/request"
 	"backend/internal/services"
 	"backend/pkg/app"
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"net/http"
+	"path/filepath"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
+
+const (
+	EVENTS_STORAGE = "/app/events"
 )
 
 type EventController struct {
-	eventService  services.EventService
+	eventService services.EventService
 }
 
 func NewEventController(service services.EventService) *EventController {
@@ -19,30 +27,38 @@ func NewEventController(service services.EventService) *EventController {
 
 func (ec *EventController) AddEvent(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var addEvent request.AddEventReq
+	formData := request.AddEventReq{}
 
-	bindErr := appGin.Ctx.Bind(&addEvent)
+	bindErr := appGin.Ctx.Bind(&formData)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	// extFile := strings.Split(addEvent.Image.Filename, ".")[len(strings.Split(addEvent.Image.Filename, "."))-1]
-	// addEvent.Image.Filename = "events/" + uuid.NewString() + "." + extFile
+	formData.Image.Filename = fmt.Sprintf(
+		"%s%s",
+		uuid.NewString(),
+		filepath.Ext(formData.Image.Filename),
+	)
 
-	_, err := ec.eventService.AddEvent(addEvent)
+	if saveErr := ctx.SaveUploadedFile(
+		formData.Image,
+		filepath.Join(
+			EVENTS_STORAGE,
+			formData.Image.Filename,
+		),
+	); saveErr != nil {
+		appGin.ErrorResponse(
+			http.StatusInternalServerError,
+			saveErr,
+		)
+	}
+
+	_, err := ec.eventService.AddEvent(formData)
 	if err != nil {
 		appGin.ErrorResponse(http.StatusInternalServerError, err)
 		return
 	}
-
-	// bodyFile, _ := addEvent.Image.Open()
-	// defer bodyFile.Close()
-	// ec.YaCloudClient.PutObject(context.TODO(), &s3.PutObjectInput{
-	// 	Bucket: aws.String(os.Getenv("BUCKET_NAME")),
-	// 	Key:    aws.String(addEvent.Image.Filename),
-	// 	Body:   bodyFile,
-	// })
 
 	appGin.SuccessResponse(http.StatusCreated, gin.H{})
 }

@@ -4,20 +4,21 @@ import (
 	"backend/internal/dto/request"
 	"backend/internal/models"
 	"fmt"
-	"gorm.io/gorm"
 	"net/http"
 	"slices"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type BugRepository interface {
-	AddBug(addBug request.AddBugReq) (httpCode int, err error)
+	AddBug(addBug request.AddBugReq, mediaNames []string) (httpCode int, err error)
 	FetchAllBugs(t string) (httpCode int, err error, bugs []models.BugModel)
 	UpdateBug(updateBug request.UpdateBugReq) (httpCode int, err error)
 }
 
 type BugRepositoryImpl struct {
-	DB          *gorm.DB
+	DB *gorm.DB
 }
 
 func NewBugRepositoryImpl(db *gorm.DB) BugRepository {
@@ -65,7 +66,7 @@ func (b BugRepositoryImpl) UpdateBug(updateBugReq request.UpdateBugReq) (httpCod
 	return http.StatusOK, nil
 }
 
-func (b BugRepositoryImpl) AddBug(addBug request.AddBugReq) (httpCode int, err error) {
+func (b BugRepositoryImpl) AddBug(addBug request.AddBugReq, mediaNames []string) (httpCode int, err error) {
 	var allBugs []models.BugModel
 	b.DB.Find(&allBugs)
 
@@ -79,7 +80,7 @@ func (b BugRepositoryImpl) AddBug(addBug request.AddBugReq) (httpCode int, err e
 		Expected:    addBug.Expected,   //Ожидаемые действия
 		Author:      addBug.Author,
 		Produce:     addBug.Produce, //Вывод
-		Media:       addBug.MediaNames,
+		Media:       mediaNames,
 		CreatedAt:   createdAt,
 	}
 	b.DB.Create(&newBug)
@@ -95,48 +96,6 @@ func (b BugRepositoryImpl) AddBug(addBug request.AddBugReq) (httpCode int, err e
 }
 
 func (b BugRepositoryImpl) FetchAllBugs(t string) (httpCode int, err error, bugs []models.BugModel) {
-	// cacheKey := ""
-	// if t == "" {
-	// 	cacheKey = "bugs:all"
-	// } else {
-	// 	cacheKey = fmt.Sprintf("bugs:%s", t)
-	// }
-
-
-	// switch {
-	// case cacheErr == redis.Nil:
-	// 	if t != "" {
-	// 		b.DB.Where("status = ?", t).Find(&bugs)
-
-	// 		jsonBugs, _ := json.Marshal(bugs)
-	// 		newCacheKey := fmt.Sprintf("bugs:%s", t)
-	// 		_, newCacheErr := b.RedisClient.Set(context.TODO(), newCacheKey, string(jsonBugs), time.Minute*10).Result()
-	// 		if newCacheErr != nil {
-	// 			return http.StatusInternalServerError, newCacheErr, nil
-	// 		}
-
-	// 		return http.StatusOK, nil, bugs
-	// 	} else {
-	// 		b.DB.Find(&bugs)
-
-	// 		jsonBugs, _ := json.Marshal(bugs)
-	// 		_, newCacheErr := b.RedisClient.Set(context.TODO(), cacheKey, string(jsonBugs), time.Minute*10).Result()
-	// 		if newCacheErr != nil {
-	// 			return http.StatusInternalServerError, newCacheErr, nil
-	// 		}
-
-	// 		return http.StatusOK, nil, bugs
-	// 	}
-
-	// case cacheErr != nil:
-	// 	return http.StatusInternalServerError, err, nil
-
-	// default:
-	// 	json.Unmarshal([]byte(cacheData), &bugs)
-
-	// 	return http.StatusOK, nil, bugs
-	// }
-
 	switch t {
 	case "":
 		b.DB.Where("status = ?", t).Find(&bugs)

@@ -7,7 +7,7 @@ import (
 )
 
 type BugService interface {
-	AddBug(addBug request.AddBugReq) (httpCode int, err error)
+	AddBug(addBug request.AddBugReq, mediaNames []string) (httpCode int, err error)
 	FetchAllBugs(t string) (httpCode int, err error, bugs []models.BugModel)
 	UpdateBug(updateBug request.UpdateBugReq) (httpCode int, err error)
 }
@@ -25,8 +25,8 @@ func (b BugServiceImpl) UpdateBug(updateBug request.UpdateBugReq) (httpCode int,
 	return httpCode, err
 }
 
-func (b BugServiceImpl) AddBug(addBug request.AddBugReq) (httpCode int, err error) {
-	httpCode, err = b.bugRepository.AddBug(addBug)
+func (b BugServiceImpl) AddBug(addBug request.AddBugReq, mediaNames []string) (httpCode int, err error) {
+	httpCode, err = b.bugRepository.AddBug(addBug, mediaNames)
 	return httpCode, err
 }
 
