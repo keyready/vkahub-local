@@ -3,8 +3,6 @@ client_max_body_size 3M;
 server {
     listen 80;
     server_name ithub.61kaf2021.vka;
-    root ~/vkahub-local/client-files;
-    index index.html;
 
     location /db-admin {
         proxy_pass http://localhost:5001;
@@ -15,6 +13,7 @@ server {
     }
 
     location / {
+        root /home/rasp/vkahub-local/client-files/;
         try_files $uri $uri/ /index.html;
     }
 
@@ -38,22 +37,22 @@ server {
     }
 
     location /certificates {
-        alias ~/vkahub-local/server/backend/certificates/;
+        alias /home/rasp/vkahub-local/server/backend/certificates/;
         try_files $uri $uri/ =404;
     }
 
     location /reports {
-        alias ~/vkahub-local/server/backend/reports/;
+        alias /home/rasp/vkahub-local/server/backend/reports/;
         try_files $uri $uri/ =404;
     }
 
     location /user-avatars {
-        alias ~/vkahub-local/server/backend/user-avatars/;
+        alias /home/rasp/vkahub-local/server/backend/user-avatars/;
         try_files $uri $uri/ =404;
     }
 
     location /team-images {
-        alias ~/vkahub-local/server/backend/team-images/;
+        alias /home/rasp/vkahub-local/server/backend/team-images/;
         try_files $uri $uri/ =404;
     } 
 }
