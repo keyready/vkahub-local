@@ -18,10 +18,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const (
-	CERTIFICATES_STORAGE = "/app/certificates"
-)
-
 type UserController struct {
 	userService services.UserService
 }
@@ -92,7 +88,7 @@ func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
 	certificateNames := make([]string, 0)
 	for _, cert := range formData.Certificates {
 		certName := fmt.Sprintf("%s_%s", formData.EventName, strings.ReplaceAll(cert.Filename, " ", "_"))
-		savePath := filepath.Join(CERTIFICATES_STORAGE, certName)
+		savePath := filepath.Join(other.CERTIFICATES_STORAGE, certName)
 
 		if saveErr := appGin.Ctx.SaveUploadedFile(cert, savePath); saveErr != nil {
 			appGin.ErrorResponse(
@@ -296,7 +292,7 @@ func (uc *UserController) EditProfile(ctx *gin.Context) {
 	avatar, err := appGin.Ctx.FormFile("avatar")
 	if err != http.ErrMissingFile {
 		delErr := utils.FindAndDeleteFile(
-			USER_AVATARS_STORAGE,
+			other.USER_AVATARS_STORAGE,
 			fmt.Sprintf(
 				"%s_%s",
 				appGin.Ctx.GetString("username"),
@@ -315,7 +311,7 @@ func (uc *UserController) EditProfile(ctx *gin.Context) {
 		)
 		avatar.Filename = fileName
 
-		savePath := filepath.Join(USER_AVATARS_STORAGE, fileName)
+		savePath := filepath.Join(other.USER_AVATARS_STORAGE, fileName)
 		if saveErr := appGin.Ctx.SaveUploadedFile(avatar, savePath); saveErr != nil {
 			appGin.ErrorResponse(
 				http.StatusInternalServerError,

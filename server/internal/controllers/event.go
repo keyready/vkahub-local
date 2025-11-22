@@ -1,20 +1,17 @@
 package controllers
 
 import (
-	"server/pkg/app"
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/services"
+	"server/pkg/app"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-)
-
-const (
-	EVENTS_STORAGE = "/app/events"
 )
 
 type EventController struct {
@@ -44,7 +41,7 @@ func (ec *EventController) AddEvent(ctx *gin.Context) {
 	if saveErr := ctx.SaveUploadedFile(
 		formData.Image,
 		filepath.Join(
-			EVENTS_STORAGE,
+			other.EVENTS_STORAGE,
 			formData.Image.Filename,
 		),
 	); saveErr != nil {

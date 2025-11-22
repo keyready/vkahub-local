@@ -1,10 +1,10 @@
 package database
 
 type Config struct {
-	DatabaseName string `mapstrucuture:"databaseName"`
-	Username     string `mapstrucuture:"username"`
-	Password     string `mapstrucuture:"password"`
-	Host         string `mapstrucuture:"host"`
-	Port         int    `mapstrucuture:"port"`
-	SSLMode      bool   `mapstrucuture:"sslMode"`
+	DatabaseName string `mapstructure:"databaseName"`
+	Username     string `mapstructure:"username"`
+	Password     string `mapstructure:"password"`
+	Host         string `mapstructure:"host"`
+	Port         int    `mapstructure:"port"`
+	SSLMode      bool   `mapstructure:"sslMode"`
 }

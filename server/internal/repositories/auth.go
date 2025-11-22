@@ -144,7 +144,12 @@ func (a *AuthRepositoryImpl) RefreshToken(refreshToken string) (tokens response.
 		return tokens, err
 	}
 
-	tokens = jsonwebtoken.GenerateTokens(tmpUser.Username)
+	payload := jsonwebtoken.Payload{
+		Username: tmpUser.Username,
+		Roles:    tmpUser.Roles,
+	}
+
+	tokens = jsonwebtoken.GenerateTokens(payload)
 
 	tmpUser.RefreshToken = tokens.RefreshToken
 	a.Db.Save(&tmpUser)

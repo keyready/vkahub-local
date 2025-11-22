@@ -1,14 +1,14 @@
 package other
 
-import (
-	"github.com/golang-jwt/jwt/v5"
+const (
+	USER_AVATARS_STORAGE     = "/app/user-avatars"
+	BUGS_STORAGE             = "/app/bugs"
+	EVENTS_STORAGE           = "/app/events"
+	REPORTS_STORAGE          = "/app/reports"
+	CERTIFICATES_STORAGE     = "/app/certificates"
+	TEAM_IMAGES_STORAGE      = "/app/team-images"
+	CHAT_ATTACHMENTS_STORAGE = "/app/attachments"
 )
-
-type JwtClaims struct {
-	jwt.RegisteredClaims
-	Username string `json:"username"`
-	Mail     string `json:"mail"`
-}
 
 type ConfirmCode struct {
 	Code string `json:"code"`

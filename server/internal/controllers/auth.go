@@ -11,15 +11,9 @@ import (
 	"server/pkg/utils/jsonwebtoken"
 	"strings"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-)
-
-const (
-	USER_AVATARS_STORAGE = "/app/user-avatars"
 )
 
 type AuthController struct {
@@ -59,7 +53,7 @@ func (ac *AuthController) SignUp(ctx *gin.Context) {
 		return
 	}
 
-	savePath := filepath.Join(USER_AVATARS_STORAGE, fileName)
+	savePath := filepath.Join(other.USER_AVATARS_STORAGE, fileName)
 	if saveErr := appGin.Ctx.SaveUploadedFile(formData.Avatar, savePath); saveErr != nil {
 		appGin.ErrorResponse(
 			http.StatusInternalServerError,
@@ -74,28 +68,25 @@ func (ac *AuthController) SignUp(ctx *gin.Context) {
 
 func (ac *AuthController) Login(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	v := validator.New()
-	var logReq request.LoginRequest
+	jsonForm := request.LoginRequest{}
 
-	if bindErr := ctx.ShouldBindJSON(&logReq); bindErr != nil {
+	if bindErr := ctx.ShouldBindJSON(&jsonForm); bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	validErr := v.Struct(logReq)
-	if validErr != nil {
-		appGin.ErrorResponse(http.StatusBadRequest, validErr)
-		return
-	}
-
-	httpCode, serviceErr := ac.authService.Login(logReq)
+	httpCode, serviceErr := ac.authService.Login(jsonForm)
 	if serviceErr != nil {
 		appGin.ErrorResponse(httpCode, serviceErr)
 		return
 	}
 
-	tokens := jsonwebtoken.GenerateTokens(logReq.Username)
-	logReq.RefreshToken = tokens.RefreshToken
+	payload := jsonwebtoken.Payload{
+		Username: jsonForm.Username,
+		Roles:    []string{},
+	}
+
+	tokens := jsonwebtoken.GenerateTokens(payload)
 
 	appGin.SuccessResponse(httpCode, tokens)
 }
@@ -112,10 +103,6 @@ func (ac *AuthController) RefreshToken(ctx *gin.Context) {
 	refreshToken := strings.Split(authHeader, " ")[1]
 	tokens, _ := ac.authService.RefreshToken(refreshToken)
 
-	session := sessions.Default(ctx)
-	session.Set("auth_token", tokens.AccessToken)
-	session.Save()
-
 	appGin.SuccessResponse(http.StatusOK, tokens)
 }
 
@@ -125,31 +112,8 @@ func (ac *AuthController) Logout(ctx *gin.Context) {
 	username := appGin.Ctx.GetString("username")
 	httpCode, _ := ac.authService.Logout(username)
 
-	//session := sessions.Default(ctx)
-	//session.Delete("auth_token")
-	//session.Save()
-
 	appGin.SuccessResponse(httpCode, gin.H{})
 }
-
-// func (ac *AuthController) MailConfirm(ctx *gin.Context) {
-// 	appGin := app.Gin{Ctx: ctx}
-// 	var confirmCode other.ConfirmCode
-
-// 	bindErr := ctx.ShouldBindJSON(&confirmCode)
-// 	if bindErr != nil {
-// 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
-// 		return
-// 	}
-
-// 	httpCode, serviceErr := ac.authService.MailConfirm(confirmCode.Code)
-// 	if serviceErr != nil {
-// 		appGin.SuccessResponse(httpCode, serviceErr)
-// 		return
-// 	}
-
-// 	appGin.SuccessResponse(http.StatusOK, gin.H{})
-// }
 
 func (ac *AuthController) ResetPassword(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}

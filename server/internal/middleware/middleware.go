@@ -3,8 +3,8 @@ package middleware
 import (
 	"errors"
 	"net/http"
-	"server/internal/dto/other"
 	"server/pkg/app"
+	"server/pkg/utils/jsonwebtoken"
 	"strings"
 	"time"
 
@@ -24,7 +24,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		accessTokenString := strings.Split(authHeader, " ")[1]
 
-		claims := &other.JwtClaims{}
+		claims := &jsonwebtoken.JwtClaims{}
 		token, err := jwt.ParseWithClaims(accessTokenString, claims, func(t *jwt.Token) (interface{}, error) {
 			expTime, _ := claims.GetExpirationTime()
 			if time.Now().Unix() > expTime.Unix() {
@@ -38,7 +38,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		ctx.Set("username", claims.Username)
+		ctx.Set("username", claims.Payload.Username)
+		ctx.Set("roles", claims.Payload.Roles)
 
 		ctx.Next()
 	}

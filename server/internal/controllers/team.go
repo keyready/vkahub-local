@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/services"
 	"server/internal/utils"
@@ -14,10 +15,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-)
-
-const (
-	TEAM_IMAGE_STORAGE = "/app/team-images"
 )
 
 type TeamController struct {
@@ -42,7 +39,7 @@ func (tc *TeamController) EditTeam(ctx *gin.Context) {
 
 	image, err := appGin.Ctx.FormFile("image")
 	if err != http.ErrMissingFile {
-		delErr := utils.FindAndDeleteFile(TEAM_IMAGE_STORAGE, formData.Title)
+		delErr := utils.FindAndDeleteFile(other.TEAM_IMAGES_STORAGE, formData.Title)
 		if delErr != nil {
 			log.Println("failed to remove old image", delErr.Error())
 		}
@@ -54,7 +51,7 @@ func (tc *TeamController) EditTeam(ctx *gin.Context) {
 		)
 
 		image.Filename = fileName
-		savePath := filepath.Join(TEAM_IMAGE_STORAGE, fileName)
+		savePath := filepath.Join(other.TEAM_IMAGES_STORAGE, fileName)
 
 		if saveErr := appGin.Ctx.SaveUploadedFile(image, savePath); bindErr != nil {
 			appGin.ErrorResponse(
@@ -157,7 +154,7 @@ func (tc *TeamController) RegisterTeam(ctx *gin.Context) {
 		return
 	}
 
-	savePath := filepath.Join(TEAM_IMAGE_STORAGE, fileName)
+	savePath := filepath.Join(other.TEAM_IMAGES_STORAGE, fileName)
 	if saveErr := appGin.Ctx.SaveUploadedFile(formData.Image, savePath); saveErr != nil {
 		appGin.ErrorResponse(
 			http.StatusInternalServerError,

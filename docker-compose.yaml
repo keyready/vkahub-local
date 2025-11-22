@@ -30,6 +30,7 @@ services:
       - ./server/user-avatars:/app/user-avatars
       - ./server/bugs:/app/bugs
       - ./server/events:/app/events
+      - ./server/attachments:/app/attachments
     restart: unless-stopped
     networks:
       - vkahub-net

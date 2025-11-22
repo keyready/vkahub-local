@@ -93,8 +93,8 @@ type CreateProposalRequest struct {
 }
 
 type FetchProposalRequest struct {
-	Type       string `json:"type"`
-	KtoSmotrit string
+	Type     string `json:"type"`
+	Observer string
 }
 
 type ApproveProposalRequest struct {
@@ -210,9 +210,8 @@ type FetchAllMessages struct {
 	TeamId int64
 }
 
-type CreateMessage struct {
-	Message         string                  `form:"message"`
-	Attachment      []*multipart.FileHeader `form:"attachment"`
+type WriteMessageForm struct {
+	Message         string `form:"message"`
 	AttachmentNames []string
 	Author          string
 	TeamChatId      int64

@@ -3,14 +3,12 @@ package config
 import (
 	"fmt"
 	"server/internal/database"
-	"server/pkg/utils/jsonwebtoken"
 
 	"github.com/spf13/viper"
 )
 
 type VkaHubConfig struct {
-	Database   database.Config     `mapstructure:"database"`
-	Authorizer jsonwebtoken.Config `mapstructure:"authorizer"`
+	Database database.Config `mapstructure:"database"`
 }
 
 func FromFile(filePath string) (*VkaHubConfig, error) {
@@ -19,6 +17,13 @@ func FromFile(filePath string) (*VkaHubConfig, error) {
 	viperInstance := viper.New()
 	viperInstance.AutomaticEnv()
 	viperInstance.SetConfigFile(filePath)
+
+	viperInstance.SetDefault("database.username", "postgres")
+	viperInstance.SetDefault("database.password", "postgres")
+	viperInstance.SetDefault("database.host", "db")
+	viperInstance.SetDefault("database.port", 5432)
+	viperInstance.SetDefault("database.databaseName", "vkahub")
+	viperInstance.SetDefault("database.sslMode", false)
 
 	if err := viperInstance.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read config file %s: %v", filePath, err)

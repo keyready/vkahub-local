@@ -1,12 +1,16 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
+	"path/filepath"
+	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/services"
 	"server/pkg/app"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type TeamChatController struct {
@@ -19,31 +23,33 @@ func NewTeamChatController(teamChatService services.TeamChatService) *TeamChatCo
 
 func (teamChatC *TeamChatController) CreateMessage(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var newMessage request.CreateMessage
+	formData := request.WriteMessageForm{}
 
-	bindErr := ctx.ShouldBind(&newMessage)
-	if bindErr != nil {
+	if bindErr := ctx.ShouldBind(&formData); bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	// for _, img := range newMessage.Attachment {
-	// 	img.Filename = "chat-attachments/" + uuid.NewString() + "." + strings.Split(img.Filename, ".")[len(strings.Split(img.Filename, "."))-1]
-	// 	newMessage.AttachmentNames = append(newMessage.AttachmentNames, img.Filename)
-	// 	bodyFile, _ := img.Open()
+	multipartForm, _ := ctx.MultipartForm()
 
-	// 	_, uploadErr := teamChatC.YaCloudClient.PutObject(context.TODO(), &s3.PutObjectInput{
-	// 		Bucket: aws.String(os.Getenv("BUCKET_NAME")),
-	// 		Key:    aws.String(img.Filename),
-	// 		Body:   bodyFile,
-	// 	})
-	// 	if uploadErr != nil {
-	// 		appGin.ErrorResponse(http.StatusInternalServerError, uploadErr)
-	// 	}
-	// }
+	for _, img := range multipartForm.File["attachment"] {
+		fileName := fmt.Sprintf("%s%s", uuid.NewString(), filepath.Ext(img.Filename))
+		img.Filename = fileName
 
-	newMessage.Author = ctx.GetString("username")
-	httpCode, err := teamChatC.teamChatService.CreateMessage(newMessage)
+		savePath := filepath.Join(other.CHAT_ATTACHMENTS_STORAGE, fileName)
+		if saveErr := ctx.SaveUploadedFile(img, savePath); saveErr != nil {
+			appGin.ErrorResponse(
+				http.StatusInternalServerError,
+				saveErr,
+			)
+			return
+		}
+
+		formData.AttachmentNames = append(formData.AttachmentNames, fileName)
+	}
+
+	formData.Author = ctx.GetString("username")
+	httpCode, err := teamChatC.teamChatService.CreateMessage(formData)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 	}

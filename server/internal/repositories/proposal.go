@@ -84,7 +84,7 @@ func (p *ProposalRepositoryImpl) FetchPersonalProposals(FetchProp request.FetchP
 		var user models.UserModel
 		var proposals []models.ProposalModel
 
-		p.DB.Where("username = ?", FetchProp.KtoSmotrit).First(&user)
+		p.DB.Where("username = ?", FetchProp.Observer).First(&user)
 		p.DB.Where("owner_id = ?", user.ID).Find(&proposals)
 
 		for _, proposal := range proposals {
@@ -112,7 +112,7 @@ func (p *ProposalRepositoryImpl) FetchPersonalProposals(FetchProp request.FetchP
 		var team models.TeamModel
 		var owner models.UserModel
 
-		p.DB.Where("username = ?", FetchProp.KtoSmotrit).First(&captain)
+		p.DB.Where("username = ?", FetchProp.Observer).First(&captain)
 		p.DB.Where("captain_id = ?", captain.ID).Find(&team)
 		p.DB.Where("team_id = ?", team.ID).Find(&proposals)
 

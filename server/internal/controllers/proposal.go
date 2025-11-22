@@ -78,8 +78,8 @@ func (pc *ProposalController) FetchPersonalProposals(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
 
 	fetchPropRequest := request.FetchProposalRequest{
-		Type:       ctx.Query("type"),
-		KtoSmotrit: ctx.GetString("username"),
+		Type:     ctx.Query("type"),
+		Observer: ctx.GetString("username"),
 	}
 
 	httpCode, err, data := pc.proposalService.FetchPersonalProposals(fetchPropRequest)

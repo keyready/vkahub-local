@@ -1,7 +1,6 @@
 package jsonwebtoken
 
 import (
-	"server/internal/dto/other"
 	"server/internal/dto/response"
 
 	"time"
@@ -9,17 +8,27 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateTokens(username string) (respLogin response.LoginResponse) {
+type Payload struct {
+	Username string   `json:"username"`
+	Roles    []string `json:"roles"`
+}
 
-	accessClaims := other.JwtClaims{
-		Username: username,
+type JwtClaims struct {
+	jwt.RegisteredClaims
+	Payload Payload
+}
+
+func GenerateTokens(payload Payload) (respLogin response.LoginResponse) {
+
+	accessClaims := JwtClaims{
+		Payload: payload,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(3 * time.Hour)),
 		},
 	}
 
-	refreshClaims := other.JwtClaims{
-		Username: username,
+	refreshClaims := JwtClaims{
+		Payload: payload,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(72 * time.Hour)),
 		},

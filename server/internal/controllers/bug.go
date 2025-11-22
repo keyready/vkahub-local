@@ -1,19 +1,16 @@
 package controllers
 
 import (
-	"server/pkg/app"
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/services"
+	"server/pkg/app"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-)
-
-const (
-	BUGS_STORAGE = "/app/bugs"
 )
 
 type BugController struct {
@@ -51,7 +48,7 @@ func (bc *BugController) AddBug(ctx *gin.Context) {
 		if saveErr := appGin.Ctx.SaveUploadedFile(
 			img,
 			filepath.Join(
-				BUGS_STORAGE,
+				other.BUGS_STORAGE,
 				img.Filename,
 			),
 		); saveErr != nil {

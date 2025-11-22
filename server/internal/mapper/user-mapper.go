@@ -14,6 +14,7 @@ func UserModelToUserData(userModel models.UserModel) (response.UserData, error) 
 	}
 
 	userData := response.UserData{
+		ID:          userModel.ID,
 		Avatar:      userModel.Avatar,
 		CreatedAt:   userModel.CreatedAt,
 		Description: userModel.Description,
@@ -21,7 +22,6 @@ func UserModelToUserData(userModel models.UserModel) (response.UserData, error) 
 		Middlename:  userModel.Middlename,
 		Lastname:    userModel.Lastname,
 		GroupNumber: userModel.GroupNumber,
-		ID:          userModel.ID,
 		Positions:   userModel.Positions,
 		Rank:        userModel.Rank,
 		Roles:       userModel.Roles,

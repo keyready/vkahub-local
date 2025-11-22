@@ -14,7 +14,7 @@ import (
 type TeamChatRepository interface {
 	DeleteMessage(deleteMessage request.DeleteMessage) (httpCode int, err error, attachmentsMessage []string)
 	UpdateMessage(updateMessage request.UpdateMessage) (httpCode int, err error)
-	CreateMessage(createMessage request.CreateMessage) (httpCode int, err error)
+	CreateMessage(createMessage request.WriteMessageForm) (httpCode int, err error)
 }
 
 type TeamChatRepositoryImpl struct {
@@ -25,7 +25,7 @@ func NewTeamChatServiceImpl(db *gorm.DB) TeamChatRepository {
 	return &TeamChatRepositoryImpl{DB: db}
 }
 
-func (tc TeamChatRepositoryImpl) CreateMessage(createMessage request.CreateMessage) (httpCode int, err error) {
+func (tc TeamChatRepositoryImpl) CreateMessage(createMessage request.WriteMessageForm) (httpCode int, err error) {
 	var author models.UserModel
 	tc.DB.Where("username = ?", createMessage.Author).First(&author)
 
@@ -50,7 +50,7 @@ func (tc TeamChatRepositoryImpl) CreateMessage(createMessage request.CreateMessa
 		Attachment: createMessage.AttachmentNames,
 		CreatedAt:  createdAt,
 	}
-	err = tc.DB.Create(&newMessage).Error
+	_ = tc.DB.Create(&newMessage).Error
 
 	if err = tc.DB.
 		Model(&models.TeamChatModel{}).

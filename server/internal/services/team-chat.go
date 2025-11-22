@@ -8,7 +8,7 @@ import (
 type TeamChatService interface {
 	DeleteMessage(deleteMessage request.DeleteMessage) (httpCode int, err error, attachmentsMessage []string)
 	UpdateMessage(updateMessage request.UpdateMessage) (httpCode int, err error)
-	CreateMessage(createMessage request.CreateMessage) (httpCode int, err error)
+	CreateMessage(createMessage request.WriteMessageForm) (httpCode int, err error)
 }
 
 type TeamChatServiceImpl struct {
@@ -19,7 +19,7 @@ func NewTeamChatServiceImpl(teamChatRepository repositories.TeamChatRepository) 
 	return &TeamChatServiceImpl{teamChatRepository: teamChatRepository}
 }
 
-func (teamChatS TeamChatServiceImpl) CreateMessage(createMessage request.CreateMessage) (httpCode int, err error) {
+func (teamChatS TeamChatServiceImpl) CreateMessage(createMessage request.WriteMessageForm) (httpCode int, err error) {
 	httpCode, err = teamChatS.teamChatRepository.CreateMessage(createMessage)
 	return httpCode, err
 }

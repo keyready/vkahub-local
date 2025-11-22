@@ -1,8 +1,7 @@
-client_max_body_size 3M;
-
 server {
     listen 80;
-    server_name ithub.61kaf2021.vka;
+    server_name localhost;
+    # server_name ithub.61kaf2021.vka;
 
     location /db-admin {
         proxy_pass http://localhost:5001;
@@ -65,4 +64,9 @@ server {
         alias /home/rasp/vkahub-local/server/events/;
         try_files $uri $uri/ =404;
     } 
+
+    location /attachments {
+        alias /home/raps/vkahub-local/server/attachments/;
+        try_files $uri $uri/ =404;
+    }
 }
