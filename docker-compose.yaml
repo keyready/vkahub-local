@@ -14,7 +14,7 @@ services:
 
   api:
     build:
-      context: ./server/backend
+      context: ./server
       dockerfile: Dockerfile
     container_name: vkahub-api
     depends_on:
