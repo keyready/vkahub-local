@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 )
 
 type TeamController struct {
@@ -183,18 +182,11 @@ func (tc *TeamController) FetchOneTeamById(ctx *gin.Context) {
 
 func (tc *TeamController) FetchAllTeamsByParams(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	v := validator.New()
 	var FetchAllTeams request.FetchAllTeamsByParamsRequest
 
 	FetchAllTeams.Title = ctx.Query("title")
 	FetchAllTeams.Wanted = ctx.Query("wanted")
 	FetchAllTeams.Members = ctx.Query("members")
-
-	validErr := v.Struct(FetchAllTeams)
-	if validErr != nil {
-		appGin.ErrorResponse(http.StatusBadRequest, validErr)
-		return
-	}
 
 	httpCode, _, data := tc.teamService.FetchAllTeamsByParams(FetchAllTeams)
 
