@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	REPORTS_STORAGE          = "/app/reports"
+	REPORTS_STORAGE          = "/app/static/reports"
 	TEMPLATE_REPORT_FILENAME = "report_template.docx"
 )
 

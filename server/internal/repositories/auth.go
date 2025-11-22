@@ -68,7 +68,7 @@ func (a *AuthRepositoryImpl) MailConfirm(uniqueLink string) (httpCode int, err e
 	}
 
 	mailUser.Roles = append(mailUser.Roles, "mailConfirmed")
-	mailUser.IsMailConfirmed = true
+	// mailUser.IsMailConfirmed = true
 	a.Db.Save(&mailUser)
 
 	var firstPersonalAchievement models.PersonalAchievementModel
@@ -109,7 +109,7 @@ func (a *AuthRepositoryImpl) SignUp(signUp request.SignUpRequest) (httpCode int,
 		Username:    signUp.Username,
 		Password:    hashPassword,
 		Avatar:      signUp.Avatar.Filename,
-		ConfirmLink: signUp.ConfirmLink,
+		// ConfirmLink: signUp.ConfirmLink,
 		Roles:       []string{"user", "mailConfirmed"},
 		Portfolio:   datatypes.JSON([]byte(`[]`)),
 		Skills:      []string{},

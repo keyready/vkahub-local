@@ -22,16 +22,16 @@ type UserModel struct {
 
 	Rank        string `json:"rank"`
 	GroupNumber string `json:"group_number"`
-	TgUsername  string `json:"tg_username"`
+	// TgUsername  string `json:"tg_username"`
 
 	IsProfileConfirmed bool `gorm:"default:false" json:"is_profile_confirmed"`
-	IsMailConfirmed    bool `gorm:"default:false" json:"is_mail_confirmed"`
+	// IsMailConfirmed    bool `gorm:"default:false" json:"is_mail_confirmed"`
 
 	TeamId    int64          `gorm:"default:0" json:"teamId"`
 	Positions pq.StringArray `gorm:"type:varchar[]" json:"positions"`
 
 	RefreshToken string `json:"refresh_token"`
-	ConfirmLink  string `json:"confirm_link"`
+	// ConfirmLink  string `json:"confirm_link"`
 
 	Skills pq.StringArray `gorm:"type:varchar[]" json:"skills"`
 

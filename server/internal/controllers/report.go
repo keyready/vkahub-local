@@ -3,7 +3,6 @@ package controllers
 import (
 	"net/http"
 	"path/filepath"
-	"server/internal/dto/other"
 	"server/internal/services"
 	"server/pkg/app"
 	"strconv"
@@ -29,7 +28,7 @@ func (rc *ReportController) GenerateReport(ctx *gin.Context) {
 		return
 	}
 
-	reportPath := filepath.Join(other.REPORTS_STORAGE, reportName)
-	
+	reportPath := filepath.Join("/app/static/reports", reportName)
+
 	ctx.JSON(http.StatusOK, gin.H{"reportName": reportPath})
 }

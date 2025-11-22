@@ -74,7 +74,7 @@ func (u *UserRepositoryImpl) DeletePortfolio(certificateName, ownerName string) 
 
 	u.Db.Save(&owner)
 
-	filePath := filepath.Join("/app/certificates", certificateName)
+	filePath := filepath.Join(other.CERTIFICATES_STORAGE, certificateName)
 	err = os.Remove(filePath)
 	if err != nil {
 		return http.StatusInternalServerError, fmt.Errorf("failed to delete file: %v", err)
@@ -107,7 +107,7 @@ func (u *UserRepositoryImpl) AddPortfolio(addPortfolio request.AddPortfolioForm,
 			Name:      certName,
 			EventName: addPortfolio.EventName,
 			Place:     addPortfolio.Place,
-			Url:       fmt.Sprintf("/app/certificates/%s", certName),
+			Url:       filepath.Join(other.CERTIFICATES_STORAGE, certName),
 			Type:      t,
 		}
 
@@ -302,7 +302,6 @@ func (u *UserRepositoryImpl) FetchAllMembersByParams(fetchAllMembersRequest requ
 	sqlQuery := u.Db.
 		Model(&models.UserModel{}).
 		Where("is_profile_confirmed = ?", true)
-		// Where("is_mail_confirmed = ?", true)
 
 	if fetchAllMembersRequest.IsMember == "false" {
 		sqlQuery.Where("team_id = ?", 0)
