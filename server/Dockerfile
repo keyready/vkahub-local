@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS builder
+FROM golang:1.25.4-alpine AS builder
 
 WORKDIR /build
 
@@ -21,3 +21,5 @@ COPY --from=builder /build/configs /app/configs
 COPY --from=builder /build/reports /app/reports
 
 ENTRYPOINT ["/app/main","--config-path=/app/configs/production.yaml"]
+
+EXPOSE 5000
