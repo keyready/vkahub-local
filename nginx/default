@@ -36,37 +36,37 @@ server {
     }
 
     location /certificates {
-        alias /home/rasp/vkahub-local/server/certificates/;
+        alias /home/rasp/vkahub-local/server/static/certificates/;
         try_files $uri $uri/ =404;
     }
 
     location /reports {
-        alias /home/rasp/vkahub-local/server/reports/;
+        alias /home/rasp/vkahub-local/server/static/reports/;
         try_files $uri $uri/ =404;
     }
 
     location /user-avatars {
-        alias /home/rasp/vkahub-local/server/user-avatars/;
+        alias /home/rasp/vkahub-local/server/static/user-avatars/;
         try_files $uri $uri/ =404;
     }
 
     location /team-images {
-        alias /home/rasp/vkahub-local/server/team-images/;
+        alias /home/rasp/vkahub-local/server/static/team-images/;
         try_files $uri $uri/ =404;
     } 
 
     location /bugs {
-        alias /home/rasp/vkahub-local/server/bugs/;
+        alias /home/rasp/vkahub-local/server/static/bugs/;
         try_files $uri $uri/ =404;
     } 
 
     location /events {
-        alias /home/rasp/vkahub-local/server/events/;
+        alias /home/rasp/vkahub-local/server/static/events/;
         try_files $uri $uri/ =404;
     } 
 
     location /attachments {
-        alias /home/raps/vkahub-local/server/attachments/;
+        alias /home/raps/vkahub-local/server/static/attachments/;
         try_files $uri $uri/ =404;
     }
 }

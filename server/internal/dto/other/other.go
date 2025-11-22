@@ -1,13 +1,17 @@
 package other
 
-const (
-	USER_AVATARS_STORAGE     = "/app/user-avatars"
-	BUGS_STORAGE             = "/app/bugs"
-	EVENTS_STORAGE           = "/app/events"
-	REPORTS_STORAGE          = "/app/reports"
-	CERTIFICATES_STORAGE     = "/app/certificates"
-	TEAM_IMAGES_STORAGE      = "/app/team-images"
-	CHAT_ATTACHMENTS_STORAGE = "/app/attachments"
+import "path/filepath"
+
+const BASE_DIR = "/app/static"
+
+var (
+	USER_AVATARS_STORAGE     = filepath.Join(BASE_DIR, "user-avatars")
+	BUGS_STORAGE             = filepath.Join(BASE_DIR, "bugs")
+	EVENTS_STORAGE           = filepath.Join(BASE_DIR, "events")
+	REPORTS_STORAGE          = filepath.Join(BASE_DIR, "reports")
+	CERTIFICATES_STORAGE     = filepath.Join(BASE_DIR, "certificates")
+	TEAM_IMAGES_STORAGE      = filepath.Join(BASE_DIR, "team-images")
+	CHAT_ATTACHMENTS_STORAGE = filepath.Join(BASE_DIR, "attachments")
 )
 
 type ConfirmCode struct {
