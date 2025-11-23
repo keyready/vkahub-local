@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"server/pkg/app"
-	"server/pkg/utils/jsonwebtoken"
+	"server/pkg/jsonwebtoken"
 	"strings"
 	"time"
 

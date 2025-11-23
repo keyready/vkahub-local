@@ -3,7 +3,6 @@ package database
 import (
 	"log"
 	"server/internal/models"
-	"server/internal/utils"
 
 	"github.com/golang-migrate/migrate/v4"
 	"gorm.io/driver/postgres"
@@ -18,7 +17,7 @@ func DatabaseConnect(
 	dbCfg *Config,
 	migrationsCfg *MigrationsConfig,
 ) *gorm.DB {
-	dsn := utils.BuildConnectDSN(
+	dsn := BuildConnectDSN(
 		dbCfg.Host,
 		dbCfg.Username,
 		dbCfg.Password,

@@ -1,4 +1,4 @@
-package hash
+package utils
 
 import "golang.org/x/crypto/bcrypt"
 
@@ -8,9 +8,7 @@ func GenerateHash(plainText string) (string, error) {
 		return "", err
 	}
 
-	hashText := string(bytes)
-
-	return hashText, nil
+	return string(bytes), nil
 }
 
 func CompareHash(hashText string, plainText string) bool {

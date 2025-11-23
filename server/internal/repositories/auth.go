@@ -7,8 +7,8 @@ import (
 	"server/internal/dto/request"
 	"server/internal/dto/response"
 	"server/internal/models"
-	"server/pkg/utils/hash"
-	"server/pkg/utils/jsonwebtoken"
+	"server/internal/utils"
+	"server/pkg/jsonwebtoken"
 
 	"gorm.io/gorm"
 )
@@ -72,7 +72,7 @@ func (a *AuthRepositoryImpl) SignUp(signUp request.SignUpRequest, avatarName str
 		return http.StatusBadRequest, errors.New("User with this username or mail already exists")
 	}
 
-	hashPassword, _ := hash.GenerateHash(signUp.Password)
+	hashPassword, _ := utils.GenerateHash(signUp.Password)
 	a.Db.Create(&models.UserModel{
 		Username: signUp.Username,
 		Password: hashPassword,
@@ -92,7 +92,7 @@ func (a *AuthRepositoryImpl) Login(login request.LoginRequest) (httpCode int, er
 		return http.StatusNotFound, errors.New("User not found")
 	}
 
-	verifyPasswd := hash.CompareHash(loginUser.Password, login.Password)
+	verifyPasswd := utils.CompareHash(loginUser.Password, login.Password)
 	if !verifyPasswd {
 		return http.StatusBadRequest, errors.New("Invalid password")
 	}

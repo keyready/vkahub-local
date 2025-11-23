@@ -8,7 +8,7 @@ import (
 	"server/internal/dto/request"
 	"server/internal/services"
 	"server/pkg/app"
-	"server/pkg/utils/jsonwebtoken"
+	"server/pkg/jsonwebtoken"
 	"strings"
 
 	"github.com/gin-gonic/gin"
