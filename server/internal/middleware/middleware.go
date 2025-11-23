@@ -39,7 +39,6 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		ctx.Set("username", claims.Payload.Username)
-		ctx.Set("roles", claims.Payload.Roles)
 
 		ctx.Next()
 	}

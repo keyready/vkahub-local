@@ -22,26 +22,23 @@ type UserModel struct {
 
 	Rank        string `json:"rank"`
 	GroupNumber string `json:"group_number"`
-	// TgUsername  string `json:"tg_username"`
 
 	IsProfileConfirmed bool `gorm:"default:false" json:"is_profile_confirmed"`
-	// IsMailConfirmed    bool `gorm:"default:false" json:"is_mail_confirmed"`
 
-	TeamId    int64          `gorm:"default:0" json:"teamId"`
-	Positions pq.StringArray `gorm:"type:varchar[]" json:"positions"`
+	TeamId int64 `gorm:"default:0" json:"teamId"`
 
 	RefreshToken string `json:"refresh_token"`
-	// ConfirmLink  string `json:"confirm_link"`
 
-	Skills pq.StringArray `gorm:"type:varchar[]" json:"skills"`
+	Positions pq.StringArray `gorm:"type:varchar[];default:'{}'" json:"positions"`
+	Skills    pq.StringArray `gorm:"type:varchar[];default:'{}'" json:"skills"`
 
-	Roles pq.StringArray `gorm:"type:varchar[]" json:"roles"`
+	Roles pq.StringArray `gorm:"type:varchar[];default:'{\"user\",\"mailConfirmed\"}'" json:"roles"`
 
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 	MemberSince time.Time `json:"memberSince"`
 
-	Portfolio datatypes.JSON `gorm:"type:jsonb" json:"-"`
+	Portfolio datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"-"`
 
 	LastOnline time.Time `json:"lastOnline"`
 }

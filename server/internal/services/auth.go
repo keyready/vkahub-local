@@ -8,8 +8,7 @@ import (
 )
 
 type AuthService interface {
-	SignUp(singUp request.SignUpRequest) (httpCode int, err error)
-	MailConfirm(code string) (httpCode int, err error)
+	SignUp(singUp request.SignUpRequest, avatarName string) (httpCode int, err error)
 	Login(login request.LoginRequest) (httpCode int, err error)
 	RefreshToken(refreshToken string) (data response.LoginResponse, err error)
 	Logout(username string) (httpCode int, err error)
@@ -27,13 +26,8 @@ func NewAuthServiceImpl(authRepository repositories.AuthRepository) AuthService 
 	}
 }
 
-func (a AuthServiceImpl) SignUp(signUp request.SignUpRequest) (httpCode int, err error) {
-	httpCode, err = a.AuthRepository.SignUp(signUp)
-	return httpCode, err
-}
-
-func (a AuthServiceImpl) MailConfirm(code string) (httpCode int, err error) {
-	httpCode, err = a.AuthRepository.MailConfirm(code)
+func (a AuthServiceImpl) SignUp(signUp request.SignUpRequest, avatarName string) (httpCode int, err error) {
+	httpCode, err = a.AuthRepository.SignUp(signUp, avatarName)
 	return httpCode, err
 }
 

@@ -5,3 +5,8 @@ database:
   port: 5432
   databaseName: vkahub
   sslMode: false
+
+migrations:
+  enable: true
+  connUri: postgres://postgres:postgres@db:5432/vkahub?sslmode=disable
+  dirUrl: file:///app/migrations

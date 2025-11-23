@@ -9,8 +9,7 @@ import (
 )
 
 type Payload struct {
-	Username string   `json:"username"`
-	Roles    []string `json:"roles"`
+	Username string `json:"username"`
 }
 
 type JwtClaims struct {

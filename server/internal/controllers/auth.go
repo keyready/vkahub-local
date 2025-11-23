@@ -13,7 +13,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 )
 
 type AuthController struct {
@@ -36,25 +35,32 @@ func (ac *AuthController) SignUp(ctx *gin.Context) {
 		return
 	}
 
-	confirmLink := uuid.NewString()
-	formData.ConfirmLink = confirmLink
+	multipartForm, err := ctx.MultipartForm()
+	if err != nil {
+		appGin.ErrorResponse(
+			http.StatusBadRequest,
+			err,
+		)
+		return
+	}
+	avatar := multipartForm.File["avatar"][0]
 
-	fileName := fmt.Sprintf(
+	avatarName := fmt.Sprintf(
 		"%s_%s_%s",
 		formData.Username,
 		"avatar",
-		strings.ReplaceAll(formData.Avatar.Filename, " ", "_"),
+		strings.ReplaceAll(avatar.Filename, " ", "_"),
 	)
-	formData.Avatar.Filename = fileName
+	avatar.Filename = avatarName
 
-	httpCode, serviceErr := ac.authService.SignUp(formData)
+	httpCode, serviceErr := ac.authService.SignUp(formData, avatarName)
 	if serviceErr != nil {
 		appGin.ErrorResponse(httpCode, serviceErr)
 		return
 	}
 
-	savePath := filepath.Join(other.USER_AVATARS_STORAGE, fileName)
-	if saveErr := appGin.Ctx.SaveUploadedFile(formData.Avatar, savePath); saveErr != nil {
+	savePath := filepath.Join(other.USER_AVATARS_STORAGE, avatarName)
+	if saveErr := appGin.Ctx.SaveUploadedFile(avatar, savePath); saveErr != nil {
 		appGin.ErrorResponse(
 			http.StatusInternalServerError,
 			saveErr,
@@ -83,7 +89,6 @@ func (ac *AuthController) Login(ctx *gin.Context) {
 
 	payload := jsonwebtoken.Payload{
 		Username: jsonForm.Username,
-		Roles:    []string{},
 	}
 
 	tokens := jsonwebtoken.GenerateTokens(payload)

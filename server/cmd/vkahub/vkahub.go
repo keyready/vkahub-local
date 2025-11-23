@@ -25,7 +25,10 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	db := database.DatabaseConnect(&serviceConfig.Database)
+	db := database.DatabaseConnect(
+		&serviceConfig.Database,
+		&serviceConfig.Migrations,
+	)
 
 	router := routers.InitRouter(db)
 

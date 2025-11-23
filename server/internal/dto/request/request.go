@@ -6,10 +6,8 @@ import (
 )
 
 type SignUpRequest struct {
-	Username    string                `form:"username"`
-	Password    string                `form:"password"`
-	Avatar      *multipart.FileHeader `form:"avatar"`
-	ConfirmLink string
+	Username string `form:"username"`
+	Password string `form:"password"`
 }
 
 type LoginRequest struct {
