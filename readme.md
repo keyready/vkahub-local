@@ -24,6 +24,10 @@ migrations:
   enable: true
   connUri: postgres://postgres:postgres@db:5432/vkahub?sslmode=disable
   dirUrl: file:///app/migrations
+
+authorizer:
+  accessSecretKey: access-secret-key
+  refreshSecretKey: refresh-secret-key
 ```
 
 ```env

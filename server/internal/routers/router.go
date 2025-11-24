@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"server/internal/authorizer"
 	"server/internal/controllers"
 	"server/internal/gocron"
 	"server/internal/repositories"
@@ -9,11 +10,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron"
-	_ "github.com/robfig/cron"
 	"gorm.io/gorm"
 )
 
-func InitRouter(db *gorm.DB) *gin.Engine {
+func InitRouter(
+	db *gorm.DB,
+	jwtService *authorizer.Authorizer,
+) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
@@ -26,17 +29,17 @@ func InitRouter(db *gorm.DB) *gin.Engine {
 	authRepo := repositories.NewAuthRepositoryImpl(db)
 	authService := services.NewAuthServiceImpl(authRepo)
 	authCtrl := controllers.NewAuthController(authService)
-	v1.NewAuthRouters(r, authCtrl)
+	v1.NewAuthRouters(r, jwtService, authCtrl)
 
 	teamRepo := repositories.NewTeamRepositoryImpl(db)
 	teamService := services.NewTeamServiceImpl(teamRepo)
 	teamCtrl := controllers.NewTeamController(teamService)
-	v1.NewTeamRouters(r, teamCtrl)
+	v1.NewTeamRouters(r, jwtService, teamCtrl)
 
 	userRepo := repositories.NewUserRepositoryImpl(db)
 	userService := services.NewUserServiceImpl(userRepo)
 	userCtrl := controllers.NewUserControllers(userService)
-	v1.NewUserRouters(r, userCtrl)
+	v1.NewUserRouters(r, jwtService, userCtrl)
 
 	r.GET("/ws/online", userCtrl.GetOnlineUsers)
 	r.GET("/ws/notifications", userCtrl.SendNotifications)
@@ -45,52 +48,52 @@ func InitRouter(db *gorm.DB) *gin.Engine {
 	proposalRepo := repositories.NewProposalRepositoryImpl(db)
 	proposalService := services.NewProposalServiceImpl(proposalRepo)
 	proposalCtrl := controllers.NewProposalControllers(proposalService)
-	v1.NewProposalRouters(r, proposalCtrl)
+	v1.NewProposalRouters(r, jwtService, proposalCtrl)
 
 	eventRepo := repositories.NewEventRepositoryImpl(db)
 	eventService := services.NewEventServiceImpl(eventRepo)
 	eventCtrl := controllers.NewEventController(eventService)
-	v1.NewEventRouters(r, eventCtrl)
+	v1.NewEventRouters(r, jwtService, eventCtrl)
 
 	trackRepo := repositories.NewTrackRepositoryImpl(db)
 	trackService := services.NewTrackServiceImpl(trackRepo)
 	trackCtrl := controllers.NewTrackController(trackService)
-	v1.NewTrackRouters(r, trackCtrl)
+	v1.NewTrackRouters(r, jwtService, trackCtrl)
 
 	achievementRepo := repositories.NewAchievementRepositoryImpl(db)
 	achievementService := services.NewAcServiceImpl(achievementRepo)
 	achievementCtrl := controllers.NewAchievementController(achievementService)
-	v1.NewAchievementRoutes(r, achievementCtrl)
+	v1.NewAchievementRoutes(r, jwtService, achievementCtrl)
 
 	skillRepo := repositories.NewSkillRepositoryImpl(db)
-	ss := services.NewSkillServiceImpl(skillRepo)
-	sc := controllers.NewSkillControllers(ss)
-	v1.NewSkillRoutes(r, sc)
+	skillService := services.NewSkillServiceImpl(skillRepo)
+	skillCtrl := controllers.NewSkillControllers(skillService)
+	v1.NewSkillRoutes(r, jwtService, skillCtrl)
 
 	positionRepo := repositories.NewPositionRepImpl(db)
 	positionService := services.NewPosServiceImpl(positionRepo)
 	positionCtrl := controllers.NewPositionController(positionService)
-	v1.NewPositionsRoutes(r, positionCtrl)
+	v1.NewPositionsRoutes(r, jwtService, positionCtrl)
 
 	reportRepo := repositories.NewReportRepositoryImpl(db)
 	reportService := services.NewReportServiceImpl(reportRepo)
 	reportCtrl := controllers.NewReportControllers(reportService)
-	v1.NewReportRoutes(r, reportCtrl)
+	v1.NewReportRoutes(r, jwtService, reportCtrl)
 
 	bugRepo := repositories.NewBugRepositoryImpl(db)
 	bugService := services.NewBugServiceImpl(bugRepo)
 	bugCtrl := controllers.NewBugControllers(bugService)
-	v1.NewBugRoutes(r, bugCtrl)
+	v1.NewBugRoutes(r, jwtService, bugCtrl)
 
 	feedbackRepo := repositories.NewFeedbackImpl(db)
 	feedbackService := services.NewFeedbackServiceImpl(feedbackRepo)
 	feedbackCtrl := controllers.NewFeedbackController(feedbackService)
-	v1.NewFeedbackRoutes(r, feedbackCtrl)
+	v1.NewFeedbackRoutes(r, jwtService, feedbackCtrl)
 
 	teamChatRep := repositories.NewTeamChatServiceImpl(db)
 	teamCharSer := services.NewTeamChatServiceImpl(teamChatRep)
 	teamChatC := controllers.NewTeamChatController(teamCharSer)
-	v1.NewTeamChatRoutes(r, teamChatC)
+	v1.NewTeamChatRoutes(r, jwtService, teamChatC)
 
 	return r
 }

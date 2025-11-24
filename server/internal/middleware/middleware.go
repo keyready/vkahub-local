@@ -3,16 +3,14 @@ package middleware
 import (
 	"errors"
 	"net/http"
+	"server/internal/authorizer"
 	"server/pkg/app"
-	"server/pkg/jsonwebtoken"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(jwtService *authorizer.Authorizer) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		appGin := app.Gin{Ctx: ctx}
 
@@ -24,17 +22,12 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		accessTokenString := strings.Split(authHeader, " ")[1]
 
-		claims := &jsonwebtoken.JwtClaims{}
-		token, err := jwt.ParseWithClaims(accessTokenString, claims, func(t *jwt.Token) (interface{}, error) {
-			expTime, _ := claims.GetExpirationTime()
-			if time.Now().Unix() > expTime.Unix() {
-				return nil, jwt.ErrTokenExpired
-			}
-			return []byte(`access-secret-key`), nil
-		})
-
-		if err != nil || !token.Valid {
-			appGin.ErrorResponse(http.StatusUnauthorized, err)
+		claims, err := jwtService.Authorizer.ValidateToken(accessTokenString)
+		if err != nil {
+			appGin.ErrorResponse(
+				http.StatusUnauthorized,
+				err,
+			)
 			return
 		}
 

@@ -1,16 +1,16 @@
 package services
 
 import (
+	"server/internal/authorizer"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
-	"server/internal/dto/response"
 	"server/internal/repositories"
 )
 
 type AuthService interface {
 	SignUp(singUp request.SignUpRequest, avatarName string) (httpCode int, err error)
 	Login(login request.LoginRequest) (httpCode int, err error)
-	RefreshToken(refreshToken string) (data response.LoginResponse, err error)
+	RefreshToken(refreshToken string) (data authorizer.TokensResponse, err error)
 	Logout(username string) (httpCode int, err error)
 	ResetPassword(mail string) (httpCode int, err error)
 	RecoveryPassword(RecoveryPass other.RecoveryPassword) (httpCode int, err error)
@@ -36,7 +36,7 @@ func (a AuthServiceImpl) Login(login request.LoginRequest) (httpCode int, err er
 	return httpCode, err
 }
 
-func (a AuthServiceImpl) RefreshToken(refreshToken string) (response.LoginResponse, error) {
+func (a AuthServiceImpl) RefreshToken(refreshToken string) (authorizer.TokensResponse, error) {
 	tokens, err := a.AuthRepository.RefreshToken(refreshToken)
 	return tokens, err
 }

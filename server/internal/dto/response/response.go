@@ -7,11 +7,6 @@ import (
 	"github.com/lib/pq"
 )
 
-type LoginResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
-
 type FetchProposalEntityResponse struct {
 	ID        int64  `json:"id"`
 	Type      string `json:"type"`
@@ -35,12 +30,6 @@ type FetchAllAchievementResponse struct {
 	TrackId   int64  `json:"trackId"`
 
 	Result string `json:"result"`
-}
-
-type ExtractDateResponse struct {
-	Year  string
-	Month string
-	Day   string
 }
 
 type FetchPersonalAchievementResponse struct {

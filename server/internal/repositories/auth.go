@@ -3,12 +3,11 @@ package repositories
 import (
 	"errors"
 	"net/http"
+	"server/internal/authorizer"
 	"server/internal/database"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
-	"server/internal/dto/response"
 	"server/internal/utils"
-	"server/pkg/jsonwebtoken"
 
 	"gorm.io/gorm"
 )
@@ -16,14 +15,15 @@ import (
 type AuthRepository interface {
 	SignUp(signUp request.SignUpRequest, avatarName string) (httpCode int, err error)
 	Login(login request.LoginRequest) (httpCode int, err error)
-	RefreshToken(refreshToken string) (tokens response.LoginResponse, err error)
+	RefreshToken(refreshToken string) (tokens authorizer.TokensResponse, err error)
 	Logout(username string) (httpCode int, err error)
 	ResetPassword(mail string) (httpCode int, err error)
 	RecoveryPassword(RecPasswdReq other.RecoveryPassword) (httpCode int, err error)
 }
 
 type AuthRepositoryImpl struct {
-	Db *gorm.DB
+	Db      *gorm.DB
+	jwtServ *authorizer.Authorizer
 }
 
 func NewAuthRepositoryImpl(Db *gorm.DB) AuthRepository {
@@ -40,12 +40,6 @@ func (a *AuthRepositoryImpl) RecoveryPassword(RecPasswdReq other.RecoveryPasswor
 	// })
 	// if err != nil {
 	// 	return http.StatusInternalServerError, err
-	// }
-
-	// userMail := claims.Mail
-	// err = a.Db.Where("mail = ?", userMail).First(&recPasswdUser).Error
-	// if err != nil {
-	// 	return http.StatusNotFound, err
 	// }
 
 	// hashPassword, _ := hash.HashData(RecPasswdReq.Password)
@@ -103,7 +97,7 @@ func (a *AuthRepositoryImpl) Login(login request.LoginRequest) (httpCode int, er
 	return http.StatusOK, nil
 }
 
-func (a *AuthRepositoryImpl) RefreshToken(refreshToken string) (tokens response.LoginResponse, err error) {
+func (a *AuthRepositoryImpl) RefreshToken(refreshToken string) (tokens authorizer.TokensResponse, err error) {
 	var tmpUser database.UserModel
 
 	err = a.Db.Where("refresh_token = ?", refreshToken).First(&tmpUser).Error
@@ -111,11 +105,11 @@ func (a *AuthRepositoryImpl) RefreshToken(refreshToken string) (tokens response.
 		return tokens, err
 	}
 
-	payload := jsonwebtoken.Payload{
+	payload := authorizer.Payload{
 		Username: tmpUser.Username,
 	}
 
-	tokens = jsonwebtoken.GenerateTokens(payload)
+	tokens = a.jwtServ.Authorizer.GenerateTokens(payload)
 
 	tmpUser.RefreshToken = tokens.RefreshToken
 	a.Db.Save(&tmpUser)

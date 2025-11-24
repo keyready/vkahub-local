@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"server/internal/authorizer"
 	"server/internal/database"
 
 	"github.com/spf13/viper"
@@ -10,6 +11,7 @@ import (
 type VkaHubConfig struct {
 	Database   database.Config           `mapstructure:"database"`
 	Migrations database.MigrationsConfig `mapstructure:"migrations"`
+	Authorizer authorizer.Config         `mapstructure:"authorizer"`
 }
 
 func FromFile(filePath string) (*VkaHubConfig, error) {
@@ -29,6 +31,9 @@ func FromFile(filePath string) (*VkaHubConfig, error) {
 	viperInstance.SetDefault("migrations.connUri", "postgres://postgres:postgres@db:5432/vkahub?sslmode=disable")
 	viperInstance.SetDefault("migrations.enable", true)
 	viperInstance.SetDefault("migrations.dirUrl", "file:///app/migrations")
+
+	viperInstance.SetDefault("authorizer.accessSecretKey", "access-secret-key")
+	viperInstance.SetDefault("authorizer.refreshSecretKey", "refresh-secret-key")
 
 	if err := viperInstance.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read config file %s: %v", filePath, err)

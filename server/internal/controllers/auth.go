@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"server/internal/authorizer"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/services"
 	"server/pkg/app"
-	"server/pkg/jsonwebtoken"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -17,6 +17,7 @@ import (
 
 type AuthController struct {
 	authService services.AuthService
+	jwtService  *authorizer.Authorizer
 }
 
 func NewAuthController(service services.AuthService) *AuthController {
@@ -87,11 +88,11 @@ func (ac *AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
-	payload := jsonwebtoken.Payload{
+	payload := authorizer.Payload{
 		Username: jsonForm.Username,
 	}
 
-	tokens := jsonwebtoken.GenerateTokens(payload)
+	tokens := ac.jwtService.Authorizer.GenerateTokens(payload)
 
 	appGin.SuccessResponse(httpCode, tokens)
 }

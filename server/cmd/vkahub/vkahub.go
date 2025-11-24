@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"server/cmd"
+	"server/internal/authorizer"
 	"server/internal/database"
 	"server/internal/routers"
 	"syscall"
@@ -30,7 +31,9 @@ func main() {
 		&serviceConfig.Migrations,
 	)
 
-	router := routers.InitRouter(db)
+	jwtService := authorizer.New(&serviceConfig.Authorizer)
+
+	router := routers.InitRouter(db, jwtService)
 
 	go awaitSystemSignals(cancel)
 
