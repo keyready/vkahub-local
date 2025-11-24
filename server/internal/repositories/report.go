@@ -52,7 +52,7 @@ func (r ReportRepositoryImpl) GenerateReport(eventId int64) (httpCode int, err e
 	}
 
 	participantsTeams := []database.TeamModel{}
-	r.DB.Where("id = 1").Find(&participantsTeams)
+	r.DB.Where("id IN ?",event.ParticipantsTeamsIds).Find(&participantsTeams)
 
 	replacements["EventLocation"] = participantsTeams[0].EventLocation
 
@@ -72,16 +72,16 @@ func (r ReportRepositoryImpl) GenerateReport(eventId int64) (httpCode int, err e
 		replacements[fmt.Sprintf("GroupNumber%s", strconv.Itoa((index+1)))] = member.GroupNumber
 	}
 
-	tmplReportFilePath := filepath.Join(REPORTS_STORAGE, TEMPLATE_REPORT_FILENAME)
+	tmplReportFilePath := filepath.Join(REPORTS_STORAGE, "template",TEMPLATE_REPORT_FILENAME)
 	doc, err := docx.Open(tmplReportFilePath)
 	if err != nil {
 		return http.StatusInternalServerError, fmt.Errorf("failed to open template report: %v", err), ""
 	}
 
-	err = doc.ReplaceAll(replacements)
-	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("failed to replace template report: %v", err), ""
-	}
+	_ = doc.ReplaceAll(replacements)
+	// if err != nil  {
+		// return http.StatusInternalServerError, fmt.Errorf("failed to replace template report: %v", err), ""
+	// }
 
 	log.Print(replacements)
 
