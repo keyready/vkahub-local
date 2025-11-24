@@ -52,35 +52,44 @@ func (r ReportRepositoryImpl) GenerateReport(eventId int64) (httpCode int, err e
 	}
 
 	participantsTeams := []database.TeamModel{}
-	r.DB.Where("id IN ?",event.ParticipantsTeamsIds).Find(&participantsTeams)
+	var participantsTeamsIds []int64
+	for _, teamID := range event.ParticipantsTeamsIds {
+		participantsTeamsIds = append(participantsTeamsIds, teamID)
+	}
+	r.DB.Where("id IN ?", participantsTeamsIds).Find(&participantsTeams)
 
-	replacements["EventLocation"] = participantsTeams[0].EventLocation
+	for num, team := range participantsTeams {
+		replacements[fmt.Sprintf("TeamNumber%d", num+1)] = num + 1
+		replacements[fmt.Sprintf("TeamTitle%d", num+1)] = team.Title
+		replacements[fmt.Sprintf("EventLocation%d", num+1)] = team.EventLocation
 
-	teamMembers := []database.UserModel{}
-	var memberIDs []int64
-	for _, memberID := range participantsTeams[0].MembersId {
-		memberIDs = append(memberIDs, memberID)
+		teamMembers := []database.UserModel{}
+		var memberIDs []int64
+		for _, memberID := range team.MembersId {
+			memberIDs = append(memberIDs, memberID)
+		}
+
+		r.DB.Where("id IN ?", memberIDs).Find(&teamMembers)
+
+		for index, member := range teamMembers {
+			replacements[fmt.Sprintf("Rank%d_%d", num+1, index+1)] = member.Rank
+			replacements[fmt.Sprintf("Lastname%d_%d", num+1, index+1)] = member.Lastname
+			replacements[fmt.Sprintf("Firstname%d_%d", num+1, index+1)] = string([]rune(member.Firstname)[0])
+			replacements[fmt.Sprintf("Middlename%d_%d", num+1, index+1)] = string([]rune(member.Middlename)[0])
+			replacements[fmt.Sprintf("GroupNumber%d_%d", num+1, index+1)] = member.GroupNumber
+		}
 	}
 
-	r.DB.Where("id IN ?", memberIDs).Find(&teamMembers)
-
-	for index, member := range teamMembers {
-		replacements[fmt.Sprintf("Rank%s", strconv.Itoa((index+1)))] = member.Rank
-		replacements[fmt.Sprintf("Lastname%s", strconv.Itoa((index+1)))] = member.Lastname
-		replacements[fmt.Sprintf("Firstname%s", strconv.Itoa((index+1)))] = string([]rune(member.Firstname)[0])
-		replacements[fmt.Sprintf("Middlename%s", strconv.Itoa((index+1)))] = string([]rune(member.Middlename)[0])
-		replacements[fmt.Sprintf("GroupNumber%s", strconv.Itoa((index+1)))] = member.GroupNumber
-	}
-
-	tmplReportFilePath := filepath.Join(REPORTS_STORAGE, "template",TEMPLATE_REPORT_FILENAME)
+	tmplReportFilePath := filepath.Join(REPORTS_STORAGE, "template", TEMPLATE_REPORT_FILENAME)
 	doc, err := docx.Open(tmplReportFilePath)
 	if err != nil {
 		return http.StatusInternalServerError, fmt.Errorf("failed to open template report: %v", err), ""
 	}
+	defer doc.Close()
 
 	_ = doc.ReplaceAll(replacements)
 	// if err != nil  {
-		// return http.StatusInternalServerError, fmt.Errorf("failed to replace template report: %v", err), ""
+	// return http.StatusInternalServerError, fmt.Errorf("failed to replace template report: %v", err), ""
 	// }
 
 	log.Print(replacements)
