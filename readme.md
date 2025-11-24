@@ -24,6 +24,9 @@ migrations:
   enable: true
   connUri: postgres://postgres:postgres@db:5432/vkahub?sslmode=disable
   dirUrl: file:///app/migrations
+  mock: 
+    enable: false
+    dirUrl: file:///app/mock
 
 authorizer:
   accessSecretKey: access-secret-key

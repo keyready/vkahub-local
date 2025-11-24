@@ -12,7 +12,6 @@ type VkaHubConfig struct {
 	Database   database.Config           `mapstructure:"database"`
 	Migrations database.MigrationsConfig `mapstructure:"migrations"`
 	Authorizer authorizer.Config         `mapstructure:"authorizer"`
-	Mock       database.MockConfig       `mapstructure:"mock"`
 }
 
 func FromFile(filePath string) (*VkaHubConfig, error) {
@@ -32,7 +31,9 @@ func FromFile(filePath string) (*VkaHubConfig, error) {
 	viperInstance.SetDefault("migrations.connUri", "postgres://postgres:postgres@db:5432/vkahub?sslmode=disable")
 	viperInstance.SetDefault("migrations.enable", true)
 	viperInstance.SetDefault("migrations.dirUrl", "file:///app/migrations")
-	viperInstance.SetDefault("migrations.mockRun", false)
+
+	viperInstance.SetDefault("migrations.mock.enable", false)
+	viperInstance.SetDefault("migrations.mock.dirUrl", "file:///app/mock")
 
 	viperInstance.SetDefault("authorizer.accessSecretKey", "access-secret-key")
 	viperInstance.SetDefault("authorizer.refreshSecretKey", "refresh-secret-key")

@@ -22,7 +22,7 @@ func main() {
 	db := database.DatabaseConnect(
 		&serviceConfig.Database,
 		&serviceConfig.Migrations,
-		&serviceConfig.Mock,
+		&serviceConfig.Migrations.Mock,
 	)
 
 	jwtService := authorizer.New(&serviceConfig.Authorizer)
