@@ -14,3 +14,8 @@ type MigrationsConfig struct {
 	Enable  bool   `mapstructure:"enable"`
 	DirUrl  string `mapstructure:"dirUrl"`
 }
+
+type MockConfig struct {
+	Enable bool   `mapstructure:"enable"`
+	DirUrl string `mapstructure:"dirUrl"`
+}
