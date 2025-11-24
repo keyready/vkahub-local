@@ -2,6 +2,7 @@ package authorizer
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -39,11 +40,17 @@ func (j *JWT) GenerateTokens(payload Payload) (tokens TokensResponse) {
 
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
 	jwtAccessSecretKey := []byte(j.config.AccessSecretKey)
-	accessTokenString, _ := accessToken.SignedString(jwtAccessSecretKey)
+	accessTokenString, signedErr := accessToken.SignedString(jwtAccessSecretKey)
+	if signedErr != nil {
+		log.Fatalln("failed to signed access: ", signedErr.Error())
+	}
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
 	jwtRefreshSecretKey := []byte(j.config.RefreshSecretKey)
-	refreshTokenString, _ := refreshToken.SignedString(jwtRefreshSecretKey)
+	refreshTokenString, signedErr := refreshToken.SignedString(jwtRefreshSecretKey)
+	if signedErr != nil {
+		log.Fatalln("failed to signed refresh: ", signedErr.Error())
+	}
 
 	return TokensResponse{
 		AccessToken:  accessTokenString,

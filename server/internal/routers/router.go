@@ -26,9 +26,9 @@ func InitRouter(
 	c.AddFunc("@monthly", gocron.ClearNotifications(db))
 	c.Start()
 
-	authRepo := repositories.NewAuthRepositoryImpl(db)
+	authRepo := repositories.NewAuthRepositoryImpl(db, jwtService)
 	authService := services.NewAuthServiceImpl(authRepo)
-	authCtrl := controllers.NewAuthController(authService)
+	authCtrl := controllers.NewAuthController(authService, jwtService)
 	v1.NewAuthRouters(r, jwtService, authCtrl)
 
 	teamRepo := repositories.NewTeamRepositoryImpl(db)

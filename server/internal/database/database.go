@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"log"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -58,8 +59,8 @@ func DatabaseConnect(
 	}
 
 	if migrationsCfg.Enable {
-		if err := m.Up(); err != nil {
-			log.Fatalln("failed to down migrations: ", err.Error())
+		if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+			log.Fatalln("failed to up migrations: ", err.Error())
 		}
 	} else {
 		if err := m.Down(); err != nil {

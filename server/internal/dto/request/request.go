@@ -11,9 +11,8 @@ type SignUpRequest struct {
 }
 
 type LoginRequest struct {
-	Username     string `binding:"required" json:"username"`
-	Password     string `binding:"required" json:"password"`
-	RefreshToken string `json:"refresh_token"`
+	Username string `binding:"required" json:"username"`
+	Password string `binding:"required" json:"password"`
 }
 
 type FetchAllMembersByParamsRequest struct {

@@ -22,12 +22,18 @@ type AuthRepository interface {
 }
 
 type AuthRepositoryImpl struct {
-	Db      *gorm.DB
-	jwtServ *authorizer.Authorizer
+	Db         *gorm.DB
+	jwtService *authorizer.Authorizer
 }
 
-func NewAuthRepositoryImpl(Db *gorm.DB) AuthRepository {
-	return &AuthRepositoryImpl{Db: Db}
+func NewAuthRepositoryImpl(
+	Db *gorm.DB,
+	jwtService *authorizer.Authorizer,
+) AuthRepository {
+	return &AuthRepositoryImpl{
+		Db:         Db,
+		jwtService: jwtService,
+	}
 }
 
 func (a *AuthRepositoryImpl) RecoveryPassword(RecPasswdReq other.RecoveryPassword) (httpCode int, err error) {
@@ -91,7 +97,6 @@ func (a *AuthRepositoryImpl) Login(login request.LoginRequest) (httpCode int, er
 		return http.StatusBadRequest, errors.New("Invalid password")
 	}
 
-	loginUser.RefreshToken = login.RefreshToken
 	a.Db.Save(&loginUser)
 
 	return http.StatusOK, nil
@@ -109,7 +114,7 @@ func (a *AuthRepositoryImpl) RefreshToken(refreshToken string) (tokens authorize
 		Username: tmpUser.Username,
 	}
 
-	tokens = a.jwtServ.Authorizer.GenerateTokens(payload)
+	tokens = a.jwtService.Authorizer.GenerateTokens(payload)
 
 	tmpUser.RefreshToken = tokens.RefreshToken
 	a.Db.Save(&tmpUser)
