@@ -3,7 +3,7 @@ package services
 import "server/internal/repositories"
 
 type ReportService interface {
-	GenerateReport(eventId int64) (httpCode int, err error, reportName string)
+	GenerateReport(eventId int64) (httpCode int, reportName string, err error)
 }
 
 type ReportServiceImpl struct {
@@ -14,7 +14,7 @@ func NewReportServiceImpl(reportRepository repositories.ReportRepository) Report
 	return &ReportServiceImpl{reportRepository: reportRepository}
 }
 
-func (r ReportServiceImpl) GenerateReport(eventId int64) (httpCode int, err error, reportName string) {
-	httpCode, err, reportName = r.reportRepository.GenerateReport(eventId)
-	return httpCode, err, reportName
+func (r ReportServiceImpl) GenerateReport(eventId int64) (httpCode int, reportName string, err error) {
+	httpCode, reportName, err = r.reportRepository.GenerateReport(eventId)
+	return httpCode, reportName, err
 }

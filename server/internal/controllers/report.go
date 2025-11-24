@@ -21,7 +21,7 @@ func (rc *ReportController) GenerateReport(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
 	eventId, _ := strconv.ParseInt(ctx.PostForm("eventId"), 10, 64)
 
-	httpCode, err, reportName := rc.reportService.GenerateReport(eventId)
+	httpCode, reportName, err := rc.reportService.GenerateReport(eventId)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return

@@ -19,7 +19,7 @@ const (
 )
 
 type ReportRepository interface {
-	GenerateReport(eventId int64) (httpCode int, err error, reportName string)
+	GenerateReport(eventId int64) (httpCode int, reportName string, err error)
 }
 
 type ReportRepositoryImpl struct {
@@ -30,7 +30,7 @@ func NewReportRepositoryImpl(DB *gorm.DB) ReportRepository {
 	return &ReportRepositoryImpl{DB: DB}
 }
 
-func (r ReportRepositoryImpl) GenerateReport(eventId int64) (httpCode int, err error, reportName string) {
+func (r ReportRepositoryImpl) GenerateReport(eventId int64) (httpCode int, reportName string, err error) {
 	event := database.EventModel{}
 
 	r.DB.First(&event, eventId)
@@ -46,9 +46,9 @@ func (r ReportRepositoryImpl) GenerateReport(eventId int64) (httpCode int, err e
 	)
 
 	replacements := docx.PlaceholderMap{
-		"EventTitle":    event.Title,
-		"EventSponsors": eventSponsors,
-		"EventDate":     eventDate,
+		"Tilte":    event.Title,
+		"Sponsors": eventSponsors,
+		"Date":     eventDate,
 	}
 
 	participantsTeams := []database.TeamModel{}
@@ -83,14 +83,14 @@ func (r ReportRepositoryImpl) GenerateReport(eventId int64) (httpCode int, err e
 	tmplReportFilePath := filepath.Join(REPORTS_STORAGE, "template", TEMPLATE_REPORT_FILENAME)
 	doc, err := docx.Open(tmplReportFilePath)
 	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("failed to open template report: %v", err), ""
+		return http.StatusInternalServerError, "", fmt.Errorf("failed to open template report: %v", err)
 	}
 	defer doc.Close()
 
 	_ = doc.ReplaceAll(replacements)
-	// if err != nil  {
-	// return http.StatusInternalServerError, fmt.Errorf("failed to replace template report: %v", err), ""
-	// }
+	if err != nil {
+		log.Println("failed replace: ", err.Error())
+	}
 
 	log.Print(replacements)
 
@@ -99,8 +99,8 @@ func (r ReportRepositoryImpl) GenerateReport(eventId int64) (httpCode int, err e
 	newReportPath := filepath.Join(REPORTS_STORAGE, newReportName)
 	err = doc.WriteToFile(newReportPath)
 	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("failed to save new report: %v", err), ""
+		return http.StatusInternalServerError, "", fmt.Errorf("failed to save new report: %v", err)
 	}
 
-	return http.StatusOK, nil, newReportName
+	return http.StatusOK, newReportName, nil
 }
