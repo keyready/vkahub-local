@@ -34,14 +34,14 @@ services:
     networks:
       - vkahub-net
 
-  # client-builder:
-  #   build:
-  #     context: ./client
-  #     dockerfile: Dockerfile
-  #   container_name: vkahub-client-builder
-  #   volumes:
-  #     - ./client-files:/dist
-  #   command: sh -c "npm run build"
+  client-builder:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: vkahub-client-builder
+    volumes:
+      - ./client-files:/dist
+    command: sh -c "npm run build"
 
   admin:
     image: dpage/pgadmin4:latest
