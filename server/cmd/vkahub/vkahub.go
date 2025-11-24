@@ -14,13 +14,6 @@ import (
 	"syscall"
 )
 
-// func init() { //TODO - unioffice
-// 	err := license.SetMeteredKey("6eb35b7dd3c4f49361b6f0f5805d96f1c69490ef4e36ce9e3f1311ffce09c122")
-// 	if err != nil {
-// 		log.Fatalf(err.Error())
-// 	}
-// }
-
 func main() {
 	serviceConfig := cmd.Execute()
 
