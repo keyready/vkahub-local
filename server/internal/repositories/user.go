@@ -11,7 +11,7 @@ import (
 	"server/internal/dto/request"
 	"server/internal/dto/response"
 	"server/internal/mapper"
-	"server/internal/models"
+	"server/internal/database"
 	"slices"
 	"strings"
 	"unicode/utf8"
@@ -27,13 +27,13 @@ type UserRepository interface {
 	GetProfile(username string) (httpCode int, err error, userData response.ProfileData)
 	EditProfile(EditProf request.EditProfileInfoForm) (httpCode int, err error)
 	FetchPersonalAchievements(username, personalUsername string) (httpCode int, err error, data []response.FetchPersonalAchievementResponse)
-	FetchAllPersonalNotifications(allNtf request.FetchAllNotifications) (httpCode int, err error, ntfs []models.NotificationModel)
+	FetchAllPersonalNotifications(allNtf request.FetchAllNotifications) (httpCode int, err error, ntfs []database.NotificationModel)
 	UpdateNotificationStatus(updateNotification other.UpdateNotificationData) (httpCode int, err error)
 	GetActualInfo() (httpCode int, err error, info response.ActualInfo)
 	FetchAllMessages(fetchAllMessage request.FetchAllMessages) (httpCode int, err error, messages []response.FetchAllMessagesResponse)
 	AddPortfolio(addPortfolioReq request.AddPortfolioForm, certificateNames []string) (httpCode int, err error)
 	DeletePortfolio(certificateName, ownerName string) (httpCode int, err error)
-	GetBannedReason(ownerID int64) (httpCode int, err error, banned models.BanModel)
+	GetBannedReason(ownerID int64) (httpCode int, err error, banned database.BanModel)
 }
 
 type UserRepositoryImpl struct {
@@ -44,23 +44,23 @@ func NewUserRepositoryImpl(Db *gorm.DB) UserRepository {
 	return &UserRepositoryImpl{Db: Db}
 }
 
-func (u *UserRepositoryImpl) GetBannedReason(ownerID int64) (httpCode int, err error, banned models.BanModel) {
+func (u *UserRepositoryImpl) GetBannedReason(ownerID int64) (httpCode int, err error, banned database.BanModel) {
 	u.Db.Where("owner_id = ?", ownerID).First(&banned)
 	return http.StatusOK, nil, banned
 }
 
 func (u *UserRepositoryImpl) DeletePortfolio(certificateName, ownerName string) (httpCode int, err error) {
-	var owner models.UserModel
+	var owner database.UserModel
 	u.Db.Where("username = ?", ownerName).First(&owner)
 
-	var portfolio []models.PortfolioFile
+	var portfolio []database.PortfolioFile
 	if len(owner.Portfolio) > 0 {
 		if err := json.Unmarshal(owner.Portfolio, &portfolio); err != nil {
-			portfolio = []models.PortfolioFile{}
+			portfolio = []database.PortfolioFile{}
 		}
 	}
 
-	updPortfolio := []models.PortfolioFile{}
+	updPortfolio := []database.PortfolioFile{}
 	for index, cert := range portfolio {
 		if strings.Compare(cert.Name, certificateName) == 0 {
 			updPortfolio = append(portfolio[:index], portfolio[index+1:]...)
@@ -84,13 +84,13 @@ func (u *UserRepositoryImpl) DeletePortfolio(certificateName, ownerName string) 
 }
 
 func (u *UserRepositoryImpl) AddPortfolio(addPortfolio request.AddPortfolioForm, certificateNames []string) (httpCode int, err error) {
-	var owner models.UserModel
+	var owner database.UserModel
 	u.Db.Where("username = ?", addPortfolio.Owner).First(&owner)
 
-	var portfolio []models.PortfolioFile
+	var portfolio []database.PortfolioFile
 	if len(owner.Portfolio) > 0 {
 		if err := json.Unmarshal(owner.Portfolio, &portfolio); err != nil {
-			portfolio = []models.PortfolioFile{}
+			portfolio = []database.PortfolioFile{}
 		}
 	}
 
@@ -103,7 +103,7 @@ func (u *UserRepositoryImpl) AddPortfolio(addPortfolio request.AddPortfolioForm,
 			t = "img"
 		}
 
-		portfolioFile := models.PortfolioFile{
+		portfolioFile := database.PortfolioFile{
 			Name:      certName,
 			EventName: addPortfolio.EventName,
 			Place:     addPortfolio.Place,
@@ -125,8 +125,8 @@ func (u *UserRepositoryImpl) AddPortfolio(addPortfolio request.AddPortfolioForm,
 }
 
 func (u *UserRepositoryImpl) FetchAllMessages(fetchAllMessage request.FetchAllMessages) (httpCode int, err error, respMessage []response.FetchAllMessagesResponse) {
-	var teamChat models.TeamChatModel
-	var messages []models.ChatMessageModel
+	var teamChat database.TeamChatModel
+	var messages []database.ChatMessageModel
 
 	if fetchAllMessage.TeamId < 0 {
 		return http.StatusInternalServerError, errors.New("нет такой команды"), respMessage
@@ -135,7 +135,7 @@ func (u *UserRepositoryImpl) FetchAllMessages(fetchAllMessage request.FetchAllMe
 	u.Db.Where("team_chat_id = ?", teamChat.ID).Find(&messages)
 
 	for _, msg := range messages {
-		var author models.UserModel
+		var author database.UserModel
 		u.Db.Where("username = ?", msg.Author).First(&author)
 		respMsg := response.FetchAllMessagesResponse{
 			ID:      msg.ID,
@@ -158,43 +158,43 @@ func (u *UserRepositoryImpl) FetchAllMessages(fetchAllMessage request.FetchAllMe
 
 func (u *UserRepositoryImpl) GetActualInfo() (httpCode int, err error, info response.ActualInfo) {
 	var totalUsers int64
-	u.Db.Model(&models.UserModel{}).Count(&totalUsers)
+	u.Db.Model(&database.UserModel{}).Count(&totalUsers)
 	info.TotalUsers = totalUsers
 
 	var totalTeams int64
-	u.Db.Model(&models.TeamModel{}).Count(&totalTeams)
+	u.Db.Model(&database.TeamModel{}).Count(&totalTeams)
 	info.TotalTeams = totalTeams
 
 	var totalEvents int64
-	u.Db.Model(&models.EventModel{}).Count(&totalEvents)
+	u.Db.Model(&database.EventModel{}).Count(&totalEvents)
 	info.TotalEvents = totalEvents
 
 	var totalWinners int64
-	u.Db.Model(&models.AchievementModel{}).Where("result = ?", "winner").Count(&totalWinners)
+	u.Db.Model(&database.AchievementModel{}).Where("result = ?", "winner").Count(&totalWinners)
 	info.TotalWinners = totalWinners
 
 	return http.StatusOK, nil, info
 }
 
 func (u *UserRepositoryImpl) UpdateNotificationStatus(updateNotification other.UpdateNotificationData) (httpCode int, err error) {
-	var updateNtf models.NotificationModel
+	var updateNtf database.NotificationModel
 	u.Db.Where("id = ?", updateNotification.NotificationID).First(&updateNtf)
 	updateNtf.Status = "read"
 	u.Db.Save(&updateNtf)
 	return http.StatusOK, nil
 }
 
-func (u *UserRepositoryImpl) FetchAllPersonalNotifications(allNtf request.FetchAllNotifications) (httpCode int, err error, data []models.NotificationModel) {
+func (u *UserRepositoryImpl) FetchAllPersonalNotifications(allNtf request.FetchAllNotifications) (httpCode int, err error, data []database.NotificationModel) {
 	err = u.Db.Where("owner_id = ?", allNtf.UserId).Where("status = ?", allNtf.Type).Find(&data).Error
 	if err != nil {
-		var tmp []models.NotificationModel
+		var tmp []database.NotificationModel
 		return http.StatusOK, nil, tmp
 	}
 	return http.StatusOK, nil, data
 }
 
 func (u *UserRepositoryImpl) FetchPersonalAchievements(username, personalUsername string) (httpCode int, err error, data []response.FetchPersonalAchievementResponse) {
-	var owner models.UserModel
+	var owner database.UserModel
 
 	if username != "" {
 		u.Db.Where("username = ?", username).First(&owner)
@@ -202,10 +202,10 @@ func (u *UserRepositoryImpl) FetchPersonalAchievements(username, personalUsernam
 		u.Db.Where("username = ?", personalUsername).First(&owner)
 	}
 
-	var allPerAchievements []models.PersonalAchievementModel
+	var allPerAchievements []database.PersonalAchievementModel
 	u.Db.Find(&allPerAchievements)
 
-	var allMembers []models.UserModel
+	var allMembers []database.UserModel
 	u.Db.Find(&allMembers)
 
 	for _, achievement := range allPerAchievements {
@@ -226,11 +226,11 @@ func (u *UserRepositoryImpl) FetchPersonalAchievements(username, personalUsernam
 }
 
 func (u *UserRepositoryImpl) EditProfile(EditProf request.EditProfileInfoForm) (httpCode int, err error) {
-	var userExist models.UserModel
+	var userExist database.UserModel
 
 	u.Db.Where("id = ?", EditProf.ID).First(&userExist)
 
-	var currentUser models.UserModel
+	var currentUser database.UserModel
 	if findUserErr := u.Db.First(&currentUser, EditProf.ID).Error; findUserErr != nil {
 		return http.StatusNotFound, findUserErr
 	}
@@ -261,8 +261,8 @@ func (u *UserRepositoryImpl) EditProfile(EditProf request.EditProfileInfoForm) (
 }
 
 func (u *UserRepositoryImpl) GetProfile(username string) (httpCode int, err error, userData response.ProfileData) {
-	user := models.UserModel{}
-	dbErr := u.Db.Model(&models.UserModel{}).Where("username = ?", username).First(&user).Error
+	user := database.UserModel{}
+	dbErr := u.Db.Model(&database.UserModel{}).Where("username = ?", username).First(&user).Error
 	if dbErr != nil {
 		return http.StatusNotFound, gorm.ErrRecordNotFound, userData
 	}
@@ -276,8 +276,8 @@ func (u *UserRepositoryImpl) GetProfile(username string) (httpCode int, err erro
 }
 
 func (u *UserRepositoryImpl) GetUserData(username string) (httpCode int, err error, userData response.UserData) {
-	user := models.UserModel{}
-	dbErr := u.Db.Model(&models.UserModel{}).Where("username = ?", username).First(&user).Error
+	user := database.UserModel{}
+	dbErr := u.Db.Model(&database.UserModel{}).Where("username = ?", username).First(&user).Error
 	if dbErr != nil {
 		return http.StatusNotFound, gorm.ErrRecordNotFound, response.UserData{}
 	}
@@ -300,7 +300,7 @@ func (u *UserRepositoryImpl) FetchOneMemberByUsername(username string) (httpCode
 
 func (u *UserRepositoryImpl) FetchAllMembersByParams(fetchAllMembersRequest request.FetchAllMembersByParamsRequest) (httpCode int, err error, members []response.FetchAllMembers) {
 	sqlQuery := u.Db.
-		Model(&models.UserModel{}).
+		Model(&database.UserModel{}).
 		Where("is_profile_confirmed = ?", true)
 
 	if fetchAllMembersRequest.IsMember == "false" {

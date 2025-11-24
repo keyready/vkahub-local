@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
-	"server/internal/models"
+	"server/internal/database"
 	"strconv"
 	"strings"
 
@@ -30,7 +30,7 @@ func NewReportRepositoryImpl(DB *gorm.DB) ReportRepository {
 }
 
 func (r ReportRepositoryImpl) GenerateReport(eventId int64) (httpCode int, err error, reportName string) {
-	event := models.EventModel{}
+	event := database.EventModel{}
 
 	r.DB.First(&event, eventId)
 
@@ -50,12 +50,12 @@ func (r ReportRepositoryImpl) GenerateReport(eventId int64) (httpCode int, err e
 		"EventDate":     eventDate,
 	}
 
-	participantsTeams := []models.TeamModel{}
+	participantsTeams := []database.TeamModel{}
 	r.DB.Where("id = 1").Find(&participantsTeams)
 
 	replacements["EventLocation"] = participantsTeams[0].EventLocation
 
-	teamMembers := []models.UserModel{}
+	teamMembers := []database.UserModel{}
 	var memberIDs []int64
 	for _, memberID := range participantsTeams[0].MembersId {
 		memberIDs = append(memberIDs, memberID)

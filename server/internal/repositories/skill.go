@@ -3,7 +3,7 @@ package repositories
 import (
 	"net/http"
 	"server/internal/dto/request"
-	"server/internal/models"
+	"server/internal/database"
 	"strconv"
 	"strings"
 
@@ -12,7 +12,7 @@ import (
 
 type SkillRepository interface {
 	AddSkill(addSkill request.AddSkillReq) (httpCode int, err error)
-	FetchAllSkills(skillIdsString string) (httpCode int, err error, skills []models.SkillModel)
+	FetchAllSkills(skillIdsString string) (httpCode int, err error, skills []database.SkillModel)
 }
 
 type SkillRepositoryImpl struct {
@@ -25,7 +25,7 @@ func NewSkillRepositoryImpl(db *gorm.DB) SkillRepository {
 
 func (s SkillRepositoryImpl) AddSkill(addSkill request.AddSkillReq) (httpCode int, err error) {
 	if addDbErr := s.Db.Create(
-		&models.SkillModel{
+		&database.SkillModel{
 			Name:   addSkill.Name,
 			Author: addSkill.Author,
 		}).Error; addDbErr != nil {
@@ -35,7 +35,7 @@ func (s SkillRepositoryImpl) AddSkill(addSkill request.AddSkillReq) (httpCode in
 	return http.StatusOK, nil
 }
 
-func (s SkillRepositoryImpl) FetchAllSkills(skillIdsString string) (httpCode int, err error, skills []models.SkillModel) {
+func (s SkillRepositoryImpl) FetchAllSkills(skillIdsString string) (httpCode int, err error, skills []database.SkillModel) {
 	if skillIdsString != "" {
 		skillIdsSlice := strings.Split(skillIdsString, ",")
 		var skillIds []int64

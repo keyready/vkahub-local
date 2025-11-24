@@ -1,7 +1,7 @@
 package response
 
 import (
-	"server/internal/models"
+	"server/internal/database"
 	"time"
 
 	"github.com/lib/pq"
@@ -86,17 +86,17 @@ type FetchAllMembers struct {
 }
 
 type ProfileData struct {
-	ID          int64                  `json:"id"`
-	Username    string                 `json:"username"`
-	TeamId      int64                  `json:"teamId"`
-	Firstname   string                 `json:"firstname"`
-	Lastname    string                 `json:"lastname"`
-	Description string                 `json:"description"`
-	Avatar      string                 `json:"avatar"`
-	Skills      pq.StringArray         `gorm:"type:varchar[]" json:"skills"`
-	Positions   pq.StringArray         `gorm:"type:varchar[]" json:"positions"`
-	CreatedAt   time.Time              `json:"created_at"`
-	Portfolio   []models.PortfolioFile `json:"portfolio"`
+	ID          int64                    `json:"id"`
+	Username    string                   `json:"username"`
+	TeamId      int64                    `json:"teamId"`
+	Firstname   string                   `json:"firstname"`
+	Lastname    string                   `json:"lastname"`
+	Description string                   `json:"description"`
+	Avatar      string                   `json:"avatar"`
+	Skills      pq.StringArray           `gorm:"type:varchar[]" json:"skills"`
+	Positions   pq.StringArray           `gorm:"type:varchar[]" json:"positions"`
+	CreatedAt   time.Time                `json:"created_at"`
+	Portfolio   []database.PortfolioFile `json:"portfolio"`
 }
 
 type FetchAllTeamsByParams struct {
@@ -111,19 +111,19 @@ type FetchAllTeamsByParams struct {
 }
 
 type UserData struct {
-	Avatar      string                 `json:"avatar"`
-	CreatedAt   time.Time              `json:"createdAt"`
-	Description string                 `json:"description"`
-	Firstname   string                 `json:"firstname"`
-	Middlename  string                 `json:"middlename"`
-	Lastname    string                 `json:"lastname"`
-	GroupNumber string                 `json:"group_number"`
-	ID          int64                  `json:"id"`
-	Positions   pq.StringArray         `gorm:"type:varchar[]" json:"positions"`
-	Rank        string                 `json:"rank"`
-	Roles       pq.StringArray         `gorm:"type:varchar[]" json:"roles"`
-	Skills      pq.StringArray         `gorm:"type:varchar[]" json:"skills"`
-	TeamId      int64                  `json:"teamId"`
-	Username    string                 `json:"username"`
-	Portfolio   []models.PortfolioFile `json:"portfolio"`
+	Avatar      string                   `json:"avatar"`
+	CreatedAt   time.Time                `json:"createdAt"`
+	Description string                   `json:"description"`
+	Firstname   string                   `json:"firstname"`
+	Middlename  string                   `json:"middlename"`
+	Lastname    string                   `json:"lastname"`
+	GroupNumber string                   `json:"group_number"`
+	ID          int64                    `json:"id"`
+	Positions   pq.StringArray           `gorm:"type:varchar[]" json:"positions"`
+	Rank        string                   `json:"rank"`
+	Roles       pq.StringArray           `gorm:"type:varchar[]" json:"roles"`
+	Skills      pq.StringArray           `gorm:"type:varchar[]" json:"skills"`
+	TeamId      int64                    `json:"teamId"`
+	Username    string                   `json:"username"`
+	Portfolio   []database.PortfolioFile `json:"portfolio"`
 }

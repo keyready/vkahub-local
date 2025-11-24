@@ -2,12 +2,12 @@ package mapper
 
 import (
 	"encoding/json"
+	"server/internal/database"
 	"server/internal/dto/response"
-	"server/internal/models"
 )
 
-func UserModelToUserData(userModel models.UserModel) (response.UserData, error) {
-	portfolio := []models.PortfolioFile{}
+func UserModelToUserData(userModel database.UserModel) (response.UserData, error) {
+	portfolio := []database.PortfolioFile{}
 
 	if decodeErr := json.Unmarshal(userModel.Portfolio, &portfolio); decodeErr != nil {
 		return response.UserData{}, decodeErr
@@ -34,8 +34,8 @@ func UserModelToUserData(userModel models.UserModel) (response.UserData, error) 
 	return userData, nil
 }
 
-func UserModelToUserProfile(userModel models.UserModel) (response.ProfileData, error) {
-	portfolio := []models.PortfolioFile{}
+func UserModelToUserProfile(userModel database.UserModel) (response.ProfileData, error) {
+	portfolio := []database.PortfolioFile{}
 
 	if decodeErr := json.Unmarshal(userModel.Portfolio, &portfolio); decodeErr != nil {
 		return response.ProfileData{}, decodeErr

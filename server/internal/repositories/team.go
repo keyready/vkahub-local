@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"server/internal/dto/request"
 	"server/internal/dto/response"
-	"server/internal/models"
+	"server/internal/database"
 	"slices"
 	"strconv"
 	"strings"
@@ -38,11 +38,11 @@ func NewTeamRepositoryImpl(Db *gorm.DB) TeamRepository {
 }
 
 func (t *TeamRepositoryImpl) EditTeam(EditTeamReq request.EditTeamInfoForm) (httpCode int, err error) {
-	var updateTeam models.TeamModel
+	var updateTeam database.TeamModel
 	wantedPositions := strings.Split(EditTeamReq.WantedPositions, ",")
 
 	err = t.Db.Where("id = ?", EditTeamReq.ID).
-		Updates(&models.TeamModel{
+		Updates(&database.TeamModel{
 			Title:           EditTeamReq.Title,
 			Description:     EditTeamReq.Description,
 			EventLocation:   EditTeamReq.EventLocation,
@@ -55,7 +55,7 @@ func (t *TeamRepositoryImpl) EditTeam(EditTeamReq request.EditTeamInfoForm) (htt
 
 	if EditTeamReq.Image != "" {
 		err := t.Db.
-			Model(&models.TeamModel{}).
+			Model(&database.TeamModel{}).
 			Where("id = ?", EditTeamReq.ID).
 			Update(
 				"image",
@@ -66,7 +66,7 @@ func (t *TeamRepositoryImpl) EditTeam(EditTeamReq request.EditTeamInfoForm) (htt
 		}
 	}
 
-	t.Db.Create(&models.NotificationModel{
+	t.Db.Create(&database.NotificationModel{
 		OwnerId: updateTeam.CaptainId,
 		Message: fmt.Sprintf("Данные о вашей команде %s обновлены", updateTeam.Title),
 	})
@@ -76,7 +76,7 @@ func (t *TeamRepositoryImpl) EditTeam(EditTeamReq request.EditTeamInfoForm) (htt
 
 func (t *TeamRepositoryImpl) PartInTeam(partInTeam request.PartInTeam) (httpCode int, err error) {
 	createdAt, _ := time.Parse(time.RFC3339, time.Now().String())
-	prop := models.ProposalModel{
+	prop := database.ProposalModel{
 		Type:      "request",
 		TeamID:    partInTeam.TeamId,
 		OwnerId:   partInTeam.MemberId,
@@ -84,20 +84,20 @@ func (t *TeamRepositoryImpl) PartInTeam(partInTeam request.PartInTeam) (httpCode
 		Message:   partInTeam.Message,
 	}
 
-	t.Db.Model(&models.ProposalModel{}).Create(&prop)
+	t.Db.Model(&database.ProposalModel{}).Create(&prop)
 
 	return http.StatusOK, nil
 }
 
 func (t *TeamRepositoryImpl) LeaveTeam(username string) (httpCode int, err error) {
-	var leaveUser models.UserModel
-	var leaveTeam models.TeamModel
+	var leaveUser database.UserModel
+	var leaveTeam database.TeamModel
 
 	t.Db.Where("username = ?", username).First(&leaveUser)
 	t.Db.Where("id = ?", leaveUser.TeamId).First(&leaveTeam)
 
 	if leaveTeam.CaptainId == leaveUser.ID {
-		var captain models.UserModel
+		var captain database.UserModel
 		t.Db.Where("id = ?", leaveUser.ID).First(&captain)
 
 		captain.TeamId = 0
@@ -110,18 +110,18 @@ func (t *TeamRepositoryImpl) LeaveTeam(username string) (httpCode int, err error
 				if len(leaveTeam.MembersId) == 0 {
 					t.Db.Delete(&leaveTeam)
 				}
-				t.Db.Create(&models.NotificationModel{
+				t.Db.Create(&database.NotificationModel{
 					OwnerId: memberId,
 					Message: fmt.Sprintf("Вашу команду покинул участник %s", leaveUser.Username),
 				})
-				t.Db.Create(&models.NotificationModel{
+				t.Db.Create(&database.NotificationModel{
 					OwnerId: captain.ID,
 					Message: fmt.Sprintf("Вы покинули команду %s", leaveTeam.Title),
 				})
 			}
 		}
 
-		var teamChat models.TeamModel
+		var teamChat database.TeamModel
 		t.Db.Where("team_id = ?", captain.TeamId).First(&teamChat)
 		for index, memberId := range teamChat.MembersId {
 			if memberId == leaveUser.ID {
@@ -131,20 +131,20 @@ func (t *TeamRepositoryImpl) LeaveTeam(username string) (httpCode int, err error
 				}
 				//TODO - при выходе почистить сообщение капитана
 				t.Db.Save(&teamChat)
-				t.Db.Create(&models.NotificationModel{
+				t.Db.Create(&database.NotificationModel{
 					OwnerId: captain.ID,
 					Message: fmt.Sprintf("Вы были исключены из командного чата %s", teamChat.Title),
 				})
-				t.Db.Create(&models.NotificationModel{
+				t.Db.Create(&database.NotificationModel{
 					OwnerId: memberId,
 					Message: fmt.Sprintf("Вашу командый чат покинул капитан %s", captain.Username),
 				})
 			}
 		}
 
-		var members []models.UserModel
+		var members []database.UserModel
 		t.Db.Where("id IN ?", leaveTeam.MembersId).Find(&members)
-		var longestUser models.UserModel
+		var longestUser database.UserModel
 		for _, member := range members {
 			longestUser = members[0]
 			if member.MemberSince.Before(longestUser.MemberSince) {
@@ -153,7 +153,7 @@ func (t *TeamRepositoryImpl) LeaveTeam(username string) (httpCode int, err error
 		}
 		leaveTeam.CaptainId = longestUser.ID
 		t.Db.Save(&leaveTeam)
-		t.Db.Create(&models.NotificationModel{
+		t.Db.Create(&database.NotificationModel{
 			OwnerId: longestUser.ID,
 			Message: fmt.Sprintf(
 				"Теперь вы,%s - капитан команды %s",
@@ -162,7 +162,7 @@ func (t *TeamRepositoryImpl) LeaveTeam(username string) (httpCode int, err error
 			),
 		})
 		for _, member := range members {
-			t.Db.Create(&models.NotificationModel{
+			t.Db.Create(&database.NotificationModel{
 				OwnerId: member.ID,
 				Message: fmt.Sprintf("Теперь в вашей команде %s новый капитан - %s", leaveTeam.Title, longestUser.Username),
 			})
@@ -177,18 +177,18 @@ func (t *TeamRepositoryImpl) LeaveTeam(username string) (httpCode int, err error
 				leaveUser.TeamId = 0
 				t.Db.Save(&leaveUser)
 				t.Db.Save(&leaveTeam)
-				t.Db.Create(&models.NotificationModel{
+				t.Db.Create(&database.NotificationModel{
 					OwnerId: leaveUser.ID,
 					Message: fmt.Sprintf("%s, вы покинули команду %s", leaveUser.Username, leaveTeam.Title),
 				})
-				var teamChat models.TeamChatModel
+				var teamChat database.TeamChatModel
 				t.Db.Where("team_id = ?", leaveTeam.ID).First(&teamChat)
 				//TODO - при выходе почистить все сообщения
 				teamChat.MembersId = append(teamChat.MembersId[:index], teamChat.MembersId[index+1:]...)
 				if len(teamChat.MembersId) == 0 {
 					t.Db.Delete(&teamChat)
 				}
-				t.Db.Create(&models.NotificationModel{
+				t.Db.Create(&database.NotificationModel{
 					OwnerId: leaveUser.ID,
 					Message: fmt.Sprintf("%s, вы покинули чат команды %s", leaveUser.Username, leaveTeam.Title),
 				})
@@ -200,9 +200,9 @@ func (t *TeamRepositoryImpl) LeaveTeam(username string) (httpCode int, err error
 
 func (t *TeamRepositoryImpl) TransferCaptainRights(TransCaptain request.TransferCaptainRightsRequest) (int, error) {
 
-	var newCap models.UserModel
-	var captain models.UserModel
-	var team models.TeamModel
+	var newCap database.UserModel
+	var captain database.UserModel
+	var team database.TeamModel
 
 	t.Db.Where("id = ?", TransCaptain.TeamId).First(&team)
 	t.Db.Where("username = ?", TransCaptain.Owner).First(&captain)
@@ -212,12 +212,12 @@ func (t *TeamRepositoryImpl) TransferCaptainRights(TransCaptain request.Transfer
 		team.CaptainId = newCap.ID
 		t.Db.Save(&team)
 
-		var persAchievements models.PersonalAchievementModel
+		var persAchievements database.PersonalAchievementModel
 		t.Db.Where("key = ?", "receiver").First(&persAchievements)
 		if !slices.Contains(persAchievements.OwnerIds, newCap.ID) {
 			persAchievements.OwnerIds = append(persAchievements.OwnerIds, captain.ID)
 			t.Db.Save(&persAchievements)
-			t.Db.Create(&models.NotificationModel{
+			t.Db.Create(&database.NotificationModel{
 				OwnerId: newCap.ID,
 				Message: fmt.Sprintf(
 					"Поздравляю! Вы теперь теперь капитан команды - %s \n Вами получено достижение: %s",
@@ -225,7 +225,7 @@ func (t *TeamRepositoryImpl) TransferCaptainRights(TransCaptain request.Transfer
 					persAchievements.Title),
 			})
 		}
-		t.Db.Create(&models.NotificationModel{
+		t.Db.Create(&database.NotificationModel{
 			OwnerId: captain.ID,
 			Message: fmt.Sprintf(
 				"Поздравляю! Вы теперь теперь капитан команды - %s \n %s передал вам право управления",
@@ -239,19 +239,19 @@ func (t *TeamRepositoryImpl) TransferCaptainRights(TransCaptain request.Transfer
 }
 
 func (t *TeamRepositoryImpl) DeleteMember(deleteMemberRequest request.DeleteMemberRequest) (int, error) {
-	var currentTeam models.TeamModel
+	var currentTeam database.TeamModel
 
 	t.Db.First(&currentTeam, deleteMemberRequest.TeamId)
 
 	for _, memberId := range currentTeam.MembersId {
 		if memberId == deleteMemberRequest.MemberId {
 
-			updateErr := t.Db.Exec("UPDATE user_models SET team_id = 0 WHERE id = ?", deleteMemberRequest.MemberId).Error
+			updateErr := t.Db.Exec("UPDATE user_database SET team_id = 0 WHERE id = ?", deleteMemberRequest.MemberId).Error
 			if updateErr != nil {
 				return http.StatusInternalServerError, updateErr
 			}
 
-			removeArrayErr := t.Db.Exec("UPDATE team_models SET members_id = ARRAY_REMOVE(members_id,?) WHERE id = ?",
+			removeArrayErr := t.Db.Exec("UPDATE team_database SET members_id = ARRAY_REMOVE(members_id,?) WHERE id = ?",
 				deleteMemberRequest.MemberId,
 				deleteMemberRequest.TeamId,
 			).Error
@@ -259,7 +259,7 @@ func (t *TeamRepositoryImpl) DeleteMember(deleteMemberRequest request.DeleteMemb
 				return http.StatusInternalServerError, removeArrayErr
 			}
 
-			removeArrayErr = t.Db.Exec("UPDATE team_chat_models SET members_id = ARRAY_REMOVE(members_id,?) WHERE team_id = ?",
+			removeArrayErr = t.Db.Exec("UPDATE team_chat_database SET members_id = ARRAY_REMOVE(members_id,?) WHERE team_id = ?",
 				deleteMemberRequest.MemberId,
 				deleteMemberRequest.TeamId,
 			).Error
@@ -267,7 +267,7 @@ func (t *TeamRepositoryImpl) DeleteMember(deleteMemberRequest request.DeleteMemb
 				return http.StatusInternalServerError, removeArrayErr
 			}
 
-			t.Db.Create(&models.NotificationModel{
+			t.Db.Create(&database.NotificationModel{
 				OwnerId: memberId,
 				Message: fmt.Sprintf("Вы были удалены из команды %s и ее командного чата", currentTeam.Title),
 			})
@@ -277,8 +277,8 @@ func (t *TeamRepositoryImpl) DeleteMember(deleteMemberRequest request.DeleteMemb
 }
 
 func (t *TeamRepositoryImpl) AddMembersInTeam(AddMemInTeam request.AddMembersInTeamRequest) (int, error) {
-	var currentTeam models.TeamModel
-	var users []models.UserModel
+	var currentTeam database.TeamModel
+	var users []database.UserModel
 
 	err := t.Db.Where("id = ?", AddMemInTeam.TeamId).First(&currentTeam).Error
 	if err != nil {
@@ -304,13 +304,13 @@ func (t *TeamRepositoryImpl) AddMembersInTeam(AddMemInTeam request.AddMembersInT
 }
 
 func (t *TeamRepositoryImpl) FetchTeamMembers(teamId int64) (httpCode int, err error, members []response.FetchAllMembers) {
-	var team models.TeamModel
+	var team database.TeamModel
 	err = t.Db.First(&team, teamId).Error
 	if err != nil {
 		return http.StatusInternalServerError, err, members
 	}
 
-	t.Db.Model(&models.UserModel{}).
+	t.Db.Model(&database.UserModel{}).
 		Where("id = ANY(?)", team.MembersId).
 		Find(&members)
 
@@ -318,14 +318,14 @@ func (t *TeamRepositoryImpl) FetchTeamMembers(teamId int64) (httpCode int, err e
 }
 
 func (t *TeamRepositoryImpl) RegisterTeam(AddTeamReq request.RegisterTeamForm) (int, error) {
-	var existTeam models.TeamModel
+	var existTeam database.TeamModel
 
 	teamExist := t.Db.Where("title = ?", AddTeamReq.Title).First(&existTeam).Error
 	if teamExist == nil {
 		return http.StatusBadRequest, errors.New("team already exists")
 	}
 
-	newTeam := &models.TeamModel{
+	newTeam := &database.TeamModel{
 		Title:           AddTeamReq.Title,
 		Description:     AddTeamReq.Description,
 		CaptainId:       AddTeamReq.CaptainID,
@@ -341,33 +341,33 @@ func (t *TeamRepositoryImpl) RegisterTeam(AddTeamReq request.RegisterTeamForm) (
 
 	memberSince, _ := time.Parse(time.RFC3339, time.Now().String())
 	t.Db.Where("id = ?", AddTeamReq.CaptainID).
-		Updates(&models.UserModel{
+		Updates(&database.UserModel{
 			TeamId:      newTeam.ID,
 			MemberSince: memberSince,
 		})
 
-	t.Db.Create(&models.NotificationModel{
+	t.Db.Create(&database.NotificationModel{
 		OwnerId: AddTeamReq.CaptainID,
 		Message: fmt.Sprintf("Поздравляем, вы создали команду %s", newTeam.Title),
 	})
 
-	var persAchievement models.PersonalAchievementModel
+	var persAchievement database.PersonalAchievementModel
 	t.Db.Where("key = ?", "member").First(&persAchievement)
 	if !slices.Contains(persAchievement.OwnerIds, AddTeamReq.CaptainID) {
 		persAchievement.OwnerIds = append(persAchievement.OwnerIds, AddTeamReq.CaptainID)
 		t.Db.Save(&persAchievement)
-		t.Db.Create(&models.NotificationModel{
+		t.Db.Create(&database.NotificationModel{
 			OwnerId: AddTeamReq.CaptainID,
 			Message: fmt.Sprintf("Вы получили достижение: %s", persAchievement.Title),
 		})
 	}
 
-	t.Db.Create(&models.TeamChatModel{
+	t.Db.Create(&database.TeamChatModel{
 		TeamId:    newTeam.ID,
 		Title:     fmt.Sprintf("%s_chat", AddTeamReq.Title),
 		MembersId: pq.Int64Array{AddTeamReq.CaptainID},
 	})
-	t.Db.Create(&models.NotificationModel{
+	t.Db.Create(&database.NotificationModel{
 		OwnerId: AddTeamReq.CaptainID,
 		Message: fmt.Sprintf("Теперь у вашей команды %s есть собственный командный чат %s_chat", AddTeamReq.Title, AddTeamReq.Title),
 	})
@@ -376,7 +376,7 @@ func (t *TeamRepositoryImpl) RegisterTeam(AddTeamReq request.RegisterTeamForm) (
 }
 
 func (t *TeamRepositoryImpl) FetchAllTeamsByParams(FetchAllTeams request.FetchAllTeamsByParamsRequest) (httpCode int, err error, teams []response.FetchAllTeamsByParams) {
-	sqlQuery := t.Db.Model(&models.TeamModel{})
+	sqlQuery := t.Db.Model(&database.TeamModel{})
 
 	if FetchAllTeams.Title != "" {
 		sqlQuery = sqlQuery.Where("LOWER(title) LIKE LOWER(?)", "%"+FetchAllTeams.Title+"%")
@@ -401,7 +401,7 @@ func (t *TeamRepositoryImpl) FetchAllTeamsByParams(FetchAllTeams request.FetchAl
 }
 
 func (t *TeamRepositoryImpl) FetchOneTeamById(teamId int64) (httpCode int, err error, findTeam response.FetchAllTeamsByParams) {
-	if err = t.Db.Model(&models.TeamModel{}).Where("id = ?", teamId).Find(&findTeam).Error; err != nil {
+	if err = t.Db.Model(&database.TeamModel{}).Where("id = ?", teamId).Find(&findTeam).Error; err != nil {
 		return http.StatusInternalServerError, err, findTeam
 	}
 

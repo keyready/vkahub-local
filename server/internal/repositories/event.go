@@ -3,8 +3,8 @@ package repositories
 import (
 	"fmt"
 	"net/http"
+	"server/internal/database"
 	"server/internal/dto/request"
-	"server/internal/models"
 	"strings"
 	"time"
 
@@ -12,9 +12,9 @@ import (
 )
 
 type EventRepository interface {
-	FetchAllEvents(fetchAllEvents request.FetchAllEventsRequest) (httpCode int, err error, events []models.EventModel)
-	FetchTracksEvent(eventId int64) (httpCode int, err error, tracks []models.TrackModel)
-	FetchOneEvent(eventId int64) (httpCode int, err error, data *models.EventModel)
+	FetchAllEvents(fetchAllEvents request.FetchAllEventsRequest) (httpCode int, err error, events []database.EventModel)
+	FetchTracksEvent(eventId int64) (httpCode int, err error, tracks []database.TrackModel)
+	FetchOneEvent(eventId int64) (httpCode int, err error, data *database.EventModel)
 	AddEvent(addEventReq request.AddEventReq) (httpCode int, err error)
 }
 
@@ -29,7 +29,7 @@ func NewEventRepositoryImpl(Db *gorm.DB) EventRepository {
 func (e *EventRepositoryImpl) AddEvent(addEventReq request.AddEventReq) (httpCode int, err error) {
 	sponsors := strings.Split(addEventReq.Sponsors, ",")
 
-	newEvent := models.EventModel{
+	newEvent := database.EventModel{
 		Type:             addEventReq.Type,
 		Title:            addEventReq.Title,
 		Description:      addEventReq.Description,
@@ -46,18 +46,18 @@ func (e *EventRepositoryImpl) AddEvent(addEventReq request.AddEventReq) (httpCod
 		return http.StatusBadRequest, fmt.Errorf("DB create event error: %v", dbErr)
 	}
 
-	var users []models.UserModel
+	var users []database.UserModel
 	e.Db.Where("is_profile_confirmed = ?", true).
 		Where("is_mail_confirmed = ?", true).
 		Find(&users)
 
 	go func() {
 		for _, user := range users {
-			e.Db.Create(&models.NotificationModel{
+			e.Db.Create(&database.NotificationModel{
 				OwnerId: user.ID,
 				Message: fmt.Sprintf("Анонсированно новое событие %s", addEventReq.Title),
 			})
-			e.Db.Create(&models.NotificationModel{
+			e.Db.Create(&database.NotificationModel{
 				OwnerId: user.ID,
 				Message: fmt.Sprintf(
 					"Уважаемый %s! Анонсировано новое событие %s. \n Даты проведения: с %s по %s \n Успейте пройти регистрацию и принять участие!",
@@ -72,22 +72,22 @@ func (e *EventRepositoryImpl) AddEvent(addEventReq request.AddEventReq) (httpCod
 	return http.StatusOK, nil
 }
 
-func (e *EventRepositoryImpl) FetchOneEvent(eventId int64) (httpCode int, err error, data *models.EventModel) {
-	var event models.EventModel
+func (e *EventRepositoryImpl) FetchOneEvent(eventId int64) (httpCode int, err error, data *database.EventModel) {
+	var event database.EventModel
 	if err = e.Db.First(&event, eventId).Error; err != nil {
 		return http.StatusNotFound, err, nil
 	}
 	return http.StatusOK, nil, &event
 }
 
-func (e *EventRepositoryImpl) FetchTracksEvent(eventId int64) (httpCode int, err error, tracks []models.TrackModel) {
-	var event models.EventModel
-	var eventTracks []models.TrackModel
+func (e *EventRepositoryImpl) FetchTracksEvent(eventId int64) (httpCode int, err error, tracks []database.TrackModel) {
+	var event database.EventModel
+	var eventTracks []database.TrackModel
 
 	e.Db.Where("id = ?", eventId).First(&event)
 
 	for _, id := range event.TracksId {
-		var track models.TrackModel
+		var track database.TrackModel
 		e.Db.Where("id = ?", id).First(&track)
 		eventTracks = append(eventTracks, track)
 	}
@@ -95,13 +95,13 @@ func (e *EventRepositoryImpl) FetchTracksEvent(eventId int64) (httpCode int, err
 	return http.StatusOK, nil, eventTracks
 }
 
-func (e *EventRepositoryImpl) FetchAllEvents(fetchAllEvents request.FetchAllEventsRequest) (httpCode int, err error, events []models.EventModel) {
+func (e *EventRepositoryImpl) FetchAllEvents(fetchAllEvents request.FetchAllEventsRequest) (httpCode int, err error, events []database.EventModel) {
 	switch fetchAllEvents.Type {
 	case "all":
 		e.Db.Find(&events)
 	case "old":
-		var team models.TeamModel
-		var user models.UserModel
+		var team database.TeamModel
+		var user database.UserModel
 		e.Db.Where("username = ?", fetchAllEvents.Username).First(&user)
 		e.Db.First(&team, user.TeamId)
 		currentTime := time.Now().Format(time.RFC3339)
@@ -109,9 +109,9 @@ func (e *EventRepositoryImpl) FetchAllEvents(fetchAllEvents request.FetchAllEven
 			Where("? = ANY(participants_teams_ids)", user.TeamId).
 			Find(&events)
 
-		var oldEvents []models.EventModel
+		var oldEvents []database.EventModel
 		for _, event := range events {
-			var teamAchievement models.AchievementModel
+			var teamAchievement database.AchievementModel
 			e.Db.Where("type = 'team' AND event_id = ?", event.ID).First(&teamAchievement)
 			if teamAchievement.Result == "" {
 				oldEvents = append(oldEvents, event)

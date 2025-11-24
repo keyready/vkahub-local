@@ -3,10 +3,10 @@ package repositories
 import (
 	"errors"
 	"net/http"
+	"server/internal/database"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/dto/response"
-	"server/internal/models"
 	"server/internal/utils"
 	"server/pkg/jsonwebtoken"
 
@@ -56,7 +56,7 @@ func (a *AuthRepositoryImpl) RecoveryPassword(RecPasswdReq other.RecoveryPasswor
 }
 
 func (a *AuthRepositoryImpl) ResetPassword(mail string) (int, error) {
-	var resetPasswordUser models.UserModel
+	var resetPasswordUser database.UserModel
 
 	err := a.Db.Where("mail = ?", mail).First(&resetPasswordUser).Error
 	if err == gorm.ErrRecordNotFound {
@@ -67,13 +67,13 @@ func (a *AuthRepositoryImpl) ResetPassword(mail string) (int, error) {
 }
 
 func (a *AuthRepositoryImpl) SignUp(signUp request.SignUpRequest, avatarName string) (httpCode int, err error) {
-	var userExist models.UserModel
+	var userExist database.UserModel
 	if err = a.Db.Where("username = ?", signUp.Username).First(&userExist).Error; err == nil {
 		return http.StatusBadRequest, errors.New("User with this username or mail already exists")
 	}
 
 	hashPassword, _ := utils.GenerateHash(signUp.Password)
-	a.Db.Create(&models.UserModel{
+	a.Db.Create(&database.UserModel{
 		Username: signUp.Username,
 		Password: hashPassword,
 		Avatar:   avatarName,
@@ -87,7 +87,7 @@ func (a *AuthRepositoryImpl) SignUp(signUp request.SignUpRequest, avatarName str
 }
 
 func (a *AuthRepositoryImpl) Login(login request.LoginRequest) (httpCode int, err error) {
-	var loginUser models.UserModel
+	var loginUser database.UserModel
 	if err = a.Db.Where("username = ?", login.Username).First(&loginUser).Error; err != nil {
 		return http.StatusNotFound, errors.New("User not found")
 	}
@@ -104,7 +104,7 @@ func (a *AuthRepositoryImpl) Login(login request.LoginRequest) (httpCode int, er
 }
 
 func (a *AuthRepositoryImpl) RefreshToken(refreshToken string) (tokens response.LoginResponse, err error) {
-	var tmpUser models.UserModel
+	var tmpUser database.UserModel
 
 	err = a.Db.Where("refresh_token = ?", refreshToken).First(&tmpUser).Error
 	if err != nil {
@@ -125,7 +125,7 @@ func (a *AuthRepositoryImpl) RefreshToken(refreshToken string) (tokens response.
 
 func (a *AuthRepositoryImpl) Logout(username string) (httpCode int, err error) {
 
-	var logoutUser models.UserModel
+	var logoutUser database.UserModel
 	err = a.Db.Where("username = ?", username).First(&logoutUser).Error
 	if err != nil {
 		return http.StatusNotFound, err

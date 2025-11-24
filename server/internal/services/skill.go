@@ -1,14 +1,14 @@
 package services
 
 import (
+	"server/internal/database"
 	"server/internal/dto/request"
-	"server/internal/models"
 	"server/internal/repositories"
 )
 
 type SkillService interface {
 	AddSkill(addSkill request.AddSkillReq) (httpCode int, err error)
-	FetchAllSkills(skillIdsString string) (httpCode int, err error, skills []models.SkillModel)
+	FetchAllSkills(skillIdsString string) (httpCode int, err error, skills []database.SkillModel)
 }
 
 type SkillServiceImpl struct {
@@ -24,7 +24,7 @@ func (s SkillServiceImpl) AddSkill(addSkill request.AddSkillReq) (httpCode int, 
 	return httpCode, err
 }
 
-func (s SkillServiceImpl) FetchAllSkills(skillIdsString string) (httpCode int, err error, skills []models.SkillModel) {
+func (s SkillServiceImpl) FetchAllSkills(skillIdsString string) (httpCode int, err error, skills []database.SkillModel) {
 	httpCode, err, skills = s.SkillRepository.FetchAllSkills(skillIdsString)
 	return httpCode, err, skills
 }

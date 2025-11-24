@@ -3,8 +3,8 @@ package repositories
 import (
 	"fmt"
 	"net/http"
+	"server/internal/database"
 	"server/internal/dto/request"
-	"server/internal/models"
 	"slices"
 	"time"
 
@@ -13,7 +13,7 @@ import (
 
 type BugRepository interface {
 	AddBug(addBug request.AddBugReq, mediaNames []string) (httpCode int, err error)
-	FetchAllBugs(t string) (httpCode int, err error, bugs []models.BugModel)
+	FetchAllBugs(t string) (httpCode int, err error, bugs []database.BugModel)
 	UpdateBug(updateBug request.UpdateBugReq) (httpCode int, err error)
 }
 
@@ -26,7 +26,7 @@ func NewBugRepositoryImpl(db *gorm.DB) BugRepository {
 }
 
 func (b BugRepositoryImpl) UpdateBug(updateBugReq request.UpdateBugReq) (httpCode int, err error) {
-	var updateBug models.BugModel
+	var updateBug database.BugModel
 	b.DB.Where("id = ?", updateBugReq.BugID).First(&updateBug)
 
 	updatedAt, _ := time.Parse(time.RFC3339, time.Now().String())
@@ -35,17 +35,17 @@ func (b BugRepositoryImpl) UpdateBug(updateBugReq request.UpdateBugReq) (httpCod
 	updateBug.UpdatedAt = updatedAt
 	b.DB.Save(&updateBug)
 
-	var ownerAchievement models.UserModel
-	var bugAchievement models.PersonalAchievementModel
+	var ownerAchievement database.UserModel
+	var bugAchievement database.PersonalAchievementModel
 	b.DB.Where("username = ?", updateBugReq.Author).First(&ownerAchievement)
 	b.DB.Where("key = ?", "bug").First(&bugAchievement)
 
 	if !slices.Contains(bugAchievement.OwnerIds, ownerAchievement.ID) {
 		bugAchievement.OwnerIds = append(bugAchievement.OwnerIds, ownerAchievement.ID)
 		b.DB.Save(&bugAchievement)
-		var author models.UserModel
+		var author database.UserModel
 		b.DB.Where("username = ?", updateBugReq.Author).First(&author)
-		b.DB.Create(&models.NotificationModel{
+		b.DB.Create(&database.NotificationModel{
 			OwnerId: author.ID,
 			Message: fmt.Sprintf(
 				"Поздравляем, %s! Ваш репорт на первый найденный баг был принят и исправлен! Вы получили новое достижение: %s \n Спасибо, что помогаете нам в поддержании сервиса!",
@@ -55,7 +55,7 @@ func (b BugRepositoryImpl) UpdateBug(updateBugReq request.UpdateBugReq) (httpCod
 		})
 	}
 
-	b.DB.Create(&models.NotificationModel{
+	b.DB.Create(&database.NotificationModel{
 		OwnerId: ownerAchievement.ID,
 		Message: fmt.Sprintf(
 			"Поздравляем, %s! Ваш репорт на найденный баг был принят и исправлен! \n Спасибо, что помогаете нам в поддержании сервиса!",
@@ -67,14 +67,14 @@ func (b BugRepositoryImpl) UpdateBug(updateBugReq request.UpdateBugReq) (httpCod
 }
 
 func (b BugRepositoryImpl) AddBug(addBug request.AddBugReq, mediaNames []string) (httpCode int, err error) {
-	var allBugs []models.BugModel
+	var allBugs []database.BugModel
 	b.DB.Find(&allBugs)
 
-	var author models.UserModel
+	var author database.UserModel
 	b.DB.Where("username = ?", addBug.Author).First(&author)
 
 	createdAt, _ := time.Parse(time.RFC3339, time.Now().String())
-	newBug := models.BugModel{
+	newBug := database.BugModel{
 		Description: addBug.Description,
 		Additional:  addBug.Additional, //Примечания
 		Expected:    addBug.Expected,   //Ожидаемые действия
@@ -85,7 +85,7 @@ func (b BugRepositoryImpl) AddBug(addBug request.AddBugReq, mediaNames []string)
 	}
 	b.DB.Create(&newBug)
 
-	b.DB.Create(&models.NotificationModel{
+	b.DB.Create(&database.NotificationModel{
 		OwnerId: author.ID,
 		Message: fmt.Sprintf(
 			"Уважаемый %s! \n Ваш баг прошел предварительную проверку и был предоставлен разработчикам на рассмотрение.\n Следите за обновлениями!",
@@ -95,7 +95,7 @@ func (b BugRepositoryImpl) AddBug(addBug request.AddBugReq, mediaNames []string)
 	return http.StatusOK, err
 }
 
-func (b BugRepositoryImpl) FetchAllBugs(t string) (httpCode int, err error, bugs []models.BugModel) {
+func (b BugRepositoryImpl) FetchAllBugs(t string) (httpCode int, err error, bugs []database.BugModel) {
 	switch t {
 	case "":
 		b.DB.Where("status = ?", t).Find(&bugs)

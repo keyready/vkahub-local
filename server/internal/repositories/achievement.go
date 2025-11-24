@@ -3,9 +3,9 @@ package repositories
 import (
 	"fmt"
 	"net/http"
+	"server/internal/database"
 	"server/internal/dto/request"
 	"server/internal/dto/response"
-	"server/internal/models"
 
 	"gorm.io/gorm"
 )
@@ -24,14 +24,14 @@ func NewAchievementRepositoryImpl(db *gorm.DB) AchievementRepository {
 }
 
 func (a *AchievementRepositoryImpl) FetchAchievementsTeam(fetchAllAc request.FetchAllAcRequest) (httpCode int, err error, data []response.FetchAllAchievementResponse) {
-	var achievements []models.AchievementModel
+	var achievements []database.AchievementModel
 
 	switch fetchAllAc.Owner {
 	case "team":
 		a.Db.Where("team_id = ? AND type = 'team'", fetchAllAc.ValueId).Find(&achievements)
 
 		for _, achievement := range achievements {
-			var event models.EventModel
+			var event database.EventModel
 			a.Db.Where("id = ?", achievement.EventID).First(&event)
 			res := response.FetchAllAchievementResponse{
 				Id:        achievement.ID,
@@ -44,15 +44,15 @@ func (a *AchievementRepositoryImpl) FetchAchievementsTeam(fetchAllAc request.Fet
 			data = append(data, res)
 		}
 	case "user":
-		var user models.UserModel
+		var user database.UserModel
 		a.Db.First(&user, fetchAllAc.ValueId)
-		var userTeam models.TeamModel
+		var userTeam database.TeamModel
 		a.Db.First(&userTeam, user.TeamId)
-		var teamAch []models.AchievementModel
+		var teamAch []database.AchievementModel
 		a.Db.Where("team_id = ? AND type = 'user'", user.TeamId).Find(&teamAch)
 
 		for _, achievement := range teamAch {
-			var event models.EventModel
+			var event database.EventModel
 			a.Db.Where("id = ?", achievement.EventID).First(&event)
 			res := response.FetchAllAchievementResponse{}
 			res.Result = achievement.Result
@@ -66,7 +66,7 @@ func (a *AchievementRepositoryImpl) FetchAchievementsTeam(fetchAllAc request.Fet
 }
 
 func (a *AchievementRepositoryImpl) AddAchievement(addAReq request.AddAchievementReq) (httpCode int, err error) {
-	newA := models.AchievementModel{
+	newA := database.AchievementModel{
 		Type:    "team",
 		TeamID:  addAReq.TeamId,
 		EventID: addAReq.EventId,
@@ -74,21 +74,21 @@ func (a *AchievementRepositoryImpl) AddAchievement(addAReq request.AddAchievemen
 	}
 	a.Db.Create(&newA)
 
-	var team models.TeamModel
+	var team database.TeamModel
 	a.Db.Where("id = ?", addAReq.TeamId).First(&team)
 
 	for _, userId := range team.MembersId {
-		var user models.UserModel
-		var event models.EventModel
+		var user database.UserModel
+		var event database.EventModel
 		a.Db.Where("id = ?", addAReq.EventId).First(&event)
 		a.Db.Where("id = ?", userId).First(&user)
-		a.Db.Create(&models.AchievementModel{
+		a.Db.Create(&database.AchievementModel{
 			Type:    "user",
 			TeamID:  userId,
 			EventID: addAReq.EventId,
 			Result:  addAReq.Result,
 		})
-		a.Db.Create(&models.NotificationModel{
+		a.Db.Create(&database.NotificationModel{
 			Message: fmt.Sprintf("Поздравляем, %s! Ваш результат - %s, в соревновании - %s", user.Username, addAReq.Result, event.Title),
 			OwnerId: user.ID,
 		})

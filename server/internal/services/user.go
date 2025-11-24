@@ -1,10 +1,10 @@
 package services
 
 import (
+	"server/internal/database"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/dto/response"
-	"server/internal/models"
 	"server/internal/repositories"
 )
 
@@ -14,13 +14,13 @@ type UserService interface {
 	GetProfile(username string) (httpCode int, err error, userData response.ProfileData)
 	EditProfile(EditProfReq request.EditProfileInfoForm) (httpCode int, err error)
 	FetchPersonalAchievements(username, personalUsername string) (httpCode int, err error, data []response.FetchPersonalAchievementResponse)
-	FetchAllPersonalNotifications(allNtf request.FetchAllNotifications) (httpCode int, err error, ntfs []models.NotificationModel)
+	FetchAllPersonalNotifications(allNtf request.FetchAllNotifications) (httpCode int, err error, ntfs []database.NotificationModel)
 	UpdateNotification(updateNtf other.UpdateNotificationData) (httpCode int, err error)
 	GetActualInfo() (httpCode int, err error, info response.ActualInfo)
 	FetchAllMessages(fetchAllMessage request.FetchAllMessages) (httpCode int, err error, messages []response.FetchAllMessagesResponse)
 	AddPortfolio(addPortfolioReq request.AddPortfolioForm, certificateNames []string) (httpCode int, err error)
 	DeletePortfolio(certificateName, ownerName string) (httpCode int, err error)
-	GetBannedReason(ownerID int64) (httpCode int, err error, banned models.BanModel)
+	GetBannedReason(ownerID int64) (httpCode int, err error, banned database.BanModel)
 }
 
 type UserServiceImpl struct {
@@ -33,7 +33,7 @@ func NewUserServiceImpl(userRepository repositories.UserRepository) UserService 
 	}
 }
 
-func (u UserServiceImpl) GetBannedReason(ownerID int64) (httpCode int, err error, banned models.BanModel) {
+func (u UserServiceImpl) GetBannedReason(ownerID int64) (httpCode int, err error, banned database.BanModel) {
 	httpCode, err, banned = u.UserRepository.GetBannedReason(ownerID)
 	return httpCode, err, banned
 }
@@ -63,7 +63,7 @@ func (u UserServiceImpl) UpdateNotification(updateNtf other.UpdateNotificationDa
 	return httpCode, err
 }
 
-func (u UserServiceImpl) FetchAllPersonalNotifications(allNtf request.FetchAllNotifications) (httpCode int, err error, ntfs []models.NotificationModel) {
+func (u UserServiceImpl) FetchAllPersonalNotifications(allNtf request.FetchAllNotifications) (httpCode int, err error, ntfs []database.NotificationModel) {
 	httpCode, err, ntfs = u.UserRepository.FetchAllPersonalNotifications(allNtf)
 	return httpCode, err, ntfs
 }

@@ -2,7 +2,7 @@ package gocron
 
 import (
 	"fmt"
-	"server/internal/models"
+	"server/internal/database"
 	"slices"
 	"time"
 
@@ -20,26 +20,26 @@ func ClearNotifications(db *gorm.DB) func() {
 
 func Banned(db *gorm.DB) func() {
 	return func() {
-		var lastEvent models.EventModel
+		var lastEvent database.EventModel
 		db.Last(&lastEvent)
 
 		for _, teamId := range lastEvent.ParticipantsTeamsIds {
 
 			deadlineDate := time.Now().AddDate(0, 0, 1)
 			if !((lastEvent.FinishDate.Before(deadlineDate)) && (lastEvent.FinishDate.After(time.Now()))) {
-				var bannedTeam models.TeamModel
-				var captain models.UserModel
+				var bannedTeam database.TeamModel
+				var captain database.UserModel
 				db.Where("id = ?", teamId).First(&bannedTeam)
 
 				createdAt, _ := time.Parse(time.RFC3339, time.Now().String())
-				db.Create(&models.BanModel{
+				db.Create(&database.BanModel{
 					Type:      "team",
 					OwnerId:   teamId,
 					Reason:    fmt.Sprintf("Несвоевременная сдача отчета о событии: %s", lastEvent.Title),
 					CreatedAt: createdAt,
 				})
 
-				db.Create(&models.BanModel{
+				db.Create(&database.BanModel{
 					Type:      "user",
 					OwnerId:   bannedTeam.CaptainId,
 					Reason:    fmt.Sprintf("Несвоевременная сдача отчета о событии: %s\nБан капитана команды %s", lastEvent.Title, bannedTeam.Title),

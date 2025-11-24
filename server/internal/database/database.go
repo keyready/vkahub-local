@@ -2,7 +2,6 @@ package database
 
 import (
 	"log"
-	"server/internal/models"
 
 	"github.com/golang-migrate/migrate/v4"
 	"gorm.io/driver/postgres"
@@ -32,21 +31,21 @@ func DatabaseConnect(
 	}
 
 	db.AutoMigrate(
-		&models.UserModel{},
-		&models.TeamModel{},
-		&models.EventModel{},
-		&models.TrackModel{},
-		&models.ProposalModel{},
-		&models.PositionModel{},
-		&models.SkillModel{},
-		&models.BanModel{},
-		&models.AchievementModel{},
-		&models.FeedbackModel{},
-		&models.BugModel{},
-		&models.PersonalAchievementModel{},
-		&models.NotificationModel{},
-		&models.TeamChatModel{},
-		&models.ChatMessageModel{},
+		&UserModel{},
+		&TeamModel{},
+		&EventModel{},
+		&TrackModel{},
+		&ProposalModel{},
+		&PositionModel{},
+		&SkillModel{},
+		&BanModel{},
+		&AchievementModel{},
+		&FeedbackModel{},
+		&BugModel{},
+		&PersonalAchievementModel{},
+		&NotificationModel{},
+		&TeamChatModel{},
+		&ChatMessageModel{},
 	)
 
 	m, err := migrate.New(

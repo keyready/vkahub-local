@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"server/internal/dto/request"
 	"server/internal/dto/response"
-	"server/internal/models"
+	"server/internal/database"
 	"slices"
 	"time"
 
@@ -28,14 +28,14 @@ func NewProposalRepositoryImpl(DB *gorm.DB) ProposalRepository {
 }
 
 func (p *ProposalRepositoryImpl) CancelProposal(proposalId int64) (httpCode int, err error) {
-	p.DB.Where("id = ?", proposalId).Delete(&models.ProposalModel{ID: proposalId})
+	p.DB.Where("id = ?", proposalId).Delete(&database.ProposalModel{ID: proposalId})
 	return http.StatusOK, nil
 }
 
 func (p *ProposalRepositoryImpl) ApproveProposal(aprProp request.ApproveProposalRequest) (httpCode int, err error) {
-	var proposal models.ProposalModel
-	var newMember models.UserModel
-	var newTeam models.TeamModel
+	var proposal database.ProposalModel
+	var newMember database.UserModel
+	var newTeam database.TeamModel
 
 	p.DB.Where("id = ?", aprProp.ProposalId).First(&proposal)
 	p.DB.Where("id = ?", proposal.TeamID).First(&newTeam)
@@ -51,23 +51,23 @@ func (p *ProposalRepositoryImpl) ApproveProposal(aprProp request.ApproveProposal
 	newTeam.MembersId = append(newTeam.MembersId, proposal.OwnerId)
 	p.DB.Save(&newTeam)
 
-	p.DB.Create(&models.NotificationModel{
+	p.DB.Create(&database.NotificationModel{
 		OwnerId: newMember.ID,
 		Message: fmt.Sprintf("%s, поздравляем Вас! \n Вы стали членом команды %s. Желаем успехов и побед в новом коллективе!", newMember.Username, newTeam.Title),
 	})
 
 	p.DB.Delete(&proposal)
 
-	var persAchievement models.PersonalAchievementModel
+	var persAchievement database.PersonalAchievementModel
 	p.DB.Where("key = ?", "member").First(&persAchievement)
 	if !slices.Contains(persAchievement.OwnerIds, newMember.ID) {
 		persAchievement.OwnerIds = append(persAchievement.OwnerIds, newMember.ID)
 		p.DB.Save(&persAchievement)
-		p.DB.Create(&models.NotificationModel{
+		p.DB.Create(&database.NotificationModel{
 			OwnerId: newMember.ID,
 			Message: fmt.Sprintf("%s,у вас новое достижение: %s", newMember.Username, persAchievement.Title),
 		})
-		p.DB.Create(&models.NotificationModel{
+		p.DB.Create(&database.NotificationModel{
 			OwnerId: newTeam.CaptainId,
 			Message: fmt.Sprintf("Ваше приглашение в команду принято участником %s", newMember.Username),
 		})
@@ -81,15 +81,15 @@ func (p *ProposalRepositoryImpl) FetchPersonalProposals(FetchProp request.FetchP
 
 	switch FetchProp.Type {
 	case "invite":
-		var user models.UserModel
-		var proposals []models.ProposalModel
+		var user database.UserModel
+		var proposals []database.ProposalModel
 
 		p.DB.Where("username = ?", FetchProp.Observer).First(&user)
 		p.DB.Where("owner_id = ?", user.ID).Find(&proposals)
 
 		for _, proposal := range proposals {
-			var team models.TeamModel
-			var captain models.UserModel
+			var team database.TeamModel
+			var captain database.UserModel
 			p.DB.Where("id = ?", proposal.TeamID).First(&team)
 			p.DB.Where("id = ?", team.CaptainId).First(&captain)
 
@@ -107,10 +107,10 @@ func (p *ProposalRepositoryImpl) FetchPersonalProposals(FetchProp request.FetchP
 		}
 
 	case "request":
-		var captain models.UserModel
-		var proposals []models.ProposalModel
-		var team models.TeamModel
-		var owner models.UserModel
+		var captain database.UserModel
+		var proposals []database.ProposalModel
+		var team database.TeamModel
+		var owner database.UserModel
 
 		p.DB.Where("username = ?", FetchProp.Observer).First(&captain)
 		p.DB.Where("captain_id = ?", captain.ID).Find(&team)
@@ -139,10 +139,10 @@ func (p *ProposalRepositoryImpl) CreateProposal(CreateProp request.CreateProposa
 	switch CreateProp.Type {
 	case "invite":
 		for _, id := range CreateProp.UsersId {
-			var user models.UserModel
-			var captain models.UserModel
-			var team models.TeamModel
-			newProposal := models.ProposalModel{
+			var user database.UserModel
+			var captain database.UserModel
+			var team database.TeamModel
+			newProposal := database.ProposalModel{
 				Type:    CreateProp.Type,
 				TeamID:  CreateProp.TeamId,
 				Message: CreateProp.Message,
@@ -153,7 +153,7 @@ func (p *ProposalRepositoryImpl) CreateProposal(CreateProp request.CreateProposa
 			p.DB.Where("id = ?", CreateProp.TeamId).First(&team)
 			p.DB.Where("id = ?", team.CaptainId).First(&captain)
 
-			invitedNotification := &models.NotificationModel{
+			invitedNotification := &database.NotificationModel{
 				OwnerId: user.ID,
 				Message: fmt.Sprintf("%s, вас пригласили в команду %s", user.Username, team.Title),
 			}
@@ -179,12 +179,12 @@ func (p *ProposalRepositoryImpl) CreateProposal(CreateProp request.CreateProposa
 		}
 
 	case "request":
-		var team models.TeamModel
-		var user models.UserModel
+		var team database.TeamModel
+		var user database.UserModel
 		p.DB.Where("id = ", CreateProp.TeamId).Find(&team)
 		p.DB.Where("id = ", CreateProp.UsersId[0]).First(&user)
 		createdAt, _ := time.Parse(time.Now().String(), time.RFC3339)
-		newProposal := models.ProposalModel{
+		newProposal := database.ProposalModel{
 			Type:      CreateProp.Type,
 			TeamID:    CreateProp.TeamId,
 			Message:   CreateProp.Message,
@@ -192,7 +192,7 @@ func (p *ProposalRepositoryImpl) CreateProposal(CreateProp request.CreateProposa
 			CreatedAt: createdAt,
 		}
 		p.DB.Create(&newProposal)
-		p.DB.Create(&models.NotificationModel{
+		p.DB.Create(&database.NotificationModel{
 			OwnerId: team.CaptainId,
 			Message: fmt.Sprintf("В вашу команду желает вступить %s: %s", user.Username, CreateProp.Message),
 		})

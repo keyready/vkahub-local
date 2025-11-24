@@ -3,7 +3,7 @@ package repositories
 import (
 	"net/http"
 	"server/internal/dto/request"
-	"server/internal/models"
+	"server/internal/database"
 	"strconv"
 	"strings"
 
@@ -12,7 +12,7 @@ import (
 
 type PositionRepository interface {
 	AddPosition(addPosition request.AddPositionReq) (httpCode int, err error)
-	FetchAllPositions(positionIdsString string) (httpCode int, err error, positions []models.PositionModel)
+	FetchAllPositions(positionIdsString string) (httpCode int, err error, positions []database.PositionModel)
 }
 
 type PositionRepositoryImpl struct {
@@ -25,7 +25,7 @@ func NewPositionRepImpl(DB *gorm.DB) PositionRepository {
 
 func (p *PositionRepositoryImpl) AddPosition(addPosition request.AddPositionReq) (httpCode int, err error) {
 	if addDdErr := p.DB.Create(
-		&models.PositionModel{
+		&database.PositionModel{
 			Name:   addPosition.Name,
 			Author: addPosition.Author,
 		}).Error; addDdErr != nil {
@@ -43,7 +43,7 @@ func (p *PositionRepositoryImpl) AddPosition(addPosition request.AddPositionReq)
 	return http.StatusOK, nil
 }
 
-func (p *PositionRepositoryImpl) FetchAllPositions(positionIdsString string) (httpCode int, err error, positions []models.PositionModel) {
+func (p *PositionRepositoryImpl) FetchAllPositions(positionIdsString string) (httpCode int, err error, positions []database.PositionModel) {
 	if positionIdsString != "" {
 		positionIdsSlice := strings.Split(positionIdsString, ",")
 		var positionIds []int64

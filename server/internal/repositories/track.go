@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"server/internal/dto/request"
-	"server/internal/models"
+	"server/internal/database"
 
 	"gorm.io/gorm"
 )
@@ -12,7 +12,7 @@ import (
 type TrackRepository interface {
 	AddTrack(addTrack request.AddTrackDto) (httpCode int, err error)
 	PartTeamInTrack(partTeamInTrack request.PartTeamInTrackRequest) (httpCode int, err error)
-	FetchOneTrack(fetchOneTrack request.FetchOneTrackReq) (httpCode int, err error, data models.TrackModel)
+	FetchOneTrack(fetchOneTrack request.FetchOneTrackReq) (httpCode int, err error, data database.TrackModel)
 }
 
 type TrackRepositoryImpl struct {
@@ -23,16 +23,16 @@ func NewTrackRepositoryImpl(db *gorm.DB) TrackRepository {
 	return &TrackRepositoryImpl{Db: db}
 }
 
-func (t *TrackRepositoryImpl) FetchOneTrack(fetchOneTrack request.FetchOneTrackReq) (httpCode int, findTrackErr error, track models.TrackModel) {
+func (t *TrackRepositoryImpl) FetchOneTrack(fetchOneTrack request.FetchOneTrackReq) (httpCode int, findTrackErr error, track database.TrackModel) {
 	if findTrackErr = t.Db.First(&track, fetchOneTrack.TrackId).Where("event_id = ?", fetchOneTrack.EventId).Error; findTrackErr != nil {
-		return http.StatusNotFound, findTrackErr, models.TrackModel{ID: 0}
+		return http.StatusNotFound, findTrackErr, database.TrackModel{ID: 0}
 	}
 	return http.StatusOK, nil, track
 }
 
 func (t *TrackRepositoryImpl) PartTeamInTrack(pTeamInTrack request.PartTeamInTrackRequest) (httpCode int, err error) {
-	var track models.TrackModel
-	var event models.EventModel
+	var track database.TrackModel
+	var event database.EventModel
 
 	if pTeamInTrack.TrackId != 0 {
 		t.Db.Where("id = ?", pTeamInTrack.TrackId).First(&track)
@@ -42,10 +42,10 @@ func (t *TrackRepositoryImpl) PartTeamInTrack(pTeamInTrack request.PartTeamInTra
 		event.ParticipantsTeamsIds = append(event.ParticipantsTeamsIds, pTeamInTrack.TeamId)
 		t.Db.Save(&event)
 		for _, teamId := range event.ParticipantsTeamsIds {
-			var team models.TeamModel
+			var team database.TeamModel
 			t.Db.Where("id = ?", teamId).First(&team)
 			for _, memberId := range team.MembersId {
-				t.Db.Create(&models.NotificationModel{
+				t.Db.Create(&database.NotificationModel{
 					OwnerId: memberId,
 					Message: fmt.Sprintf(
 						"Ваша команда %s присоеденилась к эвенту %s на трек %s",
@@ -61,10 +61,10 @@ func (t *TrackRepositoryImpl) PartTeamInTrack(pTeamInTrack request.PartTeamInTra
 		event.ParticipantsTeamsIds = append(event.ParticipantsTeamsIds, pTeamInTrack.TeamId)
 		t.Db.Save(&event)
 		for _, teamId := range event.ParticipantsTeamsIds {
-			var team models.TeamModel
+			var team database.TeamModel
 			t.Db.Where("id = ?", teamId).First(&team)
 			for _, userId := range team.MembersId {
-				t.Db.Create(&models.NotificationModel{
+				t.Db.Create(&database.NotificationModel{
 					OwnerId: userId,
 					Message: fmt.Sprintf(
 						"Ваша команда %s присоеденилась к эвенту %s",
@@ -80,8 +80,8 @@ func (t *TrackRepositoryImpl) PartTeamInTrack(pTeamInTrack request.PartTeamInTra
 }
 
 func (t *TrackRepositoryImpl) AddTrack(addTrack request.AddTrackDto) (httpCode int, err error) {
-	var event models.EventModel
-	newTrack := models.TrackModel{
+	var event database.EventModel
+	newTrack := database.TrackModel{
 		Title:                addTrack.Title,
 		Description:          addTrack.Description,
 		EventId:              addTrack.EventId,
@@ -98,10 +98,10 @@ func (t *TrackRepositoryImpl) AddTrack(addTrack request.AddTrackDto) (httpCode i
 	t.Db.Save(&event)
 
 	for _, teamId := range event.ParticipantsTeamsIds {
-		var team models.TeamModel
+		var team database.TeamModel
 		t.Db.Where("id = ?", teamId).First(&team)
 		for _, memberId := range team.MembersId {
-			t.Db.Create(&models.NotificationModel{
+			t.Db.Create(&database.NotificationModel{
 				OwnerId: memberId,
 				Message: fmt.Sprintf("Анонсирован новый трек %s на событие %s", newTrack.Title, event.Title),
 			})
