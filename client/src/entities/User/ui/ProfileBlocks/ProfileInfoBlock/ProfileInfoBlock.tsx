@@ -19,6 +19,7 @@ import { RiCloseLine, RiEditLine, RiSaveLine } from '@remixicon/react';
 import { changeUserProfile } from '../../../model/services/profileServices/changeUserProfile';
 import { getIsProfileChanging, getUserData } from '../../../model/selectors/UserSelectors';
 import { User, UserRoles } from '../../../model/types/User';
+import { RecoveryQuestionSelector } from '../../RecoveryPasswordModal/RecoveryQuestionSelector';
 
 import classes from './ProfileInfoBlock.module.scss';
 
@@ -81,6 +82,15 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                 </p>
             );
         }
+        if (!userData?.recovery?.answer) {
+            return (
+                <p className="italic text-red-300">
+                    * Пока Вы не выберете пару контрольный вопрос-ответ, вам будет недоступно
+                    использование приложения, т.к. разработчики устали удалять пользователей из-за
+                    их забывчивости
+                </p>
+            );
+        }
         if (userData?.firstname && !userRoles?.includes(UserRoles.PROFILE_CONFIRMED)) {
             return (
                 <VStack maxW>
@@ -108,7 +118,7 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
         }
 
         return null;
-    }, [isEditorMode, userData?.firstname, userRoles]);
+    }, [isEditorMode, userData?.firstname, userData?.recovery?.answer, userRoles]);
 
     const handleChangeProfile = useCallback(
         async (event: FormEvent<HTMLFormElement>) => {
@@ -273,8 +283,45 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                             label="Отчество"
                         />
 
-                        <Autocomplete
+                        <RecoveryQuestionSelector
+                            value={changedUserData?.recovery?.question || ''}
+                            onChange={(rq) =>
+                                setChangedUserData({
+                                    ...changedUserData,
+                                    recovery: {
+                                        ...(changedUserData?.recovery?.answer
+                                            ? { answer: changedUserData?.recovery?.answer }
+                                            : { answer: '' }),
+                                        question: rq,
+                                    },
+                                })
+                            }
+                            isDisabled={!isEditorMode || isProfileChanging}
+                        />
+                        <Input
                             isRequired
+                            value={changedUserData?.recovery?.question || ''}
+                            onValueChange={(val) =>
+                                setChangedUserData({
+                                    ...changedUserData,
+                                    recovery: {
+                                        ...(changedUserData?.recovery?.question
+                                            ? { question: changedUserData?.recovery?.question }
+                                            : { question: '' }),
+                                        answer: val,
+                                    },
+                                })
+                            }
+                            isDisabled={
+                                !isEditorMode ||
+                                isProfileChanging ||
+                                !changedUserData?.recovery?.question
+                            }
+                            size="sm"
+                            label="Ответ на вопрос"
+                        />
+
+                        <Autocomplete
                             selectedKey={changedUserData?.rank}
                             onSelectionChange={(value) =>
                                 setChangedUserData({
@@ -314,7 +361,6 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                         </Autocomplete>
 
                         <Input
-                            isRequired
                             value={changedUserData?.group_number || ''}
                             onChange={(event) =>
                                 setChangedUserData({

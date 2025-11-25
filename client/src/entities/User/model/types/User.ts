@@ -41,6 +41,11 @@ export interface MembersFilters {
     skills?: string[];
 }
 
+export interface RecoveryQuestion {
+    id: number;
+    question: string;
+}
+
 export interface ServerUser {
     id: string;
 
@@ -56,6 +61,12 @@ export interface ServerUser {
     lastname: string;
     middlename: string;
     description: string;
+
+    // recovery
+    recovery: {
+        question: string;
+        answer: string;
+    };
 
     group_number: string;
     rank: string;

@@ -2,7 +2,7 @@ import { Button, cn, Input } from '@nextui-org/react';
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { RiAccountBoxLine, RiMoonLine, RiSunLine } from '@remixicon/react';
+import { RiAccountBoxLine, RiLockPasswordLine, RiMoonLine, RiSunLine } from '@remixicon/react';
 
 import { loginUser } from '../../model/services/authServices/loginUser';
 import { getUserAuthError, getUserIsLoading } from '../../model/selectors/UserSelectors';
@@ -132,7 +132,10 @@ export const LoginForm = (props: LoginFormProps) => {
                 </VStack>
 
                 <VStack maxW>
-                    {/* <TextButton onClick={onRecoveryClick}>Я забыл пароль</TextButton> */}
+                    <TextButton className="flex gap-1 items-center" onClick={onRecoveryClick}>
+                        <RiLockPasswordLine size={16} />
+                        <p> Я забыл пароль</p>
+                    </TextButton>
                     <TextButton className="flex gap-1 items-center" onClick={onRegisterClick}>
                         <RiAccountBoxLine size={16} />
                         <p>У меня нет аккаунта</p>

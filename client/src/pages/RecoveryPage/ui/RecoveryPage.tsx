@@ -9,9 +9,7 @@ import { classNames } from '@/shared/lib/classNames';
 import { Page } from '@/widgets/Page';
 import { RoutePath } from '@/shared/config/routeConfig';
 import { HStack, VStack } from '@/shared/ui/Stack';
-import { changePassword, getUserIsLoading } from '@/entities/User';
-import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
-import { toastDispatch } from '@/widgets/Toaster';
+import { getUserIsLoading } from '@/entities/User';
 import { Helmet } from '@/widgets/Helmet';
 import { getCurrentTheme } from '@/widgets/ThemeSwitcher';
 
@@ -25,10 +23,9 @@ const RecoveryPage = memo((props: RecoveryPageProps) => {
     const [params] = useSearchParams();
     const [password, setPassword] = useState<string>('');
     const [confirmedPassword, setConfirmedPassword] = useState<string>('');
-    const [recoveryToken, setRecoveryToken] = useState<string>('');
+    const [_, setRecoveryToken] = useState<string>('');
 
     const navigate = useNavigate();
-    const dispatch = useAppDispatch();
 
     const isUserLoading = useSelector(getUserIsLoading);
     const isDark = useSelector(getCurrentTheme) === 'dark';
@@ -47,27 +44,9 @@ const RecoveryPage = memo((props: RecoveryPageProps) => {
         }
     }, [navigate, params]);
 
-    const handleFormSubmit = useCallback(
-        async (event: FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-
-            if (!password) return;
-
-            const result = await toastDispatch(
-                dispatch(
-                    changePassword({
-                        password,
-                        recovery_token: recoveryToken,
-                    }),
-                ),
-            );
-
-            if (result.meta.requestStatus === 'fulfilled') {
-                navigate(RoutePath.login);
-            }
-        },
-        [dispatch, navigate, password, recoveryToken],
-    );
+    const handleFormSubmit = useCallback(async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+    }, []);
 
     return (
         <Page className={classNames(classes.RecoveryPage, {}, [className])}>
