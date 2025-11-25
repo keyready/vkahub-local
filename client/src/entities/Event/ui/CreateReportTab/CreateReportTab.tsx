@@ -110,10 +110,7 @@ export const CreateReportTab = (props: CreateReportTabProps) => {
                                       className="h-fit py-1 px-3"
                                       color="success"
                                   >
-                                      <a
-                                          download
-                                          href={downloadLink.link}
-                                      >
+                                      <a download href={`/reports/${downloadLink.link}`}>
                                           Скачать рапорт
                                       </a>
                                   </Button>
