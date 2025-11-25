@@ -1,3 +1,5 @@
+.idea
 client/node_modules
 client-files
 server/bin
+server/static/reports/*.docx

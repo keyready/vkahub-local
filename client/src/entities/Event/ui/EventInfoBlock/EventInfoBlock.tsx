@@ -50,7 +50,7 @@ export const EventInfoBlock = (props: EventInfoBlockProps) => {
 
         if (
             event.participantsTeamsIds &&
-            event.participantsTeamsIds.includes(userTeamData?.id || -1)
+            event.participantsTeamsIds.includes(userTeamData?.id || '')
         ) {
             setIsButtonDisabled(true);
             setButtonColor('success');
@@ -153,9 +153,7 @@ export const EventInfoBlock = (props: EventInfoBlockProps) => {
                             classNames={{
                                 wrapper: classes.img,
                             }}
-                            src={`${import.meta.env.VITE_MINIO_ENDPOINT}/events_bucket/${
-                                event?.image
-                            }`}
+                            src={`/events-images/${event?.image}`}
                             className="w-full h-full"
                             fallbackSrc={`/static/events-types/${event?.type}-fallback.webp`}
                         />

@@ -16,5 +16,5 @@ export interface Event {
 
     // треки
     tracksId?: number[];
-    participantsTeamsIds?: number[];
+    participantsTeamsIds?: string[];
 }
