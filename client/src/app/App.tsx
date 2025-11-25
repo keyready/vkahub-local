@@ -1,16 +1,20 @@
-import {Suspense, useEffect} from "react";
-import {useSelector} from "react-redux";
-import {NextUIProvider} from "@nextui-org/react";
-import {useNavigate} from "react-router-dom";
+import { Suspense, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { NextUIProvider } from '@nextui-org/react';
+import { useNavigate } from 'react-router-dom';
 
-import {getIsUpdateAvailable, ServiceUpdatedActions, ServiceUpdatedBanner,} from "@/features/ServiceUpdated";
-import {AppRouter} from "@/app/providers/AppRouter";
-import {Toaster} from "@/widgets/Toaster";
-import {Navbar} from "@/widgets/Navbar";
-import {useAppDispatch} from "@/shared/lib/hooks/useAppDispatch";
-import {getUserData, getUserDataService} from "@/entities/User";
-import {USER_ACCESS_TOKEN} from "@/shared/const";
-import {useWindowWidth} from "@/shared/lib/hooks/useWindowWidth";
+import {
+    getIsUpdateAvailable,
+    ServiceUpdatedActions,
+    ServiceUpdatedBanner,
+} from '@/features/ServiceUpdated';
+import { AppRouter } from '@/app/providers/AppRouter';
+import { Toaster } from '@/widgets/Toaster';
+import { Navbar } from '@/widgets/Navbar';
+import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
+import { getUserData, getUserDataService } from '@/entities/User';
+import { USER_ACCESS_TOKEN } from '@/shared/const';
+import { useWindowWidth } from '@/shared/lib/hooks/useWindowWidth';
 
 export const App = () => {
     const { width } = useWindowWidth();

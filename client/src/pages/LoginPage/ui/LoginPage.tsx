@@ -7,7 +7,13 @@ import classes from './LoginPage.module.scss';
 
 import { classNames } from '@/shared/lib/classNames';
 import { Page } from '@/widgets/Page';
-import { getUserData, getUserIsLoading, LoginForm, RegisterModal } from '@/entities/User';
+import {
+    getUserData,
+    getUserIsLoading,
+    LoginForm,
+    RecoveryPasswordModal,
+    RegisterModal,
+} from '@/entities/User';
 import { HStack, VStack } from '@/shared/ui/Stack';
 import { RoutePath } from '@/shared/config/routeConfig';
 import { Helmet } from '@/widgets/Helmet';
@@ -79,10 +85,10 @@ const LoginPage = memo((props: LoginPageProps) => {
                     isOpened={isRegisterModalOpened}
                     setIsOpened={setIsRegisterModalOpened}
                 />
-                {/* <RecoveryPasswordModal */}
-                {/*    isOpened={isRecoveryModalOpened} */}
-                {/*    setIsOpened={setIsRecoveryModalOpened} */}
-                {/* /> */}
+                 <RecoveryPasswordModal 
+                    isOpened={isRecoveryModalOpened} 
+                    setIsOpened={setIsRecoveryModalOpened} 
+                 /> 
             </VStack>
         </Page>
     );
