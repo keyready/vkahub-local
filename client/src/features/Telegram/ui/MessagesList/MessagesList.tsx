@@ -11,7 +11,7 @@ import { useSockets } from '@/shared/api/useSockets';
 
 interface MessagesListProps {
     className?: string;
-    teamId: number;
+    teamId: string;
     receiveMessage?: 'flow' | 'leave';
 }
 

@@ -167,7 +167,9 @@ export const ChatWindow = (props: ChatWindowProps) => {
                         className="rounded-full"
                         classNames={{ wrapper: classes.avatarFallback }}
                         fallbackSrc="/static/fallbacks/team-fallback.webp"
-                        src={`${import.meta.env.VITE_MINIO_ENDPOINT}/teams_bucket/${teamData?.image}`}
+                        src={`${import.meta.env.VITE_MINIO_ENDPOINT}/teams_bucket/${
+                            teamData?.image
+                        }`}
                         alt={teamData?.title}
                     />
                     <Button
@@ -181,7 +183,7 @@ export const ChatWindow = (props: ChatWindowProps) => {
 
                 <MessagesList
                     receiveMessage={chatSettings.receiveMessage}
-                    teamId={teamData?.id || -1}
+                    teamId={teamData?.id || ''}
                 />
                 <MessageInputField sendVariant={chatSettings.sendMessage} />
 
