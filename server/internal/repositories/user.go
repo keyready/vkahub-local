@@ -7,11 +7,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"server/internal/database"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/dto/response"
 	"server/internal/mapper"
-	"server/internal/database"
+	"server/internal/utils"
 	"slices"
 	"strings"
 	"unicode/utf8"
@@ -241,19 +242,40 @@ func (u *UserRepositoryImpl) EditProfile(EditProf request.EditProfileInfoForm) (
 	currentUser.GroupNumber = EditProf.GroupNumber
 	currentUser.Rank = EditProf.Rank
 	currentUser.Description = EditProf.Description
+
 	if !slices.Contains(currentUser.Roles, "profileConfirmed") {
 		currentUser.Roles = append(currentUser.Roles, "profileConfirmed")
 	}
-	currentUser.IsProfileConfirmed = true
-	if !slices.Contains(EditProf.Skills, "null") {
+
+	if EditProf.Skills != nil {
 		currentUser.Skills = EditProf.Skills
 	}
-	if !slices.Contains(EditProf.Positions, "null") {
+	if EditProf.Positions != nil {
 		currentUser.Positions = EditProf.Positions
 	}
 	if EditProf.Avatar != "" {
 		currentUser.Avatar = EditProf.Avatar
 	}
+
+	if currentUser.Recovery != nil {
+		hashAnwser, _ := utils.GenerateHash(
+			strings.ReplaceAll(
+				strings.ToLower(EditProf.Recovery.Answer), 
+				" ", 
+				"_",
+			),
+		)
+		
+		recovery := other.RecoveryQuestionDTO{
+			Question: EditProf.Recovery.Question,
+			Answer:   hashAnwser,
+		}
+
+		jsonData, _ := json.Marshal(recovery)
+		currentUser.Recovery = datatypes.JSON(jsonData)
+	}
+
+	currentUser.IsProfileConfirmed = true
 
 	u.Db.Save(&currentUser)
 

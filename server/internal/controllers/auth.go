@@ -125,34 +125,93 @@ func (ac *AuthController) Logout(ctx *gin.Context) {
 	appGin.SuccessResponse(httpCode, gin.H{})
 }
 
-func (ac *AuthController) ResetPassword(ctx *gin.Context) {
-	appGin := app.Gin{Ctx: ctx}
-	mail := appGin.Ctx.PostForm("mail")
+func (ac *AuthController) ApproveRecovery(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
 
-	httpCode, err := ac.authService.ResetPassword(mail)
+	jsonForm := request.ApproveRecoveryForm{}
+	if bindErr := gCtx.ShouldBindJSON(&jsonForm); bindErr != nil {
+		appGin.ErrorResponse(
+			http.StatusBadRequest,
+			bindErr,
+		)
+
+		return
+	}
+
+	httpCode, err := ac.authService.ApproveRecovery(jsonForm)
 	if err != nil {
-		appGin.ErrorResponse(httpCode, err)
+		appGin.ErrorResponse(
+			http.StatusInternalServerError,
+			err,
+		)
+
+		return
+	}
+
+	appGin.SuccessResponse(httpCode, "ok")
+}
+
+func (ac *AuthController) ChangePassword(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
+
+	jsonForm := request.RecoveryPasswordForm{}
+	if bindErr := gCtx.ShouldBindJSON(&jsonForm); bindErr != nil {
+		appGin.ErrorResponse(
+			http.StatusBadRequest,
+			bindErr,
+		)
+		return
+	}
+
+	httpCode, err := ac.authService.ChangePassword(jsonForm)
+	if err != nil {
+		appGin.ErrorResponse(
+			httpCode,
+			err,
+		)
+
 		return
 	}
 
 	appGin.SuccessResponse(httpCode, gin.H{})
 }
 
-func (ac *AuthController) RecoveryPassword(ctx *gin.Context) {
-	appGin := app.Gin{Ctx: ctx}
-	var RecPasswdReq other.RecoveryPassword
+func (ac *AuthController) GetPersonalQuestion(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
 
-	err := ctx.ShouldBindJSON(&RecPasswdReq)
-	if err != nil {
-		appGin.ErrorResponse(http.StatusBadRequest, err)
+	jsonForm := request.GetPersonalQuestionForm{}
+	if bindErr := gCtx.ShouldBindJSON(&jsonForm); bindErr != nil {
+		appGin.ErrorResponse(
+			http.StatusBadRequest,
+			bindErr,
+		)
 		return
 	}
 
-	httpCode, err := ac.authService.RecoveryPassword(RecPasswdReq)
+	httpCode, err, question := ac.authService.GetPersonalQuestion(jsonForm)
 	if err != nil {
-		appGin.ErrorResponse(httpCode, err)
+		appGin.ErrorResponse(
+			httpCode,
+			err,
+		)
 		return
 	}
 
-	appGin.SuccessResponse(httpCode, gin.H{})
+	appGin.SuccessResponse(httpCode, gin.H{"question": question})
+}
+
+func (ac *AuthController) GetRecoveryQuestions(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
+
+	httpCode, questions, err := ac.authService.GetRecoveryQuestions()
+	if err != nil {
+		appGin.ErrorResponse(
+			http.StatusInternalServerError,
+			err,
+		)
+
+		return
+	}
+
+	appGin.SuccessResponse(httpCode, questions)
 }

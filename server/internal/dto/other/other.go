@@ -13,13 +13,9 @@ var (
 	CHAT_ATTACHMENTS_STORAGE = filepath.Join(BASE_DIR, "attachments")
 )
 
-type ConfirmCode struct {
-	Code string `json:"code"`
-}
-
-type RecoveryPassword struct {
-	Password      string `json:"password"`
-	RecoveryToken string `json:"recovery_token"`
+type RecoveryQuestionDTO struct {
+	Question string `json:"question"`
+	Answer   string `json:"answer"`
 }
 
 type NotificationData struct {

@@ -2,6 +2,7 @@ package request
 
 import (
 	"mime/multipart"
+	"server/internal/dto/other"
 	"time"
 )
 
@@ -33,6 +34,8 @@ type EditProfileInfoForm struct {
 	Description string `form:"description"`
 
 	Avatar string
+
+	Recovery other.RecoveryQuestionDTO `binding:"required" form:"recovery"`
 
 	Rank        string `form:"rank"`
 	GroupNumber string `form:"group_number"`
@@ -217,4 +220,18 @@ type WriteMessageForm struct {
 type FetchAllEventsRequest struct {
 	Type     string
 	Username string
+}
+
+type GetPersonalQuestionForm struct {
+	Username string `json:"username"`
+}
+
+type ApproveRecoveryForm struct {
+	Username string `json:"username"`
+	Answer   string `json:"answer"`
+}
+
+type RecoveryPasswordForm struct {
+	Username    string `json:"username"`
+	NewPassword string `json:"new_password"`
 }

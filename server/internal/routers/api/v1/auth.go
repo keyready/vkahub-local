@@ -19,7 +19,10 @@ func NewAuthRouters(
 		authRouters.POST("/login", ac.Login)
 		authRouters.GET("/logout", middleware.AuthMiddleware(jwtService), ac.Logout)
 		authRouters.POST("/refresh_token", ac.RefreshToken)
-		authRouters.POST("/recovery", ac.ResetPassword)
-		authRouters.POST("/change_password", ac.RecoveryPassword)
+
+		authRouters.GET("/recovery_questions", ac.GetRecoveryQuestions)
+		authRouters.GET("/personal_question", ac.GetPersonalQuestion)
+		authRouters.PUT("/approve_recovery", ac.ApproveRecovery)
+		authRouters.POST("/change_password", ac.ChangePassword)
 	}
 }

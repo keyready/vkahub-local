@@ -1,7 +1,9 @@
 package repositories
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"server/internal/authorizer"
 	"server/internal/database"
@@ -17,8 +19,11 @@ type AuthRepository interface {
 	Login(login request.LoginRequest) (httpCode int, err error)
 	RefreshToken(refreshToken string) (tokens authorizer.TokensResponse, err error)
 	Logout(username string) (httpCode int, err error)
-	ResetPassword(mail string) (httpCode int, err error)
-	RecoveryPassword(RecPasswdReq other.RecoveryPassword) (httpCode int, err error)
+
+	GetRecoveryQuestions() (httpCode int, questions []database.RecoveryQuestionModel, err error)
+	GetPersonalQuestion(getPersonalQuestionForm request.GetPersonalQuestionForm) (httpCode int, err error, question string)
+	ApproveRecovery(approveRecoveryForm request.ApproveRecoveryForm) (httpCode int, err error)
+	ChangePassword(recoveryPasswordForm request.RecoveryPasswordForm) (httpCode int, err error)
 }
 
 type AuthRepositoryImpl struct {
@@ -36,43 +41,85 @@ func NewAuthRepositoryImpl(
 	}
 }
 
-func (a *AuthRepositoryImpl) RecoveryPassword(RecPasswdReq other.RecoveryPassword) (httpCode int, err error) {
-	// var recPasswdUser models.UserModel
+func (a *AuthRepositoryImpl) ChangePassword(recoveryPasswordForm request.RecoveryPasswordForm) (httpCode int, err error) {
+	userRecovery := database.UserModel{}
+	if err = a.Db.Where("username = ?", recoveryPasswordForm.Username).First(&userRecovery).Error; err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("failed to recovery password: %v", err)
+	}
 
-	// claims := &jsonwebtoken.RecTokenClaims{}
+	hashNewPassword, _ := utils.GenerateHash(recoveryPasswordForm.NewPassword)
+	userRecovery.Password = hashNewPassword
+	a.Db.Save(&userRecovery)
 
-	// _, err = jwt.ParseWithClaims(RecPasswdReq.RecoveryToken, claims, func(token *jwt.Token) (interface{}, error) {
-	// 	return []byte(os.Getenv("JWT_ACCESS_SECRET_KEY")), nil
-	// })
-	// if err != nil {
-	// 	return http.StatusInternalServerError, err
-	// }
-
-	// hashPassword, _ := hash.HashData(RecPasswdReq.Password)
-	// recPasswdUser.Password = hashPassword
-
-	// a.Db.Save(&recPasswdUser)
 	return http.StatusOK, nil
 }
 
-func (a *AuthRepositoryImpl) ResetPassword(mail string) (int, error) {
-	var resetPasswordUser database.UserModel
+func (a *AuthRepositoryImpl) ApproveRecovery(
+	approveRecoveryForm request.ApproveRecoveryForm,
+) (httpCode int, err error) {
+	userRecovery := database.UserModel{}
+	recovery := other.RecoveryQuestionDTO{}
 
-	err := a.Db.Where("mail = ?", mail).First(&resetPasswordUser).Error
-	if err == gorm.ErrRecordNotFound {
-		return http.StatusNotFound, err
+	if err = a.Db.Where("username = ?", approveRecoveryForm.Username).First(&userRecovery).Error; err != nil {
+		return http.StatusInternalServerError,
+			fmt.Errorf(
+				"user %s not found in system", approveRecoveryForm.Username,
+			)
 	}
 
-	return http.StatusOK, err
+	if decodeErr := json.Unmarshal(userRecovery.Recovery, &recovery); decodeErr != nil {
+		return http.StatusInternalServerError,
+			fmt.Errorf("failed to decode recovery: %v", decodeErr)
+	}
+
+	if validateAnswer := utils.CompareHash(recovery.Answer, approveRecoveryForm.Answer); !validateAnswer {
+		return http.StatusBadRequest,
+			errors.New("answer is invalid")
+	}
+
+	return http.StatusOK, nil
+}
+
+func (a *AuthRepositoryImpl) GetPersonalQuestion(
+	getPersonalQuestionForm request.GetPersonalQuestionForm,
+) (httpCode int, err error, recoveryQuestion string) {
+	userRecovery := database.UserModel{}
+	recovery := other.RecoveryQuestionDTO{}
+
+	if err = a.Db.Where("username = ?", getPersonalQuestionForm.Username).First(&userRecovery).Error; err != nil {
+		return http.StatusInternalServerError,
+			fmt.Errorf(
+				"user %s not found in system", getPersonalQuestionForm.Username,
+			),
+			""
+	}
+
+	if decodeErr := json.Unmarshal(userRecovery.Recovery, &recovery); decodeErr != nil {
+		return http.StatusInternalServerError,
+			fmt.Errorf(
+				"failed to decode: %v", decodeErr,
+			),
+			""
+	}
+
+	return http.StatusOK, nil, recovery.Question
+}
+
+func (a *AuthRepositoryImpl) GetRecoveryQuestions() (httpCode int, questions []database.RecoveryQuestionModel, err error) {
+	if err = a.Db.Find(&questions).Error; err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+	return http.StatusOK, questions, nil
 }
 
 func (a *AuthRepositoryImpl) SignUp(signUp request.SignUpRequest, avatarName string) (httpCode int, err error) {
 	var userExist database.UserModel
 	if err = a.Db.Where("username = ?", signUp.Username).First(&userExist).Error; err == nil {
-		return http.StatusBadRequest, errors.New("User with this username or mail already exists")
+		return http.StatusBadRequest, errors.New("user with this username already exists")
 	}
 
 	hashPassword, _ := utils.GenerateHash(signUp.Password)
+
 	a.Db.Create(&database.UserModel{
 		Username: signUp.Username,
 		Password: hashPassword,

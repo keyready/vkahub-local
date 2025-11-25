@@ -47,6 +47,7 @@ func DatabaseConnect(
 		&NotificationModel{},
 		&TeamChatModel{},
 		&ChatMessageModel{},
+		&RecoveryQuestionModel{},
 	)
 
 	m, err := migrate.New(

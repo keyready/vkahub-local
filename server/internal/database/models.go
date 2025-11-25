@@ -141,10 +141,14 @@ type TrackModel struct {
 }
 
 type UserModel struct {
-	ID       int64  `gorm:"primaryKey" json:"id"`
+	ID int64 `gorm:"primaryKey" json:"id"`
+
 	Username string `gorm:"unique;index" json:"username"`
 	Password string `json:"password"`
-	Avatar   string `json:"avatar"`
+
+	Recovery datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"-"`
+
+	Avatar string `json:"avatar"`
 
 	Firstname  string `json:"firstname"`
 	Middlename string `json:"middlename"`
@@ -173,4 +177,9 @@ type UserModel struct {
 	Portfolio datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"-"`
 
 	LastOnline time.Time `json:"lastOnline"`
+}
+
+type RecoveryQuestionModel struct {
+	ID       int64  `gorm:"primaryKey" json:"id"`
+	Question string `gorm:"unique;not null" json:"question"`
 }
