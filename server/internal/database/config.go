@@ -10,13 +10,7 @@ type Config struct {
 }
 
 type MigrationsConfig struct {
-	ConnUri string     `mapstructure:"connUri"`
-	Enable  bool       `mapstructure:"enable"`
-	DirUrl  string     `mapstructure:"dirUrl"`
-	Mock    MockConfig `mapstructure:"mock"`
-}
-
-type MockConfig struct {
-	Enable bool   `mapstructure:"enable"`
-	DirUrl string `mapstructure:"dirUrl"`
+	ConnUri string `mapstructure:"connUri"`
+	Enable  bool   `mapstructure:"enable"`
+	DirUrl  string `mapstructure:"dirUrl"`
 }

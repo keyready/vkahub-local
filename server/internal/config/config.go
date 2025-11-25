@@ -32,9 +32,6 @@ func FromFile(filePath string) (*VkaHubConfig, error) {
 	viperInstance.SetDefault("migrations.enable", true)
 	viperInstance.SetDefault("migrations.dirUrl", "file:///app/migrations")
 
-	viperInstance.SetDefault("migrations.mock.enable", false)
-	viperInstance.SetDefault("migrations.mock.dirUrl", "file:///app/mock")
-
 	viperInstance.SetDefault("authorizer.accessSecretKey", "access-secret-key")
 	viperInstance.SetDefault("authorizer.refreshSecretKey", "refresh-secret-key")
 

@@ -16,7 +16,6 @@ import (
 func DatabaseConnect(
 	dbCfg *Config,
 	migrationsCfg *MigrationsConfig,
-	mockCfg *MockConfig,
 ) *gorm.DB {
 	dsn := BuildConnectDSN(
 		dbCfg.Host,
@@ -65,20 +64,6 @@ func DatabaseConnect(
 	} else {
 		if err := m.Down(); err != nil {
 			log.Fatalln("failed to down migrations: ", err.Error())
-		}
-	}
-
-	if mockCfg.Enable {
-		mockMigration, err := migrate.New(
-			migrationsCfg.ConnUri,
-			mockCfg.DirUrl,
-		)
-		if err != nil {
-			log.Fatalln("failed to init mock migrations: ", err)
-		}
-
-		if err = mockMigration.Up(); err != nil {
-			log.Fatalln("failed to run mock migrations: ", err)
 		}
 	}
 

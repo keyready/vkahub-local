@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"server/internal/database"
-	"strconv"
 	"strings"
 
 	"github.com/lukasjarosch/go-docx"
@@ -38,11 +37,11 @@ func (r ReportRepositoryImpl) GenerateReport(eventId int64) (httpCode int, repor
 	eventSponsors := strings.Join(event.Sponsors, ", ")
 
 	eventDate := fmt.Sprintf(
-		"с %s по %s %s %s г.",
-		strconv.Itoa(event.StartDate.Day()),
-		strconv.Itoa(event.FinishDate.Day()),
+		"с %d по %d %s %d г.",
+		event.StartDate.Day(),
+		event.FinishDate.Day(),
 		event.StartDate.Month().String(),
-		strconv.Itoa(event.StartDate.Year()),
+		event.StartDate.Year(),
 	)
 
 	replacements := docx.PlaceholderMap{
