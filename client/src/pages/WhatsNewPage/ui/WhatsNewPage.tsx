@@ -63,6 +63,27 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
             <VStack gap="36px" maxW align="start" className="overflow-y-auto relative">
                 <HStack maxW align="start" className="grid grid-cols-5">
                     <div className="col-span-1 sticky top-1">
+                        <h1 className="text-xl leading-tight">Версия 2.2.0 от 25.11.2025 г.</h1>
+                    </div>
+                    <VStack maxW gap="24px" className="col-span-4">
+                        <div>
+                            <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
+                                Новые функции
+                            </h3>
+                            <h4 className="text-l leading-snug">
+                                - Добавили два обязательных для заполнения поля: контрольные вопрос
+                                и ответ. Это очень нужно для возможности восстановить пароль, если
+                                вдруг (!) забыли
+                                <br />- Добавили возможность сброса пароля
+                                <br />- Пока Вы не выберете контрольный вопрос и не введете на него
+                                ответ, Вам будет недоступно использование приложения
+                            </h4>
+                        </div>
+                    </VStack>
+                </HStack>
+
+                <HStack maxW align="start" className="grid grid-cols-5">
+                    <div className="col-span-1 sticky top-1">
                         <h1 className="text-xl leading-tight">Версия 2.1.1 от 17.11.2025 г.</h1>
                     </div>
                     <VStack maxW gap="24px" className="col-span-4">
@@ -72,7 +93,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             </h3>
                             <h4 className="text-l leading-snug">
                                 - Добавили возможность редактирование аватарки профиля поользователя
-                                и команды. (Почему не сделали сразу?)
+                                и команды (почему не сделали сразу?)
                             </h4>
                         </div>
                         <div>

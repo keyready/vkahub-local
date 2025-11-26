@@ -7,3 +7,4 @@ export const getIsProfileChanging = (state: StateSchema) => state.user?.isProfil
 export const getUserError = (state: StateSchema) => state.user?.error;
 export const getUserAuthError = (state: StateSchema) => state.user?.authError;
 export const getMembersFilters = (state: StateSchema) => state.user?.filters || {};
+export const getRecoveryQuestions = (state: StateSchema) => state.user?.recoveryQuestions || [];

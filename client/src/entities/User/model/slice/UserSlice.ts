@@ -1,9 +1,9 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-import { UserSchema } from '../types/UserSchema';
+import type { UserSchema } from '../types/UserSchema';
 import { signupUser } from '../services/authServices/signupUser';
 import { loginUser } from '../services/authServices/loginUser';
-import { AuthErrorTypes, MembersFilters, User } from '../types/User';
+import type { AuthErrorTypes, MembersFilters, RecoveryQuestion, User } from '../types/User';
 import { getUserDataService } from '../services/profileServices/getUserData';
 import { getProfileData } from '../services/profileServices/getProfileData';
 import { sendRecoveryLink } from '../services/authServices/sendRecoveryLink';
@@ -13,11 +13,14 @@ import { changeUserProfile } from '../services/profileServices/changeUserProfile
 import { logoutService } from '../services/authServices/logoutService';
 import { addPortfolioFile } from '../services/profileServices/addPortfolioFile';
 import { deletePortfolioFile } from '../services/profileServices/deletePortfolioFile';
+import { getRecoveryQuestions } from '../services/authServices/getRecoveryQuestions';
+import { approveRecoveryAnswer } from '../services/authServices/approveRecoveryAnswer';
 
 import { USER_ACCESS_TOKEN, USER_REFRESH_TOKEN } from '@/shared/const';
 
 const initialState: UserSchema = {
     data: undefined,
+    recoveryQuestions: [],
     isLoading: false,
     error: undefined,
     selectedProfile: undefined,
@@ -69,6 +72,34 @@ export const UserSlice = createSlice({
                 state.data = undefined;
             })
             .addCase(logoutService.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+
+            .addCase(getRecoveryQuestions.pending, (state) => {
+                state.error = undefined;
+                state.isLoading = true;
+            })
+            .addCase(
+                getRecoveryQuestions.fulfilled,
+                (state, action: PayloadAction<RecoveryQuestion[]>) => {
+                    state.isLoading = false;
+                    state.recoveryQuestions = action.payload;
+                },
+            )
+            .addCase(getRecoveryQuestions.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+
+            .addCase(approveRecoveryAnswer.pending, (state) => {
+                state.error = undefined;
+                state.isLoading = true;
+            })
+            .addCase(approveRecoveryAnswer.fulfilled, (state) => {
+                state.isLoading = false;
+            })
+            .addCase(approveRecoveryAnswer.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
             })
