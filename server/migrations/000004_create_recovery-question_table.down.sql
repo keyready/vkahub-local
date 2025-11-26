@@ -1,1 +1,0 @@
-DROP TABLE IF EXISTS recovery_question_model; 

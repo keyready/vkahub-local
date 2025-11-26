@@ -1,5 +1,5 @@
-INSERT INTO recovery_question_model (question) 
-VALUES 
+INSERT INTO recovery_question_models (question)
+VALUES
     ('Девичья фамилия вашей матери?'),
     ('Имя вашего первого питомца?'),
     ('В каком городе родился ваш старший родственник (например, бабушка или дедушка)?'),
