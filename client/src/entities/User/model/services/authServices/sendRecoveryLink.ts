@@ -9,20 +9,18 @@ export const sendRecoveryLink = createAsyncThunk<{ question: string }, string, T
         const { extra, rejectWithValue } = thunkAPI;
 
         try {
-            // const response = await extra.api.post<{ question: string }>(
-            //     '/api/auth/personal_question',
-            //     {
-            //         username: mail,
-            //     },
-            // );
+            const response = await extra.api.post<{ question: string }>(
+                '/api/auth/personal_question',
+                {
+                    username: mail,
+                },
+            );
 
-            return { question: 'Когда ебали что на жопе написали?' };
+            if (!response.data) {
+                throw new Error();
+            }
 
-            // if (!response.data) {
-            //     throw new Error();
-            // }
-            //
-            // return response.data;
+            return response.data;
         } catch (e) {
             const axiosError = e as AxiosError;
             // @ts-ignore

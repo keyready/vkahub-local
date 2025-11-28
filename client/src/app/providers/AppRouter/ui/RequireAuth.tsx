@@ -18,14 +18,10 @@ export function RequireAuth({ children, roles }: RequireAuthProps) {
 
     const hasRequiredRoles = useMemo(() => {
         if (!roles) return true;
+        if (!userData?.recovery?.answer) return false;
 
         return roles.every((requiredRole) => userRoles?.includes(requiredRole));
-    }, [roles, userRoles]);
-
-    const isRecoveryAnswerEntered = useMemo(
-        () => Boolean(userData?.recovery?.answer),
-        [userData?.recovery?.answer],
-    );
+    }, [roles, userData?.recovery?.answer, userRoles]);
 
     useEffect(() => {
         if (userRoles.includes(UserRoles.BANNED) && currentLocation.pathname !== RoutePath.banned) {
@@ -34,10 +30,6 @@ export function RequireAuth({ children, roles }: RequireAuthProps) {
     }, [currentLocation.pathname, navigate, userRoles]);
 
     if (!hasRequiredRoles) {
-        return <Navigate to={RoutePath.feed} state={{ from: currentLocation }} replace />;
-    }
-
-    if (isRecoveryAnswerEntered) {
         return <Navigate to={RoutePath.feed} state={{ from: currentLocation }} replace />;
     }
 

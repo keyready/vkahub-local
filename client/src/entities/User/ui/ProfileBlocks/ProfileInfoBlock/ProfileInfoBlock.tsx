@@ -20,6 +20,7 @@ import { changeUserProfile } from '../../../model/services/profileServices/chang
 import { getIsProfileChanging, getUserData } from '../../../model/selectors/UserSelectors';
 import { User, UserRoles } from '../../../model/types/User';
 import { RecoveryQuestionSelector } from '../../RecoveryPasswordModal/RecoveryQuestionSelector';
+import { getRecoveryQuestions } from '../../../model/services/authServices/getRecoveryQuestions';
 
 import classes from './ProfileInfoBlock.module.scss';
 
@@ -58,6 +59,10 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
     const [isEditorMode, setIsEditorMode] = useState<boolean>(false);
 
     const isProfileChanging = useSelector(getIsProfileChanging);
+
+    useEffect(() => {
+        dispatch(getRecoveryQuestions());
+    }, [dispatch]);
 
     const isProfilesEqual = useMemo(
         () => JSON.stringify(userData) === JSON.stringify(changedUserData),
@@ -300,7 +305,7 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                         />
                         <Input
                             isRequired
-                            value={changedUserData?.recovery?.question || ''}
+                            value={changedUserData?.recovery?.answer || ''}
                             onValueChange={(val) =>
                                 setChangedUserData({
                                     ...changedUserData,
