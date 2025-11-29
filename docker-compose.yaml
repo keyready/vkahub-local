@@ -48,8 +48,6 @@ services:
     container_name: vkahub-admin
     env_file:
       - ./server/.env
-    ports:
-      - "127.0.0.1:5001:5001"
     volumes:
       - pgadmin:/root/.pgadmin
     networks:
