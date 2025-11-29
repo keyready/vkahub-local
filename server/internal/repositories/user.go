@@ -275,8 +275,6 @@ func (u *UserRepositoryImpl) EditProfile(EditProf request.EditProfileInfoForm) (
 		currentUser.Recovery = datatypes.JSON(jsonData)
 	}
 
-	currentUser.IsProfileConfirmed = true
-
 	u.Db.Save(&currentUser)
 
 	return http.StatusOK, nil

@@ -9,7 +9,9 @@ import (
 	"os/signal"
 	"server/cmd"
 	"server/internal/authorizer"
+	"server/internal/cloud"
 	"server/internal/database"
+	"server/internal/onliner"
 	"server/internal/routers"
 	"syscall"
 )
@@ -19,6 +21,9 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
+	onlinerServ := onliner.New(&serviceConfig.Onliner)
+	cloudServ := cloud.New(&serviceConfig.Cloud)
+
 	db := database.DatabaseConnect(
 		&serviceConfig.Database,
 		&serviceConfig.Migrations,
@@ -26,7 +31,12 @@ func main() {
 
 	jwtService := authorizer.New(&serviceConfig.Authorizer)
 
-	router := routers.InitRouter(db, jwtService)
+	router := routers.InitRouter(
+		db,
+		jwtService,
+		onlinerServ,
+		cloudServ,
+	)
 
 	go awaitSystemSignals(cancel)
 

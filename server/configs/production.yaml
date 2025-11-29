@@ -12,5 +12,17 @@ migrations:
   dirUrl: file:///app/migrations
 
 authorizer:
-  accessSecretKey: access-secret-key
-  refreshSecretKey: refresh-secret-key
+  accessSecretKey: access-vkahub-secret-vkahub-key
+  refreshSecretKey: refresh-vkahub-secret-vkahub-key
+
+onliner:
+  address: http://redis:6379
+  password: 
+  databaseNum: 0
+
+cloud:
+  address: cloud:9000
+  username: minio-root
+  password: minio-root
+  enableSSL: false
+  mainBucket: vkahub-bucket

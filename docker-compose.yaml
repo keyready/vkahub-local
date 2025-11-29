@@ -50,9 +50,35 @@ services:
     ports:
       - "127.0.0.1:5001:5001"
     volumes:
-      - pgadmin:/root/.pgadmin
+      - pgadmin_data:/root/.pgadmin
     networks:
       - vkahub-net
+  
+  redis:
+    image: redis:latest
+    container_name: vkahub-redis
+    env_file:
+      - ./server/.env
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      - vkahub-net
+
+  cloud:
+    container_name: cloud
+    image: minio/minio:latest
+    command: server --address ":9000" --console-address ":9001" /data
+    networks:
+      - vkahub-net
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    env_file:
+      - ./server/.env
+    volumes:
+     - minio_data:/data
 
 networks:
   vkahub-net:
@@ -61,4 +87,6 @@ networks:
 
 volumes:
   db_data:
-  pgadmin:
+  pgadmin_data:
+  redis_data:
+  minio_data:

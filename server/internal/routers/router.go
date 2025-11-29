@@ -1,9 +1,12 @@
 package routers
 
 import (
+	"context"
 	"server/internal/authorizer"
+	"server/internal/cloud"
 	"server/internal/controllers"
 	"server/internal/gocron"
+	"server/internal/onliner"
 	"server/internal/repositories"
 	v1 "server/internal/routers/api/v1"
 	"server/internal/services"
@@ -16,10 +19,14 @@ import (
 func InitRouter(
 	db *gorm.DB,
 	jwtService *authorizer.Authorizer,
+	onliner *onliner.Onliner,
+	cloud *cloud.Cloud,
 ) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
+
+	_ = cloud.Cloud.InitBucket(context.Background())
 
 	c := cron.New()
 	// c.AddFunc("@weekly", gocron.Banned(db))
@@ -33,12 +40,12 @@ func InitRouter(
 
 	teamRepo := repositories.NewTeamRepositoryImpl(db)
 	teamService := services.NewTeamServiceImpl(teamRepo)
-	teamCtrl := controllers.NewTeamController(teamService)
+	teamCtrl := controllers.NewTeamController(teamService, cloud)
 	v1.NewTeamRouters(r, jwtService, teamCtrl)
 
 	userRepo := repositories.NewUserRepositoryImpl(db)
 	userService := services.NewUserServiceImpl(userRepo)
-	userCtrl := controllers.NewUserControllers(userService)
+	userCtrl := controllers.NewUserControllers(userService, cloud)
 	v1.NewUserRouters(r, jwtService, userCtrl)
 
 	r.GET("/ws/online", userCtrl.GetOnlineUsers)

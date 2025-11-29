@@ -10,7 +10,7 @@ git clone <repository-url>/vkahub-local.git
 cd vkahub-local
 ```
 
-2. Инициализируем файл конфигураций `configs/production.yaml` и файл переменных окружения `.env`:
+2. Инициализируем файл конфигураций `server/configs/production.yaml` и файл переменных окружения `server/.env`:
 ```yaml
 database:
   username: postgres
@@ -26,8 +26,20 @@ migrations:
   dirUrl: file:///app/migrations
 
 authorizer:
-  accessSecretKey: access-secret-key
-  refreshSecretKey: refresh-secret-key
+  accessSecretKey: access-vkahub-secret-vkahub-key
+  refreshSecretKey: refresh-vkahub-secret-vkahub-key
+
+onliner:
+  address: http://redis:6379
+  password: 
+  databaseNum: 0
+
+cloud:
+  address: cloud:9000
+  username: minio-root
+  password: minio-root
+  enableSSL: false
+  mainBucket: vkahub-bucket
 ```
 
 ```env
@@ -38,6 +50,9 @@ PGADMIN_LISTEN_PORT=5001
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_DB=vkahub
+
+MINIO_ROOT_USER=minio-root
+MINIO_ROOT_PASSWORD=minio-root
 ```
 
 3. Запускаем приложение при помощи `docker compose`:

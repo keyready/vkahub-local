@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"path/filepath"
+	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/gosocket"
@@ -20,11 +20,16 @@ import (
 
 type UserController struct {
 	userService services.UserService
+	cloud       *cloud.Cloud
 }
 
-func NewUserControllers(service services.UserService) *UserController {
+func NewUserControllers(
+	service services.UserService,
+	cloud *cloud.Cloud,
+) *UserController {
 	return &UserController{
 		userService: service,
+		cloud:       cloud,
 	}
 }
 
@@ -277,42 +282,38 @@ func (uc *UserController) FetchAllMembersByParams(ctx *gin.Context) {
 	appGin.SuccessResponse(httpCode, data)
 }
 
-func (uc *UserController) EditProfile(ctx *gin.Context) {
-	appGin := app.Gin{Ctx: ctx}
+func (uc *UserController) EditProfile(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
 	formData := request.EditProfileInfoForm{}
 
-	bindErr := ctx.ShouldBind(&formData)
-	if bindErr != nil {
+	if bindErr := gCtx.ShouldBind(&formData); bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
+
+	ctx := gCtx.Request.Context()
 
 	formData.Owner = appGin.Ctx.GetString("username")
 
 	avatar, err := appGin.Ctx.FormFile("avatar")
 	if err != http.ErrMissingFile {
-		delErr := utils.FindAndDeleteFile(
-			other.USER_AVATARS_STORAGE,
-			fmt.Sprintf(
-				"%s_%s",
-				appGin.Ctx.GetString("username"),
-				"avatar",
-			),
-		)
-		if delErr != nil {
-			log.Println("failed to delete old avatar", delErr.Error())
+		// err = uc.cloud.Cloud.RemoveFile()
+
+		readFileParams := utils.ReadFileParams{
+			File:    avatar,
+			SaveDir: other.USER_AVATARS_STORAGE,
 		}
 
-		fileName := fmt.Sprintf(
-			"%s_%s_%s",
-			appGin.Ctx.GetString("username"),
-			"avatar",
-			strings.ReplaceAll(avatar.Filename, " ", "_"),
-		)
-		avatar.Filename = fileName
+		readFileResult, err := utils.ReadFile(readFileParams)
+		if err != nil {
+			appGin.ErrorResponse(
+				http.StatusInternalServerError,
+				err,
+			)
+			return
+		}
 
-		savePath := filepath.Join(other.USER_AVATARS_STORAGE, fileName)
-		if saveErr := appGin.Ctx.SaveUploadedFile(avatar, savePath); saveErr != nil {
+		if saveErr := uc.cloud.Cloud.UploadFile(ctx, readFileResult.FilePath, readFileResult.FileData); saveErr != nil {
 			appGin.ErrorResponse(
 				http.StatusInternalServerError,
 				saveErr,
@@ -320,7 +321,7 @@ func (uc *UserController) EditProfile(ctx *gin.Context) {
 			return
 		}
 
-		formData.Avatar = fileName
+		formData.Avatar = readFileResult.FileName
 	} else {
 		formData.Avatar = ""
 	}

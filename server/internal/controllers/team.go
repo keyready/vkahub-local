@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"path/filepath"
+	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/services"
@@ -18,41 +18,49 @@ import (
 
 type TeamController struct {
 	teamService services.TeamService
+	cloud       *cloud.Cloud
 }
 
-func NewTeamController(service services.TeamService) *TeamController {
+func NewTeamController(
+	service services.TeamService,
+	cloud *cloud.Cloud,
+) *TeamController {
 	return &TeamController{
 		teamService: service,
+		cloud:       cloud,
 	}
 }
 
-func (tc *TeamController) EditTeam(ctx *gin.Context) {
-	appGin := app.Gin{Ctx: ctx}
+func (tc *TeamController) EditTeam(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
 	formData := request.EditTeamInfoForm{}
 
-	bindErr := ctx.ShouldBind(&formData)
-	if bindErr != nil {
+	if bindErr := gCtx.ShouldBind(&formData); bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
+	ctx := gCtx.Request.Context()
+
 	image, err := appGin.Ctx.FormFile("image")
 	if err != http.ErrMissingFile {
-		delErr := utils.FindAndDeleteFile(other.TEAM_IMAGES_STORAGE, formData.Title)
-		if delErr != nil {
-			log.Println("failed to remove old image", delErr.Error())
+		// err := tc.cloud.Cloud.RemoveFile(ctx,)
+
+		params := utils.ReadFileParams{
+			File:    image,
+			SaveDir: other.TEAM_IMAGES_STORAGE,
 		}
 
-		fileName := fmt.Sprintf(
-			"%s_%s",
-			strings.ReplaceAll(formData.Title, " ", "_"),
-			strings.ReplaceAll(image.Filename, " ", "_"),
-		)
+		readFileResult, err := utils.ReadFile(params)
+		if err != nil {
+			appGin.ErrorResponse(
+				http.StatusInternalServerError,
+				err,
+			)
+			return
+		}
 
-		image.Filename = fileName
-		savePath := filepath.Join(other.TEAM_IMAGES_STORAGE, fileName)
-
-		if saveErr := appGin.Ctx.SaveUploadedFile(image, savePath); bindErr != nil {
+		if saveErr := tc.cloud.Cloud.UploadFile(ctx, readFileResult.FilePath, readFileResult.FileData); saveErr != nil {
 			appGin.ErrorResponse(
 				http.StatusInternalServerError,
 				saveErr,
@@ -60,7 +68,7 @@ func (tc *TeamController) EditTeam(ctx *gin.Context) {
 			return
 		}
 
-		formData.Image = fileName
+		formData.Image = readFileResult.FileName
 	} else {
 		formData.Image = ""
 	}
