@@ -41,7 +41,6 @@ services:
     container_name: vkahub-client-builder
     volumes:
       - ./client-files:/client/dist
-#    command: sh -c "npm run build"
 
   admin:
     image: dpage/pgadmin4:latest
@@ -51,12 +50,15 @@ services:
     volumes:
       - pgadmin:/root/.pgadmin
     networks:
-      - vkahub-net
+      vkahub-net:
+        ipv4_address: 172.18.0.11
 
 networks:
   vkahub-net:
-    name: vkahub-net
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/24
 
 volumes:
   db_data:
