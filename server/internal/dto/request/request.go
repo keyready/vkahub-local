@@ -34,9 +34,8 @@ type EditProfileInfoForm struct {
 
 	Avatar string
 
-	Question string `binding:"required" form:"recoveryQuesiton"`
-	Answer   string `binding:"required" form:"recoveryAnswer"`
-	// Recovery other.RecoveryQuestionDTO `binding:"required" form:"recovery"`
+	Question string `form:"recoveryQuesiton"`
+	Answer   string `form:"recoveryAnswer"`
 
 	Rank        string `form:"rank"`
 	GroupNumber string `form:"group_number"`
