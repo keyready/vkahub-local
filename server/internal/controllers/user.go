@@ -166,7 +166,7 @@ func (uc *UserController) GetOnlineUsers(ctx *gin.Context) {
 	}
 
 	defer func() {
-		conn.Close()
+		_ = conn.Close()
 		delete(gosocket.ClientsOnline, conn)
 	}()
 

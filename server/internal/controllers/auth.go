@@ -167,7 +167,7 @@ func (ac *AuthController) ApproveRecovery(gCtx *gin.Context) {
 	httpCode, err := ac.authService.ApproveRecovery(jsonForm)
 	if err != nil {
 		appGin.ErrorResponse(
-			http.StatusInternalServerError,
+			httpCode,
 			err,
 		)
 
