@@ -4,19 +4,26 @@ import (
 	"errors"
 	"net/http"
 	"server/internal/authorizer"
-	"server/pkg/app"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 func AuthMiddleware(jwtService *authorizer.Authorizer) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		appGin := app.Gin{Ctx: ctx}
+	return func(gCtx *gin.Context) {
 
-		authHeader := appGin.Ctx.Request.Header.Get("Authorization")
+		authHeader := gCtx.Request.Header.Get("Authorization")
 		if authHeader == "" {
-			appGin.ErrorResponse(http.StatusBadRequest, errors.New("not found authorization header"))
+			gCtx.AbortWithError(
+				http.StatusUnauthorized,
+				errors.New("auth header not found"),
+			)
+
+			gCtx.JSON(
+				http.StatusUnauthorized,
+				gin.H{"error": "Неавторизованный запрос"},
+			)
+
 			return
 		}
 
@@ -24,15 +31,20 @@ func AuthMiddleware(jwtService *authorizer.Authorizer) gin.HandlerFunc {
 
 		claims, err := jwtService.Authorizer.ValidateToken(accessTokenString)
 		if err != nil {
-			appGin.ErrorResponse(
+			gCtx.AbortWithError(
 				http.StatusUnauthorized,
-				err,
+				errors.New("token is invalid"),
+			)
+
+			gCtx.JSON(
+				http.StatusUnauthorized,
+				gin.H{"error": "Неавторизованный запрос"},
 			)
 			return
 		}
 
-		ctx.Set("username", claims.Payload.Username)
+		gCtx.Set("username", claims.Payload.Username)
 
-		ctx.Next()
+		gCtx.Next()
 	}
 }

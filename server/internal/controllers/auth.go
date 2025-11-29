@@ -30,25 +30,37 @@ func NewAuthController(
 	}
 }
 
-func (ac *AuthController) SignUp(ctx *gin.Context) {
-	appGin := app.Gin{Ctx: ctx}
+func (ac *AuthController) SignUp(gCtx *gin.Context) {
 	formData := request.SignUpRequest{}
 
-	bindErr := ctx.ShouldBind(&formData)
-	if bindErr != nil {
-		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
+	if bindErr := gCtx.ShouldBind(&formData); bindErr != nil {
+		gCtx.AbortWithError(
+			http.StatusBadRequest,
+			bindErr,
+		)
+
+		gCtx.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": bindErr.Error()},
+		)
+
 		return
 	}
 
-	multipartForm, err := ctx.MultipartForm()
+	avatar, err := gCtx.FormFile("avatar")
 	if err != nil {
-		appGin.ErrorResponse(
+		gCtx.AbortWithError(
 			http.StatusBadRequest,
 			err,
 		)
+
+		gCtx.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": err.Error()},
+		)
+
 		return
 	}
-	avatar := multipartForm.File["avatar"][0]
 
 	avatarName := fmt.Sprintf(
 		"%s_%s_%s",
@@ -60,21 +72,35 @@ func (ac *AuthController) SignUp(ctx *gin.Context) {
 
 	httpCode, serviceErr := ac.authService.SignUp(formData, avatarName)
 	if serviceErr != nil {
-		appGin.ErrorResponse(httpCode, serviceErr)
-		return
-	}
+		gCtx.AbortWithError(
+			httpCode,
+			serviceErr,
+		)
 
-	savePath := filepath.Join(other.USER_AVATARS_STORAGE, avatarName)
-	if saveErr := appGin.Ctx.SaveUploadedFile(avatar, savePath); saveErr != nil {
-		appGin.ErrorResponse(
-			http.StatusInternalServerError,
-			saveErr,
+		gCtx.JSON(
+			httpCode,
+			gin.H{"error": serviceErr.Error()},
 		)
 
 		return
 	}
 
-	appGin.SuccessResponse(http.StatusCreated, gin.H{})
+	savePath := filepath.Join(other.USER_AVATARS_STORAGE, avatarName)
+	if saveErr := gCtx.SaveUploadedFile(avatar, savePath); saveErr != nil {
+		gCtx.AbortWithError(
+			http.StatusInternalServerError,
+			saveErr,
+		)
+
+		gCtx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": saveErr.Error()},
+		)
+
+		return
+	}
+
+	gCtx.JSON(http.StatusCreated, gin.H{})
 }
 
 func (ac *AuthController) Login(ctx *gin.Context) {
@@ -181,10 +207,16 @@ func (ac *AuthController) GetPersonalQuestion(gCtx *gin.Context) {
 
 	jsonForm := request.GetPersonalQuestionForm{}
 	if bindErr := gCtx.ShouldBindJSON(&jsonForm); bindErr != nil {
-		appGin.ErrorResponse(
+		gCtx.AbortWithError(
 			http.StatusBadRequest,
 			bindErr,
 		)
+
+		gCtx.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": bindErr.Error()},
+		)
+
 		return
 	}
 
@@ -197,21 +229,24 @@ func (ac *AuthController) GetPersonalQuestion(gCtx *gin.Context) {
 		return
 	}
 
-	appGin.SuccessResponse(httpCode, gin.H{"question": question})
+	gCtx.JSON(httpCode, gin.H{"question": question})
 }
 
 func (ac *AuthController) GetRecoveryQuestions(gCtx *gin.Context) {
-	appGin := app.Gin{Ctx: gCtx}
-
 	httpCode, questions, err := ac.authService.GetRecoveryQuestions()
 	if err != nil {
-		appGin.ErrorResponse(
+		gCtx.AbortWithError(
 			http.StatusInternalServerError,
 			err,
+		)
+
+		gCtx.JSON(
+			httpCode,
+			gin.H{"error": err.Error()},
 		)
 
 		return
 	}
 
-	appGin.SuccessResponse(httpCode, questions)
+	gCtx.JSON(httpCode, questions)
 }

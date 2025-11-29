@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"server/pkg/app"
 	"net/http"
 	"server/internal/dto/request"
 	"server/internal/services"
@@ -18,47 +17,69 @@ func NewAchievementController(aService services.AchievementService) *Achievement
 	return &AchievementController{aService: aService}
 }
 
-func (ac *AchievementController) FetchAchievementsTeam(ctx *gin.Context) {
-	appGin := app.Gin{Ctx: ctx}
-	var fetchAllAcReq request.FetchAllAcRequest
+func (ac *AchievementController) FetchAchievementsTeam(gCtx *gin.Context) {
+	form := request.FetchAllAcRequest{}
 
-	userId := ctx.Query("userId")
-	teamId := ctx.Query("teamId")
+	userId := gCtx.Query("userId")
+	teamId := gCtx.Query("teamId")
 
-	if userId == "" {
-		fetchAllAcReq.Owner = "team"
-		id, _ := strconv.ParseInt(teamId, 10, 64)
-		fetchAllAcReq.ValueId = id
-	} else {
-		fetchAllAcReq.Owner = "user"
-		id, _ := strconv.ParseInt(userId, 10, 64)
-		fetchAllAcReq.ValueId = id
+	switch {
+	case userId == "":
+		form.Owner = "team"
+		valueID, _ := strconv.Atoi(teamId)
+		form.ValueId = int64(valueID)
+	default:
+		form.Owner = "user"
+		valueID, _ := strconv.Atoi(userId)
+		form.ValueId = int64(valueID)
 	}
 
-	httpCode, err, data := ac.aService.FetchAchievementsTeam(fetchAllAcReq)
+	httpCode, err, achievements := ac.aService.FetchAchievementsTeam(form)
 	if err != nil {
-		appGin.ErrorResponse(httpCode, err)
+		gCtx.AbortWithError(
+			httpCode,
+			err,
+		)
+
+		gCtx.JSON(
+			httpCode,
+			gin.H{"error": err.Error()},
+		)
+
 		return
 	}
 
-	appGin.SuccessResponse(httpCode, data)
+	gCtx.JSON(httpCode, achievements)
 }
 
-func (ac *AchievementController) AddAchievement(ctx *gin.Context) {
-	appGin := app.Gin{Ctx: ctx}
-	var addA request.AddAchievementReq
+func (ac *AchievementController) AddAchievement(gCtx *gin.Context) {
+	jsonForm := request.AddAchievementReq{}
 
-	bindErr := ctx.ShouldBindJSON(&addA)
-	if bindErr != nil {
-		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
+	if bindErr := gCtx.ShouldBindJSON(&jsonForm); bindErr != nil {
+		gCtx.AbortWithError(
+			http.StatusBadRequest,
+			bindErr,
+		)
+
+		gCtx.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": bindErr.Error()},
+		)
+
 		return
 	}
 
-	httpCode, err := ac.aService.AddAchievement(addA)
+	httpCode, err := ac.aService.AddAchievement(jsonForm)
 	if err != nil {
-		appGin.ErrorResponse(httpCode, err)
+		gCtx.AbortWithError(
+			httpCode,
+			err,
+		)
+
+		gCtx.JSON(httpCode, gin.H{"error": err.Error()})
+
 		return
 	}
 
-	appGin.SuccessResponse(httpCode, gin.H{})
+	gCtx.JSON(httpCode, gin.H{})
 }
