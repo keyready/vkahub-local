@@ -26,15 +26,15 @@ type FetchAllMembersByParamsRequest struct {
 type EditProfileInfoForm struct {
 	ID int64 `form:"id"`
 
-	Firstname  string `binding:"required" form:"firstname"`
-	Middlename string `binding:"required" form:"middlename"`
-	Lastname   string `binding:"required" form:"lastname"`
+	Firstname  string `form:"firstname"`
+	Middlename string `form:"middlename"`
+	Lastname   string `form:"lastname"`
 
 	Description string `form:"description"`
 
 	Avatar string
 
-	Question string `form:"recoveryQuesiton"`
+	Question string `form:"recoveryQuestion"`
 	Answer   string `form:"recoveryAnswer"`
 
 	Rank        string `form:"rank"`
