@@ -21,7 +21,7 @@ func NewAuthRouters(
 		authRouters.POST("/refresh_token", ac.RefreshToken)
 
 		authRouters.GET("/recovery_questions", ac.GetRecoveryQuestions)
-		authRouters.GET("/personal_question", ac.GetPersonalQuestion)
+		authRouters.POST("/personal_question", ac.GetPersonalQuestion)
 		authRouters.PUT("/approve_recovery", ac.ApproveRecovery)
 		authRouters.POST("/change_password", ac.ChangePassword)
 	}

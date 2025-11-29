@@ -146,7 +146,7 @@ type UserModel struct {
 	Username string `gorm:"unique;index" json:"username"`
 	Password string `json:"password"`
 
-	Recovery datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"-"`
+	Recovery datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"recovery"`
 
 	Avatar string `json:"avatar"`
 

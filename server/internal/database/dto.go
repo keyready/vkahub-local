@@ -10,5 +10,5 @@ type PortfolioFile struct {
 
 type RecoveryQuestion struct {
 	Question string `json:"recoveryQuestion"`
-	Answer   string `json:"-"`
+	Answer   string `json:"recoveryAnswer"`
 }
