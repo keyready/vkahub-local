@@ -16,14 +16,13 @@ export const approveRecoveryAnswer = createAsyncThunk<
     const { extra, rejectWithValue } = thunkAPI;
 
     try {
-        // const response = await extra.api.post<string>('/api/auth/approve_recovery', recoveryProps);
-        return 'ok';
+        const response = await extra.api.post<string>('/api/auth/approve_recovery', recoveryProps);
 
-        // if (!response.data) {
-        //     throw new Error();
-        // }
-        //
-        // return response.data;
+        if (!response.data) {
+            throw new Error();
+        }
+
+        return response.data;
     } catch (e) {
         const axiosError = e as AxiosError;
         // @ts-ignore

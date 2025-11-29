@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 const baseUrl = '/online';
 
 export function useSockets<T, M = any>(url?: string) {
-    const ws = useMemo(() => new WebSocket(`ws://localhost:5000/ws${url || baseUrl}`), [url]);
+    const ws = useMemo(() => new WebSocket(`/ws${url || baseUrl}`), [url]);
 
     const [socketData, setSocketData] = useState<T>();
     const [error, setError] = useState<any>();

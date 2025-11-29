@@ -1,18 +1,9 @@
 server {
     listen 80;
-    server_name localhost;
-    # server_name ithub.61kaf2021.vka;
-
-    location /db-admin {
-        proxy_pass http://localhost:5001;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
+    server_name ithub.61kaf2021.vka;
 
     location / {
-        root /home/rasp/vkahub-local/client-files/;
+        root /home/service/vkahub-local/client-files/;
         try_files $uri $uri/ /index.html;
     }
 
@@ -36,32 +27,32 @@ server {
     }
 
     location /certificates {
-        alias /home/rasp/vkahub-local/server/static/certificates/;
+        alias /home/service/vkahub-local/server/static/certificates/;
         try_files $uri $uri/ =404;
     }
 
     location /reports {
-        alias /home/rasp/vkahub-local/server/static/reports/;
+        alias /home/service/vkahub-local/server/static/reports/;
         try_files $uri $uri/ =404;
     }
 
     location /user-avatars {
-        alias /home/rasp/vkahub-local/server/static/user-avatars/;
+        alias /home/service/vkahub-local/server/static/user-avatars/;
         try_files $uri $uri/ =404;
     }
 
     location /team-images {
-        alias /home/rasp/vkahub-local/server/static/team-images/;
+        alias /home/service/vkahub-local/server/static/team-images/;
         try_files $uri $uri/ =404;
     } 
 
     location /bugs {
-        alias /home/rasp/vkahub-local/server/static/bugs/;
+        alias /home/service/vkahub-local/server/static/bugs/;
         try_files $uri $uri/ =404;
     } 
 
     location /events {
-        alias /home/rasp/vkahub-local/server/static/events/;
+        alias /home/service/vkahub-local/server/static/events/;
         try_files $uri $uri/ =404;
     } 
 
