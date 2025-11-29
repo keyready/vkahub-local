@@ -3,13 +3,12 @@ package mapper
 import (
 	"encoding/json"
 	"server/internal/database"
-	"server/internal/dto/other"
 	"server/internal/dto/response"
 )
 
 func UserModelToUserData(userModel database.UserModel) (response.UserData, error) {
 	portfolio := []database.PortfolioFile{}
-	recovery := other.RecoveryQuestionDTO{}
+	recovery := database.RecoveryQuestion{}
 
 	if decodeErr := json.Unmarshal(userModel.Portfolio, &portfolio); decodeErr != nil {
 		return response.UserData{}, decodeErr

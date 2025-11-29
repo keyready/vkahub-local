@@ -7,3 +7,8 @@ type PortfolioFile struct {
 	Url       string `json:"url"`
 	Type      string `json:"type"`
 }
+
+type RecoveryQuestion struct {
+	Question string `json:"recoveryQuestion"`
+	Answer   string `json:"-"`
+}

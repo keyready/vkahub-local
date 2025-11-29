@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"server/internal/authorizer"
 	"server/internal/database"
-	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/utils"
 
@@ -58,7 +57,7 @@ func (a *AuthRepositoryImpl) ApproveRecovery(
 	approveRecoveryForm request.ApproveRecoveryForm,
 ) (httpCode int, err error) {
 	userRecovery := database.UserModel{}
-	recovery := other.RecoveryQuestionDTO{}
+	recovery := database.RecoveryQuestion{}
 
 	if err = a.Db.Where("username = ?", approveRecoveryForm.Username).First(&userRecovery).Error; err != nil {
 		return http.StatusInternalServerError,
@@ -84,7 +83,7 @@ func (a *AuthRepositoryImpl) GetPersonalQuestion(
 	getPersonalQuestionForm request.GetPersonalQuestionForm,
 ) (httpCode int, err error, recoveryQuestion string) {
 	userRecovery := database.UserModel{}
-	recovery := other.RecoveryQuestionDTO{}
+	recovery := database.RecoveryQuestion{}
 
 	if err = a.Db.Where("username = ?", getPersonalQuestionForm.Username).First(&userRecovery).Error; err != nil {
 		return http.StatusInternalServerError,
@@ -124,10 +123,6 @@ func (a *AuthRepositoryImpl) SignUp(signUp request.SignUpRequest, avatarName str
 		Username: signUp.Username,
 		Password: hashPassword,
 		Avatar:   avatarName,
-		// Roles:    []string{"user", "mailConfirmed"},
-		// Portfolio: datatypes.JSON([]byte(`[]`)),
-		// Skills:    []string{},
-		// Positions: []string{},
 	})
 
 	return http.StatusCreated, nil

@@ -13,11 +13,6 @@ var (
 	CHAT_ATTACHMENTS_STORAGE = filepath.Join(BASE_DIR, "attachments")
 )
 
-type RecoveryQuestionDTO struct {
-	Question string `form:"question" json:"question"`
-	Answer   string `form:"answer" json:"-"`
-}
-
 type NotificationData struct {
 	Message string `query:"message"`
 	OwnerId int    `query:"to"`

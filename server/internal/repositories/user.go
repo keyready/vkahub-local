@@ -266,7 +266,7 @@ func (u *UserRepositoryImpl) EditProfile(EditProf request.EditProfileInfoForm) (
 			),
 		)
 
-		recovery := other.RecoveryQuestionDTO{
+		recovery := database.RecoveryQuestion{
 			Question: EditProf.Question,
 			Answer:   hashAnwser,
 		}
