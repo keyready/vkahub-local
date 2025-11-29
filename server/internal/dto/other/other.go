@@ -15,7 +15,7 @@ var (
 
 type RecoveryQuestionDTO struct {
 	Question string `form:"question" json:"question"`
-	Answer   string `form:"answer" json:"answer"`
+	Answer   string `form:"answer" json:"-"`
 }
 
 type NotificationData struct {

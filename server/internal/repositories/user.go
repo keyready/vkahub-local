@@ -260,14 +260,14 @@ func (u *UserRepositoryImpl) EditProfile(EditProf request.EditProfileInfoForm) (
 	if currentUser.Recovery != nil {
 		hashAnwser, _ := utils.GenerateHash(
 			strings.ReplaceAll(
-				strings.ToLower(EditProf.Recovery.Answer), 
-				" ", 
+				strings.ToLower(EditProf.Answer),
+				" ",
 				"_",
 			),
 		)
-		
+
 		recovery := other.RecoveryQuestionDTO{
-			Question: EditProf.Recovery.Question,
+			Question: EditProf.Question,
 			Answer:   hashAnwser,
 		}
 

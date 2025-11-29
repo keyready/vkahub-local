@@ -2,7 +2,6 @@ package request
 
 import (
 	"mime/multipart"
-	"server/internal/dto/other"
 	"time"
 )
 
@@ -35,7 +34,9 @@ type EditProfileInfoForm struct {
 
 	Avatar string
 
-	Recovery other.RecoveryQuestionDTO `binding:"required" form:"recovery"`
+	Question string `binding:"required" form:"recoveryQuesiton"`
+	Answer   string `binding:"required" form:"recoveryAnswer"`
+	// Recovery other.RecoveryQuestionDTO `binding:"required" form:"recovery"`
 
 	Rank        string `form:"rank"`
 	GroupNumber string `form:"group_number"`

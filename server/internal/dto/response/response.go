@@ -100,19 +100,20 @@ type FetchAllTeamsByParams struct {
 }
 
 type UserData struct {
-	Avatar      string                   `json:"avatar"`
-	CreatedAt   time.Time                `json:"createdAt"`
-	Description string                   `json:"description"`
-	Firstname   string                   `json:"firstname"`
-	Middlename  string                   `json:"middlename"`
-	Lastname    string                   `json:"lastname"`
-	GroupNumber string                   `json:"group_number"`
-	ID          int64                    `json:"id"`
-	Positions   pq.StringArray           `gorm:"type:varchar[]" json:"positions"`
-	Rank        string                   `json:"rank"`
-	Roles       pq.StringArray           `gorm:"type:varchar[]" json:"roles"`
-	Skills      pq.StringArray           `gorm:"type:varchar[]" json:"skills"`
-	TeamId      int64                    `json:"teamId"`
-	Username    string                   `json:"username"`
-	Portfolio   []database.PortfolioFile `json:"portfolio"`
+	Avatar           string                   `json:"avatar"`
+	CreatedAt        time.Time                `json:"createdAt"`
+	Description      string                   `json:"description"`
+	Firstname        string                   `json:"firstname"`
+	Middlename       string                   `json:"middlename"`
+	Lastname         string                   `json:"lastname"`
+	GroupNumber      string                   `json:"group_number"`
+	ID               int64                    `json:"id"`
+	Positions        pq.StringArray           `gorm:"type:varchar[]" json:"positions"`
+	Rank             string                   `json:"rank"`
+	Roles            pq.StringArray           `gorm:"type:varchar[]" json:"roles"`
+	Skills           pq.StringArray           `gorm:"type:varchar[]" json:"skills"`
+	TeamId           int64                    `json:"teamId"`
+	Username         string                   `json:"username"`
+	Portfolio        []database.PortfolioFile `json:"portfolio"`
+	RecoveryQuestion string                   `json:"recoveryQuestion"`
 }

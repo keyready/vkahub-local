@@ -12,12 +12,5 @@ func GenerateHash(plainText string) (string, error) {
 }
 
 func CompareHash(hashText string, plainText string) bool {
-	hashBytes := []byte(hashText)
-	plainBytes := []byte(plainText)
-
-	if err := bcrypt.CompareHashAndPassword(hashBytes, plainBytes); err != nil {
-		return false
-	}
-
-	return true
+	return bcrypt.CompareHashAndPassword([]byte(hashText), []byte(plainText)) == nil
 }
