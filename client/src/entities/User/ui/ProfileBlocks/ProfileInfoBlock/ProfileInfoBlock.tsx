@@ -3,7 +3,7 @@
  */
 
 import { useSelector } from 'react-redux';
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Autocomplete,
     AutocompleteItem,
@@ -15,12 +15,18 @@ import {
     Tooltip,
 } from '@nextui-org/react';
 import { RiCloseLine, RiEditLine, RiSaveLine } from '@remixicon/react';
+import { Controller, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 
 import { changeUserProfile } from '../../../model/services/profileServices/changeUserProfile';
 import { getIsProfileChanging, getUserData } from '../../../model/selectors/UserSelectors';
-import { User, UserRoles } from '../../../model/types/User';
+import { UserRoles } from '../../../model/types/User';
 import { RecoveryQuestionSelector } from '../../RecoveryPasswordModal/RecoveryQuestionSelector';
 import { getRecoveryQuestions } from '../../../model/services/authServices/getRecoveryQuestions';
+import {
+    profileCompletionSchema,
+    type UserProfileFormValues,
+} from '../../../model/types/validationSchemas';
 
 import classes from './ProfileInfoBlock.module.scss';
 
@@ -49,34 +55,39 @@ const officersRanks = [
 export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
     const { className } = props;
 
+    const isProfileChanging = useSelector(getIsProfileChanging);
+
     const userData = useSelector(getUserData);
     const userRoles = useSelector(getUserRoles);
     const dispatch = useAppDispatch();
 
     const { isMobile } = useWindowWidth();
 
-    const [changedUserData, setChangedUserData] = useState<Partial<User>>();
     const [isEditorMode, setIsEditorMode] = useState<boolean>(false);
+    const [avatar, setAvatar] = useState<File>();
 
-    const isProfileChanging = useSelector(getIsProfileChanging);
+    const {
+        control,
+        handleSubmit,
+        formState: { errors, isValid },
+        reset,
+    } = useForm<UserProfileFormValues>({
+        resolver: yupResolver(profileCompletionSchema),
+        mode: 'onChange',
+        defaultValues: userData,
+        context: {
+            requireAnswer: !userData?.recoveryQuestion,
+        },
+    });
 
     useEffect(() => {
         dispatch(getRecoveryQuestions());
     }, [dispatch]);
 
-    const isProfilesEqual = useMemo(
-        () => JSON.stringify(userData) === JSON.stringify(changedUserData),
-        [changedUserData, userData],
-    );
-
     const isSaveButtonDisabled = useMemo(
-        () => isProfileChanging || isProfileChanging || isProfilesEqual,
-        [isProfileChanging, isProfilesEqual],
+        () => isProfileChanging || !isValid,
+        [isProfileChanging, isValid],
     );
-
-    useEffect(() => {
-        setChangedUserData(userData);
-    }, [userData]);
 
     const renderAlertMessage = useMemo(() => {
         if (!userRoles.includes(UserRoles.PROFILE_CONFIRMED)) {
@@ -126,17 +137,15 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
     }, [isEditorMode, userData?.firstname, userData?.recoveryQuestion, userRoles]);
 
     const handleChangeProfile = useCallback(
-        async (event: FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-
+        async (profile: UserProfileFormValues) => {
             await toastDispatch(
-                dispatch(changeUserProfile({ ...changedUserData, id: userData?.id })),
+                dispatch(changeUserProfile({ ...profile, newAvatar: avatar, id: userData?.id })),
             );
 
             await dispatch(getUserDataService());
             setIsEditorMode(false);
         },
-        [changedUserData, dispatch, userData?.id],
+        [avatar, dispatch, userData?.id],
     );
 
     const handleChangeEditorMode = useCallback(() => {
@@ -147,19 +156,12 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
 
     const handleCancelChanges = useCallback(() => {
         setIsEditorMode(false);
-        setChangedUserData(userData);
-    }, [userData]);
-
-    const handleChangeImage = useCallback((file: File) => {
-        setChangedUserData((ps) => ({
-            ...ps,
-            newAvatar: file,
-        }));
-    }, []);
+        reset();
+    }, [reset]);
 
     return (
         <form
-            onSubmit={handleChangeProfile}
+            onSubmit={handleSubmit(handleChangeProfile)}
             className={classNames(classes.ProfileInfoBlock, {}, [className])}
         >
             <VStack gap="24px" maxW>
@@ -230,7 +232,7 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                                     ? `http://localhost/user-avatars/${userData?.avatar}`
                                     : `/user-avatars/${userData?.avatar}`
                             }
-                            onChange={handleChangeImage}
+                            onChange={setAvatar}
                         />
                     ) : (
                         <Image
@@ -248,148 +250,184 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                     )}
 
                     <VStack maxW gap="12px">
-                        <Input
-                            isRequired
-                            value={changedUserData?.lastname || ''}
-                            onChange={(event) =>
-                                setChangedUserData({
-                                    ...changedUserData,
-                                    lastname: event.target.value,
-                                })
-                            }
-                            isDisabled={!isEditorMode || isProfileChanging}
-                            size="sm"
-                            label="Фамилия"
-                        />
-                        <Input
-                            isRequired
-                            value={changedUserData?.firstname || ''}
-                            onChange={(event) =>
-                                setChangedUserData({
-                                    ...changedUserData,
-                                    firstname: event.target.value,
-                                })
-                            }
-                            isDisabled={!isEditorMode || isProfileChanging}
-                            size="sm"
-                            label="Имя"
-                        />
-                        <Input
-                            isRequired
-                            value={changedUserData?.middlename || ''}
-                            onChange={(event) =>
-                                setChangedUserData({
-                                    ...changedUserData,
-                                    middlename: event.target.value,
-                                })
-                            }
-                            isDisabled={!isEditorMode || isProfileChanging}
-                            size="sm"
-                            label="Отчество"
+                        <Controller
+                            control={control}
+                            name="lastname"
+                            render={({ field }) => (
+                                <Input
+                                    isRequired
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                    isDisabled={!isEditorMode || isProfileChanging}
+                                    size="sm"
+                                    label="Фамилия"
+                                    isInvalid={Boolean(errors.lastname?.message)}
+                                    errorMessage={errors.lastname?.message}
+                                    classNames={{
+                                        errorMessage: 'text-start text-red-400 font-bold',
+                                    }}
+                                />
+                            )}
                         />
 
-                        <RecoveryQuestionSelector
-                            value={changedUserData?.recoveryQuestion || ''}
-                            onChange={(rq) =>
-                                setChangedUserData({
-                                    ...changedUserData,
-                                    recoveryQuestion: rq,
-                                })
-                            }
-                            isDisabled={
-                                !isEditorMode ||
-                                isProfileChanging ||
-                                Boolean(userData?.recoveryQuestion)
-                            }
+                        <Controller
+                            control={control}
+                            name="firstname"
+                            render={({ field }) => (
+                                <Input
+                                    isRequired
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                    isDisabled={!isEditorMode || isProfileChanging}
+                                    size="sm"
+                                    label="Имя"
+                                    isInvalid={Boolean(errors.firstname?.message)}
+                                    errorMessage={errors.firstname?.message}
+                                    classNames={{
+                                        errorMessage: 'text-start text-red-400 font-bold',
+                                    }}
+                                />
+                            )}
                         />
-                        {!changedUserData?.recoveryQuestion && (
-                            <Input
-                                isRequired
-                                value={changedUserData?.recoveryAnswer || ''}
-                                onValueChange={(val) =>
-                                    setChangedUserData({
-                                        ...changedUserData,
-                                        recoveryAnswer: val,
-                                    })
-                                }
-                                isDisabled={
-                                    !isEditorMode ||
-                                    isProfileChanging ||
-                                    !changedUserData?.recoveryQuestion
-                                }
-                                size="sm"
-                                label="Ответ на вопрос"
+                        <Controller
+                            control={control}
+                            name="middlename"
+                            render={({ field }) => (
+                                <Input
+                                    isRequired
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                    isDisabled={!isEditorMode || isProfileChanging}
+                                    size="sm"
+                                    label="Отчество"
+                                    isInvalid={Boolean(errors.middlename?.message)}
+                                    errorMessage={errors.middlename?.message}
+                                    classNames={{
+                                        errorMessage: 'text-start text-red-400 font-bold',
+                                    }}
+                                />
+                            )}
+                        />
+
+                        <Controller
+                            control={control}
+                            name="recoveryQuestion"
+                            render={({ field }) => (
+                                <RecoveryQuestionSelector
+                                    value={field.value || ''}
+                                    onChange={field.onChange}
+                                    isDisabled={
+                                        !isEditorMode ||
+                                        isProfileChanging ||
+                                        Boolean(userData?.recoveryQuestion)
+                                    }
+                                />
+                            )}
+                        />
+
+                        {!userData?.recoveryQuestion && (
+                            <Controller
+                                control={control}
+                                name="recoveryAnswer"
+                                render={({ field }) => (
+                                    <Input
+                                        isRequired
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                        isDisabled={!isEditorMode || isProfileChanging}
+                                        size="sm"
+                                        label="Ответ на вопрос"
+                                        isInvalid={Boolean(errors.recoveryAnswer?.message)}
+                                        errorMessage={errors.recoveryAnswer?.message}
+                                        classNames={{
+                                            errorMessage: 'text-start text-red-400 font-bold',
+                                        }}
+                                    />
+                                )}
                             />
                         )}
 
-                        <Autocomplete
-                            selectedKey={changedUserData?.rank}
-                            onSelectionChange={(value) =>
-                                setChangedUserData({
-                                    ...changedUserData,
-                                    rank: value as string,
-                                })
-                            }
-                            label="Воинское звание"
-                            size="sm"
-                            isDisabled={!isEditorMode || isProfileChanging}
-                            className="w-full"
-                        >
-                            <AutocompleteSection title="Курсантские звания">
-                                {soldiersRanks.map((rank) => (
-                                    <AutocompleteItem
-                                        classNames={{
-                                            title: 'text-main',
-                                        }}
-                                        key={rank}
-                                    >
-                                        {rank}
-                                    </AutocompleteItem>
-                                ))}
-                            </AutocompleteSection>
-                            <AutocompleteSection title="Офицерские звания">
-                                {officersRanks.map((rank) => (
-                                    <AutocompleteItem
-                                        classNames={{
-                                            title: 'text-main',
-                                        }}
-                                        key={rank}
-                                    >
-                                        {rank}
-                                    </AutocompleteItem>
-                                ))}
-                            </AutocompleteSection>
-                        </Autocomplete>
-
-                        <Input
-                            value={changedUserData?.group_number || ''}
-                            onChange={(event) =>
-                                setChangedUserData({
-                                    ...changedUserData,
-                                    group_number: event.target.value,
-                                })
-                            }
-                            isDisabled={!isEditorMode || isProfileChanging}
-                            size="sm"
-                            label="Учебная группа (подразделение)"
+                        <Controller
+                            control={control}
+                            name="rank"
+                            render={({ field }) => (
+                                <Autocomplete
+                                    isRequired
+                                    selectedKey={field.value}
+                                    onSelectionChange={field.onChange}
+                                    label="Воинское звание"
+                                    size="sm"
+                                    isDisabled={!isEditorMode || isProfileChanging}
+                                    className="w-full"
+                                >
+                                    <AutocompleteSection title="Курсантские звания">
+                                        {soldiersRanks.map((rank) => (
+                                            <AutocompleteItem
+                                                classNames={{
+                                                    title: 'text-main',
+                                                }}
+                                                key={rank}
+                                            >
+                                                {rank}
+                                            </AutocompleteItem>
+                                        ))}
+                                    </AutocompleteSection>
+                                    <AutocompleteSection title="Офицерские звания">
+                                        {officersRanks.map((rank) => (
+                                            <AutocompleteItem
+                                                classNames={{
+                                                    title: 'text-main',
+                                                }}
+                                                key={rank}
+                                            >
+                                                {rank}
+                                            </AutocompleteItem>
+                                        ))}
+                                    </AutocompleteSection>
+                                </Autocomplete>
+                            )}
                         />
 
-                        <Textarea
-                            value={changedUserData?.description || ''}
-                            onChange={(event) =>
-                                setChangedUserData({
-                                    ...changedUserData,
-                                    description: event.target.value,
-                                })
-                            }
-                            classNames={{
-                                inputWrapper: 'h-full',
-                            }}
-                            minRows={isEditorMode ? 10 : 4}
-                            size="sm"
-                            isDisabled={!isEditorMode || isProfileChanging}
-                            label="О себе"
-                            placeholder="Необязательно, но желательно. Расскажите, чем занимаетесь, свою жизненную позицию или корневые принципы"
+                        <Controller
+                            control={control}
+                            name="group_number"
+                            render={({ field }) => (
+                                <Input
+                                    isRequired
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                    isDisabled={!isEditorMode || isProfileChanging}
+                                    size="sm"
+                                    label="Учебная группа (подразделение)"
+                                    isInvalid={Boolean(errors.group_number?.message)}
+                                    errorMessage={errors.group_number?.message}
+                                    classNames={{
+                                        errorMessage: 'text-start text-red-400 font-bold',
+                                    }}
+                                />
+                            )}
+                        />
+
+                        <Controller
+                            control={control}
+                            name="description"
+                            render={({ field }) => (
+                                <Textarea
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                    classNames={{
+                                        inputWrapper: 'h-full',
+                                        errorMessage: 'text-start text-red-400 font-bold',
+                                    }}
+                                    minRows={isEditorMode ? 10 : 4}
+                                    size="sm"
+                                    isDisabled={!isEditorMode || isProfileChanging}
+                                    label="О себе"
+                                    placeholder="Необязательно, но желательно. Расскажите, чем занимаетесь или свою жизненную позицию"
+                                    isInvalid={Boolean(errors.description?.message)}
+                                    errorMessage={errors.description?.message}
+                                />
+                            )}
                         />
                     </VStack>
                 </HStack>

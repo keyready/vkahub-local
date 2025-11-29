@@ -1,5 +1,7 @@
 import * as yup from 'yup';
 
+const cyrillicOnly = /^[А-ЯЁа-яё]+$/u;
+
 export const usernameRules = yup
     .string()
     .required('Обязательное поле')
@@ -52,3 +54,21 @@ export const confirmPasswordRules = (refField: string) =>
         .string()
         .required('Подтвердите пароль')
         .oneOf([yup.ref(refField)], 'Пароли должны совпадать');
+
+export const requiredCyrillicString = yup
+    .string()
+    .required('Обязательное поле')
+    .test('not-empty', 'Поле не может быть пустым', (value) => value != null && value.trim() !== '')
+    .test(
+        'cyrillic',
+        'Только кириллические буквы',
+        (value) => value != null && cyrillicOnly.test(value.trim()),
+    )
+    .min(2, 'Не менее 2 букв')
+    .max(30, 'Не более 30 букв');
+
+export const requiredCyrillicSymbolicString = yup
+    .string()
+    .required('Обязательное поле')
+    .test('not-empty', 'Поле не может быть пустым', (value) => value != null && value.trim() !== '')
+    .min(2, 'Не менее 2 букв');

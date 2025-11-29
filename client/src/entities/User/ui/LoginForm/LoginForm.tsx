@@ -134,7 +134,7 @@ export const LoginForm = (props: LoginFormProps) => {
                     )}
 
                     <Button
-                        isDisabled={userLoginError === 'Invalid password' || !isValid}
+                        isDisabled={!isValid}
                         isLoading={isUserLoading}
                         type="submit"
                         className={cn('text-white self-end')}
