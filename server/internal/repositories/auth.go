@@ -9,6 +9,7 @@ import (
 	"server/internal/database"
 	"server/internal/dto/request"
 	"server/internal/utils"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -71,7 +72,14 @@ func (a *AuthRepositoryImpl) ApproveRecovery(
 			fmt.Errorf("failed to decode recovery: %v", decodeErr)
 	}
 
-	if validateAnswer := utils.CompareHash(recovery.Answer, approveRecoveryForm.Answer); !validateAnswer {
+	if validateAnswer := utils.CompareHash(
+		recovery.Answer,
+		strings.ReplaceAll(
+			strings.ToLower(approveRecoveryForm.Answer),
+			" ",
+			"_",
+		),
+	); !validateAnswer {
 		return http.StatusBadRequest,
 			errors.New("answer is invalid")
 	}
