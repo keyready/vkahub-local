@@ -221,11 +221,12 @@ func (ac *AuthController) GetPersonalQuestion(gCtx *gin.Context) {
 	}
 
 	httpCode, err, question := ac.authService.GetPersonalQuestion(jsonForm)
-	if err != nil {
+	if err != nil || question == "" {
 		appGin.ErrorResponse(
 			httpCode,
 			err,
 		)
+
 		return
 	}
 

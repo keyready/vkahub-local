@@ -80,7 +80,7 @@ func (a *AuthRepositoryImpl) ApproveRecovery(
 			"_",
 		),
 	); !validateAnswer {
-		return http.StatusBadRequest,
+		return http.StatusForbidden,
 			errors.New("answer is invalid")
 	}
 
@@ -94,7 +94,7 @@ func (a *AuthRepositoryImpl) GetPersonalQuestion(
 	recovery := database.RecoveryQuestion{}
 
 	if err = a.Db.Where("username = ?", getPersonalQuestionForm.Username).First(&userRecovery).Error; err != nil {
-		return http.StatusInternalServerError,
+		return http.StatusNotFound,
 			fmt.Errorf(
 				"user %s not found in system", getPersonalQuestionForm.Username,
 			),
@@ -107,6 +107,11 @@ func (a *AuthRepositoryImpl) GetPersonalQuestion(
 				"failed to decode: %v", decodeErr,
 			),
 			""
+	}
+
+	if strings.Compare(recovery.Question, "") == 0 {
+		return http.StatusNotAcceptable,
+			errors.New("no recovery question set"), ""
 	}
 
 	return http.StatusOK, nil, recovery.Question
