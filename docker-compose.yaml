@@ -25,7 +25,7 @@ services:
     env_file:
       - ./server/.env
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     depends_on:
       db:
         condition: service_healthy
@@ -40,8 +40,7 @@ services:
       dockerfile: Dockerfile
     container_name: vkahub-client-builder
     volumes:
-      - ./client-files:/dist
-    command: sh -c "npm run build"
+      - ./client-files:/client/dist
 
   admin:
     image: dpage/pgadmin4:latest
@@ -49,7 +48,7 @@ services:
     env_file:
       - ./server/.env
     ports:
-      - "5001:5001"
+      - "127.0.0.1:5001:5001"
     volumes:
       - pgadmin:/root/.pgadmin
     networks:
