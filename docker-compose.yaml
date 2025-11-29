@@ -25,7 +25,7 @@ services:
     env_file:
       - ./server/.env
     ports:
-      - "127.0.0.1:5000:5000"
+      - "5000:5000"
     depends_on:
       db:
         condition: service_healthy
@@ -40,25 +40,25 @@ services:
       dockerfile: Dockerfile
     container_name: vkahub-client-builder
     volumes:
-      - ./client-files:/client/dist
+      - ./client-files:/dist
+    command: sh -c "npm run build"
 
   admin:
     image: dpage/pgadmin4:latest
     container_name: vkahub-admin
     env_file:
       - ./server/.env
+    ports:
+      - "5001:5001"
     volumes:
       - pgadmin:/root/.pgadmin
     networks:
-      vkahub-net:
-        ipv4_address: 172.18.0.11
+      - vkahub-net
 
 networks:
   vkahub-net:
+    name: vkahub-net
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.18.0.0/24
 
 volumes:
   db_data:
