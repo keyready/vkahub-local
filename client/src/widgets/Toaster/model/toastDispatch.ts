@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 interface Messages {
     loading: string;
     success: string;
-    error: string;
+    error: string | { [status: number]: string };
 }
 
 const defaultMessages: Messages = {
@@ -24,8 +24,22 @@ export const toastDispatch = async (promise: Promise<any>, messages?: Partial<Me
         toast.success(result.payload?.message || initialMessages?.success);
     } else {
         toast.dismiss(toastId);
-        // @ts-ignore
-        toast.error(result.payload?.message || initialMessages?.error);
+
+        if (typeof initialMessages.error !== 'string') {
+            const errorMessages = initialMessages.error;
+            const isStatusExist = Object.entries(errorMessages).find(
+                ([key]) => key === result.payload.status.toString(),
+            );
+            if (isStatusExist) {
+                toast.error(isStatusExist[1]);
+            } else {
+                // @ts-ignore
+                toast.error(result.payload?.message || initialMessages?.error);
+            }
+        } else {
+            // @ts-ignore
+            toast.error(result.payload?.message || initialMessages?.error);
+        }
     }
 
     return result;

@@ -23,8 +23,11 @@ export const sendRecoveryLink = createAsyncThunk<{ question: string }, string, T
             return response.data;
         } catch (e) {
             const axiosError = e as AxiosError;
-            // @ts-ignore
-            return rejectWithValue(axiosError.response?.data?.message || 'Произошла ошибка');
+            return rejectWithValue(
+                // @ts-ignore
+                { status: axiosError.response.status, message: axiosError.response?.data?.error } ||
+                    'Произошла ошибка',
+            );
         }
     },
 );

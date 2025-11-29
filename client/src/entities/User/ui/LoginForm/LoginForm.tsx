@@ -1,8 +1,10 @@
 import { Button, cn, Input } from '@nextui-org/react';
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RiAccountBoxLine, RiLockPasswordLine, RiMoonLine, RiSunLine } from '@remixicon/react';
+import { Controller, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 
 import { loginUser } from '../../model/services/authServices/loginUser';
 import { getUserAuthError, getUserIsLoading } from '../../model/selectors/UserSelectors';
@@ -15,6 +17,7 @@ import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
 import { RoutePath } from '@/shared/config/routeConfig';
 import { TextButton } from '@/shared/ui/TextButton';
 import { getCurrentTheme, ThemeSwitcherActions } from '@/widgets/ThemeSwitcher';
+import { registrationSchema } from '@/entities/User/model/types/validationSchemas';
 
 interface LoginFormProps {
     className?: string;
@@ -32,23 +35,14 @@ export const LoginForm = (props: LoginFormProps) => {
     const userLoginError = useSelector(getUserAuthError);
     const isDark = useSelector(getCurrentTheme) === 'dark';
 
-    const [login, setLogin] = useState<string>('');
-    const [password, setPassword] = useState<string>('');
-
-    const isButtonDisabled = useMemo(
-        () => (import.meta.env.DEV ? false : !login || !password || login.includes('@')),
-        [login, password],
-    );
-
-    useEffect(() => {
-        dispatch(UserActions.clearAuthError());
-    }, [dispatch, login, password]);
-
-    useEffect(() => {
-        if (userLoginError === 'Invalid password') {
-            setPassword('');
-        }
-    }, [userLoginError]);
+    const {
+        control,
+        handleSubmit,
+        formState: { errors, isValid },
+    } = useForm<{ username: string; password: string }>({
+        resolver: yupResolver(registrationSchema),
+        mode: 'onChange',
+    });
 
     const renderAuthErrorText = useMemo(() => {
         switch (userLoginError) {
@@ -62,14 +56,11 @@ export const LoginForm = (props: LoginFormProps) => {
     }, [userLoginError]);
 
     const handleFormSubmit = useCallback(
-        async (event: FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-            dispatch(UserActions.clearAuthError());
-
+        async (user: { username: string; password: string }) => {
             const result = await dispatch(
                 loginUser({
-                    username: login,
-                    password,
+                    username: user.username,
+                    password: user.password,
                 }),
             );
 
@@ -79,7 +70,7 @@ export const LoginForm = (props: LoginFormProps) => {
                 navigate(RoutePath.feed);
             }
         },
-        [dispatch, login, navigate, password],
+        [dispatch, navigate],
     );
 
     const handleToggleTheme = useCallback(() => {
@@ -88,28 +79,52 @@ export const LoginForm = (props: LoginFormProps) => {
 
     return (
         <VStack className={classNames('', {}, [className])} maxW align="center" justify="center">
-            <form onSubmit={handleFormSubmit} className="w-full">
+            <form onSubmit={handleSubmit(handleFormSubmit)} className="w-full">
                 <VStack maxW align="center" gap="12px">
                     <h1 className="text-2xl text-main leading-none">
                         Для продолжения работы <br /> <span className="font-bold">необходимо</span>{' '}
                         авторизоваться
                     </h1>
-                    <Input
-                        isDisabled={isUserLoading}
-                        value={login}
-                        onChange={(event) => setLogin(event.target.value)}
-                        autoFocus
-                        required
-                        label="Ваш логин"
+
+                    <Controller
+                        render={({ field }) => (
+                            <Input
+                                isDisabled={isUserLoading}
+                                autoFocus
+                                required
+                                label="Ваш логин"
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                isInvalid={Boolean(errors.username?.message)}
+                                errorMessage={errors.username?.message}
+                                classNames={{
+                                    errorMessage: 'text-start text-red-400 font-bold',
+                                }}
+                            />
+                        )}
+                        name="username"
+                        control={control}
                     />
-                    <Input
-                        color={userLoginError === 'Invalid password' ? 'danger' : 'default'}
-                        isDisabled={isUserLoading}
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                        required
-                        type="password"
-                        label="Ваш пароль"
+
+                    <Controller
+                        render={({ field }) => (
+                            <Input
+                                color={userLoginError === 'Invalid password' ? 'danger' : 'default'}
+                                isDisabled={isUserLoading}
+                                required
+                                type="password"
+                                label="Ваш пароль"
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                isInvalid={Boolean(errors.password?.message)}
+                                errorMessage={errors.password?.message}
+                                classNames={{
+                                    errorMessage: 'text-start text-red-400 font-bold',
+                                }}
+                            />
+                        )}
+                        control={control}
+                        name="password"
                     />
 
                     {userLoginError && (
@@ -119,13 +134,11 @@ export const LoginForm = (props: LoginFormProps) => {
                     )}
 
                     <Button
-                        isDisabled={userLoginError === 'Invalid password' || isButtonDisabled}
+                        isDisabled={userLoginError === 'Invalid password' || !isValid}
                         isLoading={isUserLoading}
                         type="submit"
-                        className={cn(
-                            'text-white self-end',
-                            userLoginError ? 'bg-danger' : 'dark:text-black bg-accent',
-                        )}
+                        className={cn('text-white self-end')}
+                        color="primary"
                     >
                         {isUserLoading ? 'Ожидайте...' : 'Войти!'}
                     </Button>

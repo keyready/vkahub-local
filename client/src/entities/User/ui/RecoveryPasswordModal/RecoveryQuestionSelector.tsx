@@ -1,6 +1,6 @@
 import { Autocomplete, AutocompleteItem } from '@nextui-org/react';
 import { useSelector } from 'react-redux';
-import { Key, useCallback } from 'react';
+import { Key, useCallback, useEffect, useState } from 'react';
 
 import { getRecoveryQuestions } from '../../model/selectors/UserSelectors';
 
@@ -14,6 +14,15 @@ export const RecoveryQuestionSelector = (props: RecoveryQuestionSelectorProps) =
     const { onChange, value, isDisabled } = props;
 
     const questions = useSelector(getRecoveryQuestions);
+
+    const [selected, setSelected] = useState<number>(-1);
+
+    useEffect(() => {
+        const foundQuestionId = questions.find((q) => q.question === value);
+        if (foundQuestionId) {
+            setSelected(foundQuestionId.id);
+        }
+    }, [questions, value]);
 
     const handleSelectionChange = useCallback(
         (ss: Key | null) => {
@@ -34,6 +43,7 @@ export const RecoveryQuestionSelector = (props: RecoveryQuestionSelectorProps) =
             selectedKey={value}
             onSelectionChange={handleSelectionChange}
             listboxProps={{
+                disallowEmptySelection: true,
                 emptyContent: 'Вопросы не найдены, т.к. сервера недоступны. Попробуйте позже',
                 itemClasses: {
                     title: 'dark:text-white',

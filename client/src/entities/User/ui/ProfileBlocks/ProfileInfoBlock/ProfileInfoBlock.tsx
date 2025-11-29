@@ -87,7 +87,7 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                 </p>
             );
         }
-        if (!userData?.recovery?.answer) {
+        if (!userData?.recoveryQuestion) {
             return (
                 <p className="italic text-red-300">
                     * Пока Вы не выберете пару контрольный вопрос-ответ, вам будет недоступно
@@ -123,7 +123,7 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
         }
 
         return null;
-    }, [isEditorMode, userData?.firstname, userData?.recovery?.answer, userRoles]);
+    }, [isEditorMode, userData?.firstname, userData?.recoveryQuestion, userRoles]);
 
     const handleChangeProfile = useCallback(
         async (event: FormEvent<HTMLFormElement>) => {
@@ -289,42 +289,38 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                         />
 
                         <RecoveryQuestionSelector
-                            value={changedUserData?.recovery?.question || ''}
+                            value={changedUserData?.recoveryQuestion || ''}
                             onChange={(rq) =>
                                 setChangedUserData({
                                     ...changedUserData,
-                                    recovery: {
-                                        ...(changedUserData?.recovery?.answer
-                                            ? { answer: changedUserData?.recovery?.answer }
-                                            : { answer: '' }),
-                                        question: rq,
-                                    },
-                                })
-                            }
-                            isDisabled={!isEditorMode || isProfileChanging}
-                        />
-                        <Input
-                            isRequired
-                            value={changedUserData?.recovery?.answer || ''}
-                            onValueChange={(val) =>
-                                setChangedUserData({
-                                    ...changedUserData,
-                                    recovery: {
-                                        ...(changedUserData?.recovery?.question
-                                            ? { question: changedUserData?.recovery?.question }
-                                            : { question: '' }),
-                                        answer: val,
-                                    },
+                                    recoveryQuestion: rq,
                                 })
                             }
                             isDisabled={
                                 !isEditorMode ||
                                 isProfileChanging ||
-                                !changedUserData?.recovery?.question
+                                Boolean(userData?.recoveryQuestion)
                             }
-                            size="sm"
-                            label="Ответ на вопрос"
                         />
+                        {!changedUserData?.recoveryQuestion && (
+                            <Input
+                                isRequired
+                                value={changedUserData?.recoveryAnswer || ''}
+                                onValueChange={(val) =>
+                                    setChangedUserData({
+                                        ...changedUserData,
+                                        recoveryAnswer: val,
+                                    })
+                                }
+                                isDisabled={
+                                    !isEditorMode ||
+                                    isProfileChanging ||
+                                    !changedUserData?.recoveryQuestion
+                                }
+                                size="sm"
+                                label="Ответ на вопрос"
+                            />
+                        )}
 
                         <Autocomplete
                             selectedKey={changedUserData?.rank}

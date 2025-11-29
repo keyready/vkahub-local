@@ -17,7 +17,7 @@ export const getUserDataService = createAsyncThunk<User, void, ThunkConfig<strin
                 throw new Error();
             }
 
-            return { ...response.data, recoveryQuestion: 'Вопрос № 3' };
+            return { ...response.data };
         } catch (e) {
             const axiosError = e as AxiosError;
             // @ts-ignore
