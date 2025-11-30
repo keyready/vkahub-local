@@ -1,43 +1,61 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
-	"path/filepath"
+	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/services"
+	"server/internal/utils"
 	"server/pkg/app"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type TeamChatController struct {
 	teamChatService services.TeamChatService
+	cloud           *cloud.Cloud
 }
 
-func NewTeamChatController(teamChatService services.TeamChatService) *TeamChatController {
-	return &TeamChatController{teamChatService: teamChatService}
+func NewTeamChatController(
+	teamChatService services.TeamChatService,
+	cloud *cloud.Cloud,
+) *TeamChatController {
+	return &TeamChatController{
+		teamChatService: teamChatService,
+		cloud:           cloud,
+	}
 }
 
-func (teamChatC *TeamChatController) CreateMessage(ctx *gin.Context) {
-	appGin := app.Gin{Ctx: ctx}
+func (teamChatC *TeamChatController) CreateMessage(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
 	formData := request.WriteMessageForm{}
 
-	if bindErr := ctx.ShouldBind(&formData); bindErr != nil {
+	if bindErr := gCtx.ShouldBind(&formData); bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	multipartForm, _ := ctx.MultipartForm()
+	ctx := gCtx.Request.Context()
+
+	multipartForm, _ := gCtx.MultipartForm()
 
 	for _, img := range multipartForm.File["attachment"] {
-		fileName := fmt.Sprintf("%s%s", uuid.NewString(), filepath.Ext(img.Filename))
-		img.Filename = fileName
+		readFileParams := utils.ReadFileParams{
+			File:    img,
+			SaveDir: other.CHAT_ATTACHMENTS_STORAGE,
+		}
 
-		savePath := filepath.Join(other.CHAT_ATTACHMENTS_STORAGE, fileName)
-		if saveErr := ctx.SaveUploadedFile(img, savePath); saveErr != nil {
+		readFileResult, err := utils.ReadFile(readFileParams)
+		if err != nil {
+			appGin.ErrorResponse(
+				http.StatusInternalServerError,
+				err,
+			)
+			return
+		}
+
+		if saveErr := teamChatC.cloud.Cloud.UploadFile(ctx, readFileResult.FilePath, readFileResult.FileData); saveErr != nil {
 			appGin.ErrorResponse(
 				http.StatusInternalServerError,
 				saveErr,
@@ -45,10 +63,10 @@ func (teamChatC *TeamChatController) CreateMessage(ctx *gin.Context) {
 			return
 		}
 
-		formData.AttachmentNames = append(formData.AttachmentNames, fileName)
+		formData.AttachmentNames = append(formData.AttachmentNames, readFileResult.FilePath)
 	}
 
-	formData.Author = ctx.GetString("username")
+	formData.Author = gCtx.GetString("username")
 	httpCode, err := teamChatC.teamChatService.CreateMessage(formData)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)

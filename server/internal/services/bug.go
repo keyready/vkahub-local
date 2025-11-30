@@ -1,6 +1,7 @@
 package services
 
 import (
+	"server/internal/cloud"
 	"server/internal/database"
 	"server/internal/dto/request"
 	"server/internal/repositories"
@@ -14,10 +15,17 @@ type BugService interface {
 
 type BugServiceImpl struct {
 	bugRepository repositories.BugRepository
+	cloud         *cloud.Cloud
 }
 
-func NewBugServiceImpl(bugRepository repositories.BugRepository) BugService {
-	return &BugServiceImpl{bugRepository: bugRepository}
+func NewBugServiceImpl(
+	bugRepository repositories.BugRepository,
+	cloud *cloud.Cloud,
+) BugService {
+	return &BugServiceImpl{
+		bugRepository: bugRepository,
+		cloud:         cloud,
+	}
 }
 
 func (b BugServiceImpl) UpdateBug(updateBug request.UpdateBugReq) (httpCode int, err error) {

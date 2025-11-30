@@ -1,38 +1,44 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
-	"path/filepath"
+	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/services"
+	"server/internal/utils"
 	"server/pkg/app"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type BugController struct {
 	bugService services.BugService
+	cloud      *cloud.Cloud
 }
 
-func NewBugControllers(s services.BugService) *BugController {
-	return &BugController{bugService: s}
+func NewBugControllers(
+	s services.BugService,
+	cloud *cloud.Cloud,
+) *BugController {
+	return &BugController{
+		bugService: s,
+		cloud:      cloud,
+	}
 }
 
-func (bc *BugController) AddBug(ctx *gin.Context) {
-	appGin := app.Gin{Ctx: ctx}
+func (bc *BugController) AddBug(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
 	formData := request.AddBugReq{}
 
-	formData.Author = ctx.GetString("username")
+	formData.Author = gCtx.GetString("username")
 
-	if bindErr := ctx.ShouldBind(&formData); bindErr != nil {
+	if bindErr := gCtx.ShouldBind(&formData); bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	multipartForm, mpfdErr := ctx.MultipartForm()
+	multipartForm, mpfdErr := gCtx.MultipartForm()
 	if mpfdErr != nil {
 		appGin.ErrorResponse(
 			http.StatusBadRequest,
@@ -40,17 +46,27 @@ func (bc *BugController) AddBug(ctx *gin.Context) {
 		)
 	}
 
+	ctx := gCtx.Request.Context()
 	mediaNames := []string{}
 	for _, img := range multipartForm.File["media"] {
-		fileName := fmt.Sprintf("%s%s", uuid.NewString(), filepath.Ext(img.Filename))
-		img.Filename = fileName
+		readFileParams := utils.ReadFileParams{
+			File:    img,
+			SaveDir: other.BUGS_STORAGE,
+		}
 
-		if saveErr := appGin.Ctx.SaveUploadedFile(
-			img,
-			filepath.Join(
-				other.BUGS_STORAGE,
-				img.Filename,
-			),
+		readFileResult, err := utils.ReadFile(readFileParams)
+		if err != nil {
+			appGin.ErrorResponse(
+				http.StatusInternalServerError,
+				err,
+			)
+			return
+		}
+
+		if saveErr := bc.cloud.Cloud.UploadFile(
+			ctx,
+			readFileResult.FilePath,
+			readFileResult.FileData,
 		); saveErr != nil {
 			appGin.ErrorResponse(
 				http.StatusInternalServerError,
@@ -58,7 +74,7 @@ func (bc *BugController) AddBug(ctx *gin.Context) {
 			)
 		}
 
-		mediaNames = append(mediaNames, fileName)
+		mediaNames = append(mediaNames, readFileResult.FilePath)
 	}
 
 	httpCode, err := bc.bugService.AddBug(formData, mediaNames)

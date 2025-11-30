@@ -35,16 +35,16 @@ func InitRouter(
 
 	authRepo := repositories.NewAuthRepositoryImpl(db, jwtService)
 	authService := services.NewAuthServiceImpl(authRepo)
-	authCtrl := controllers.NewAuthController(authService, jwtService)
+	authCtrl := controllers.NewAuthController(authService, jwtService, cloud)
 	v1.NewAuthRouters(r, jwtService, authCtrl)
 
 	teamRepo := repositories.NewTeamRepositoryImpl(db)
-	teamService := services.NewTeamServiceImpl(teamRepo)
+	teamService := services.NewTeamServiceImpl(teamRepo, cloud)
 	teamCtrl := controllers.NewTeamController(teamService, cloud)
 	v1.NewTeamRouters(r, jwtService, teamCtrl)
 
 	userRepo := repositories.NewUserRepositoryImpl(db)
-	userService := services.NewUserServiceImpl(userRepo)
+	userService := services.NewUserServiceImpl(userRepo, cloud)
 	userCtrl := controllers.NewUserControllers(userService, cloud)
 	v1.NewUserRouters(r, jwtService, userCtrl)
 
@@ -58,8 +58,8 @@ func InitRouter(
 	v1.NewProposalRouters(r, jwtService, proposalCtrl)
 
 	eventRepo := repositories.NewEventRepositoryImpl(db)
-	eventService := services.NewEventServiceImpl(eventRepo)
-	eventCtrl := controllers.NewEventController(eventService)
+	eventService := services.NewEventServiceImpl(eventRepo, cloud)
+	eventCtrl := controllers.NewEventController(eventService, cloud)
 	v1.NewEventRouters(r, jwtService, eventCtrl)
 
 	trackRepo := repositories.NewTrackRepositoryImpl(db)
@@ -88,8 +88,8 @@ func InitRouter(
 	v1.NewReportRoutes(r, jwtService, reportCtrl)
 
 	bugRepo := repositories.NewBugRepositoryImpl(db)
-	bugService := services.NewBugServiceImpl(bugRepo)
-	bugCtrl := controllers.NewBugControllers(bugService)
+	bugService := services.NewBugServiceImpl(bugRepo, cloud)
+	bugCtrl := controllers.NewBugControllers(bugService, cloud)
 	v1.NewBugRoutes(r, jwtService, bugCtrl)
 
 	feedbackRepo := repositories.NewFeedbackImpl(db)
@@ -99,7 +99,7 @@ func InitRouter(
 
 	teamChatRep := repositories.NewTeamChatServiceImpl(db)
 	teamCharSer := services.NewTeamChatServiceImpl(teamChatRep)
-	teamChatC := controllers.NewTeamChatController(teamCharSer)
+	teamChatC := controllers.NewTeamChatController(teamCharSer, cloud)
 	v1.NewTeamChatRoutes(r, jwtService, teamChatC)
 
 	return r

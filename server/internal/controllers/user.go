@@ -1,9 +1,7 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
-	"path/filepath"
 	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
@@ -12,7 +10,6 @@ import (
 	"server/internal/utils"
 	"server/pkg/app"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -90,12 +87,24 @@ func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
 		return
 	}
 
+	ctx := gCtx.Request.Context()
 	certificateNames := make([]string, 0)
 	for _, cert := range formData.Certificates {
-		certName := fmt.Sprintf("%s_%s", formData.EventName, strings.ReplaceAll(cert.Filename, " ", "_"))
-		savePath := filepath.Join(other.CERTIFICATES_STORAGE, certName)
+		readFileParams := utils.ReadFileParams{
+			File:    cert,
+			SaveDir: other.CERTIFICATES_STORAGE,
+		}
 
-		if saveErr := appGin.Ctx.SaveUploadedFile(cert, savePath); saveErr != nil {
+		readFileResult, err := utils.ReadFile(readFileParams)
+		if err != nil {
+			appGin.ErrorResponse(
+				http.StatusInternalServerError,
+				err,
+			)
+			return
+		}
+
+		if saveErr := uc.cloud.Cloud.UploadFile(ctx, readFileResult.FilePath, readFileResult.FileData); saveErr != nil {
 			appGin.ErrorResponse(
 				http.StatusInternalServerError,
 				saveErr,
@@ -103,7 +112,7 @@ func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
 			return
 		}
 
-		certificateNames = append(certificateNames, certName)
+		certificateNames = append(certificateNames, readFileResult.FileName)
 	}
 
 	formData.Owner = appGin.Ctx.GetString("username")
@@ -321,7 +330,7 @@ func (uc *UserController) EditProfile(gCtx *gin.Context) {
 			return
 		}
 
-		formData.Avatar = readFileResult.FileName
+		formData.Avatar = readFileResult.FilePath
 	} else {
 		formData.Avatar = ""
 	}
