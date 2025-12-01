@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"path/filepath"
 	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
@@ -59,7 +60,7 @@ func (ec *EventController) AddEvent(gCtx *gin.Context) {
 		)
 	}
 
-	formData.Image.Filename = readFileResult.FilePath
+	formData.Image.Filename = filepath.Join("vkahub-bucket", readFileResult.FilePath)
 	_, err = ec.eventService.AddEvent(formData)
 	if err != nil {
 		appGin.ErrorResponse(http.StatusInternalServerError, err)

@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"context"
 	"log"
-	"net/url"
-	"server/internal/utils"
-	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -59,14 +56,4 @@ func (mw *S3Minio) UploadFile(ctx context.Context, uploadPath string, fileData b
 func (mw *S3Minio) RemoveFile(ctx context.Context, filePath string) error {
 	opts := minio.RemoveObjectOptions{}
 	return mw.mc.RemoveObject(ctx, mw.config.InitBucket, filePath, opts)
-}
-
-func (mw *S3Minio) GetSharedURL(ctx context.Context, filePath string, expires time.Duration) (string, error) {
-	params := make(url.Values)
-	url, err := mw.mc.PresignedGetObject(ctx, mw.config.InitBucket, filePath, expires, params)
-	if err != nil {
-		return "", err
-	}
-
-	return utils.ParseURL(url.String()), nil
 }

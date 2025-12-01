@@ -2,15 +2,12 @@ package services
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 	"server/internal/cloud"
 	"server/internal/database"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/dto/response"
 	"server/internal/repositories"
-	"time"
 )
 
 type UserService interface {
@@ -70,19 +67,6 @@ func (u UserServiceImpl) AddPortfolio(addPortfolioReq request.AddPortfolioForm, 
 
 func (u UserServiceImpl) FetchAllMessages(fetchAllMessage request.FetchAllMessages) (httpCode int, err error, messages []response.FetchAllMessagesResponse) {
 	httpCode, err, messages = u.UserRepository.FetchAllMessages(fetchAllMessage)
-
-	for _, message := range messages {
-		urls := make([]string, len(message.Attachments))
-		for _, attach := range message.Attachments {
-			url, err := u.cloud.Cloud.GetSharedURL(context.Background(), attach, time.Hour*2)
-			if err != nil {
-				return http.StatusInsufficientStorage, fmt.Errorf("failed to get share-link: %v", err), nil
-			}
-			urls = append(urls, url)
-		}
-		message.Attachments = urls
-	}
-
 	return httpCode, err, messages
 }
 
@@ -103,15 +87,6 @@ func (u UserServiceImpl) FetchAllPersonalNotifications(allNtf request.FetchAllNo
 
 func (u UserServiceImpl) FetchPersonalAchievements(username, personalUsername string) (httpCode int, err error, data []response.FetchPersonalAchievementResponse) {
 	httpCode, err, data = u.UserRepository.FetchPersonalAchievements(username, personalUsername)
-
-	for _, achivement := range data {
-		url, err := u.cloud.Cloud.GetSharedURL(context.Background(), achivement.Image, time.Hour*2)
-		if err != nil {
-			return http.StatusInternalServerError, fmt.Errorf("failed to get share-link: %v", err), nil
-		}
-		achivement.Image = url
-	}
-
 	return httpCode, err, data
 }
 
@@ -127,18 +102,10 @@ func (u UserServiceImpl) FetchAllMembersByParams(FetchAllMem request.FetchAllMem
 
 func (u UserServiceImpl) GetUserData(username string) (httpCode int, err error, userData response.UserData) {
 	httpCode, err, userData = u.UserRepository.GetUserData(username)
-
-	url, err := u.cloud.Cloud.GetSharedURL(context.Background(), userData.Avatar, time.Hour*2)
-	userData.Avatar = url
-
 	return httpCode, err, userData
 }
 
 func (u UserServiceImpl) GetProfile(username string) (httpCode int, err error, profileData response.ProfileData) {
 	httpCode, err, profileData = u.UserRepository.GetProfile(username)
-
-	url, err := u.cloud.Cloud.GetSharedURL(context.Background(), profileData.Avatar, time.Hour*2)
-	profileData.Avatar = url
-
 	return httpCode, err, profileData
 }

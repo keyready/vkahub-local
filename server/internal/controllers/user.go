@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"path/filepath"
 	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
@@ -178,7 +179,7 @@ func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
 			return
 		}
 
-		certificateNames = append(certificateNames, readFileResult.FileName)
+		certificateNames = append(certificateNames, filepath.Join("vkahub-bucket", readFileResult.FileName))
 	}
 
 	formData.Owner = appGin.Ctx.GetString("username")
@@ -401,8 +402,6 @@ func (uc *UserController) EditProfile(gCtx *gin.Context) {
 
 	avatar, err := appGin.Ctx.FormFile("avatar")
 	if err != http.ErrMissingFile {
-		// err = uc.cloud.Cloud.RemoveFile()
-
 		readFileParams := utils.ReadFileParams{
 			File:    avatar,
 			SaveDir: other.USER_AVATARS_STORAGE,
@@ -425,7 +424,7 @@ func (uc *UserController) EditProfile(gCtx *gin.Context) {
 			return
 		}
 
-		formData.Avatar = readFileResult.FilePath
+		formData.Avatar = filepath.Join("vkahub-bucket", readFileResult.FilePath)
 	} else {
 		formData.Avatar = ""
 	}

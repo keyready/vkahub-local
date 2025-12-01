@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"path/filepath"
 	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
@@ -162,7 +163,7 @@ func (tc *TeamController) RegisterTeam(gCtx *gin.Context) {
 		return
 	}
 
-	formData.Image.Filename = readFileResult.FilePath
+	formData.Image.Filename = filepath.Join("vkahub-bucket", readFileResult.FilePath)
 
 	httpCode, serviceErr := tc.teamService.RegisterTeam(formData)
 	if serviceErr != nil {

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"path/filepath"
 	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
@@ -74,7 +75,7 @@ func (bc *BugController) AddBug(gCtx *gin.Context) {
 			)
 		}
 
-		mediaNames = append(mediaNames, readFileResult.FilePath)
+		mediaNames = append(mediaNames, filepath.Join("vkahub-bucket", readFileResult.FilePath))
 	}
 
 	httpCode, err := bc.bugService.AddBug(formData, mediaNames)

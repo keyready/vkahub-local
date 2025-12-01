@@ -3,7 +3,6 @@ package cloud
 import (
 	"bytes"
 	"context"
-	"time"
 )
 
 type Cloud struct {
@@ -13,7 +12,6 @@ type Cloud struct {
 type ICloud interface {
 	IBucket
 	IFile
-	IShare
 }
 
 type IBucket interface {
@@ -23,8 +21,4 @@ type IBucket interface {
 type IFile interface {
 	UploadFile(ctx context.Context, uploadPath string, fileData bytes.Buffer) error
 	RemoveFile(ctx context.Context, filePath string) error
-}
-
-type IShare interface {
-	GetSharedURL(ctx context.Context, filePath string, expires time.Duration) (string, error)
 }

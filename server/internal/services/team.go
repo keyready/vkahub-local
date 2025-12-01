@@ -1,14 +1,10 @@
 package services
 
 import (
-	"context"
-	"fmt"
-	"net/http"
 	"server/internal/cloud"
 	"server/internal/dto/request"
 	"server/internal/dto/response"
 	"server/internal/repositories"
-	"time"
 )
 
 type TeamService interface {
@@ -76,28 +72,11 @@ func (t TeamServiceImpl) RegisterTeam(formData request.RegisterTeamForm) (httpCo
 
 func (t TeamServiceImpl) FetchOneTeamById(teamId int64) (httpCode int, err error, findTeam response.FetchAllTeamsByParams) {
 	httpCode, err, findTeam = t.TeamRepository.FetchOneTeamById(teamId)
-	url, err := t.cloud.Cloud.GetSharedURL(context.Background(), findTeam.Image, time.Hour*2)
-	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("failed to get share-link: %v", err), findTeam
-	}
-
-	findTeam.Image = url
-
 	return httpCode, err, findTeam
 }
 
 func (t TeamServiceImpl) FetchAllTeamsByParams(FetchAllTeams request.FetchAllTeamsByParamsRequest) (httpCode int, err error, teams []response.FetchAllTeamsByParams) {
 	httpCode, err, teams = t.TeamRepository.FetchAllTeamsByParams(FetchAllTeams)
-
-	for _, team := range teams {
-		url, err := t.cloud.Cloud.GetSharedURL(context.Background(), team.Image, time.Hour*2)
-		if err != nil {
-			return http.StatusInternalServerError, fmt.Errorf("failed to get share-link: %v", err), nil
-		}
-
-		team.Image = url
-	}
-
 	return httpCode, err, teams
 }
 

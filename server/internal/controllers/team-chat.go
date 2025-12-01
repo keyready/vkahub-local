@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"path/filepath"
 	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
@@ -63,7 +64,7 @@ func (teamChatC *TeamChatController) CreateMessage(gCtx *gin.Context) {
 			return
 		}
 
-		formData.AttachmentNames = append(formData.AttachmentNames, readFileResult.FilePath)
+		formData.AttachmentNames = append(formData.AttachmentNames, filepath.Join("vkahub-bucket", readFileResult.FilePath))
 	}
 
 	formData.Author = gCtx.GetString("username")
@@ -92,13 +93,6 @@ func (teamChatC *TeamChatController) DeleteMessage(ctx *gin.Context) {
 		appGin.ErrorResponse(http.StatusInternalServerError, err)
 		return
 	}
-
-	// for _, message := range attachmentsMessage {
-	// 	teamChatC.YaCloudClient.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
-	// 		Bucket: aws.String(os.Getenv("BUCKET_NAME")),
-	// 		Key:    aws.String(message),
-	// 	})
-	// }
 
 	appGin.SuccessResponse(httpCode, gin.H{})
 }

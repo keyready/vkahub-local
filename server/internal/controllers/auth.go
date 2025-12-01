@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"path/filepath"
 	"server/internal/authorizer"
 	"server/internal/cloud"
 	"server/internal/dto/other"
@@ -104,7 +105,7 @@ func (ac *AuthController) SignUp(gCtx *gin.Context) {
 		return
 	}
 
-	httpCode, serviceErr := ac.authService.SignUp(formData, readFileResult.FilePath)
+	httpCode, serviceErr := ac.authService.SignUp(formData, filepath.Join("vkahub-bucket", readFileResult.FilePath))
 	if serviceErr != nil {
 		gCtx.AbortWithError(
 			httpCode,

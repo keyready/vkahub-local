@@ -34,7 +34,7 @@ func InitRouter(
 	c.AddFunc("@monthly", gocron.ClearNotifications(db))
 	c.Start()
 
-	userRepo := repositories.NewUserRepositoryImpl(db)
+	userRepo := repositories.NewUserRepositoryImpl(db, cloud)
 	userService := services.NewUserServiceImpl(userRepo, cloud)
 	userCtrl := controllers.NewUserControllers(userService, cloud, onliner)
 	v1.NewUserRouters(r, jwtService, userCtrl)

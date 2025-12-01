@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
+	"server/internal/cloud"
 	"server/internal/database"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
@@ -41,11 +41,12 @@ type UserRepository interface {
 }
 
 type UserRepositoryImpl struct {
-	Db *gorm.DB
+	Db    *gorm.DB
+	cloud *cloud.Cloud
 }
 
-func NewUserRepositoryImpl(Db *gorm.DB) UserRepository {
-	return &UserRepositoryImpl{Db: Db}
+func NewUserRepositoryImpl(Db *gorm.DB, cloud *cloud.Cloud) UserRepository {
+	return &UserRepositoryImpl{Db: Db, cloud: cloud}
 }
 
 func (u *UserRepositoryImpl) GetSettings(ctx context.Context, username string) (string, error) {
@@ -81,6 +82,10 @@ func (u *UserRepositoryImpl) DeletePortfolio(certificateName, ownerName string) 
 	updPortfolio := []database.PortfolioFile{}
 	for index, cert := range portfolio {
 		if strings.Compare(cert.Name, certificateName) == 0 {
+			removeErr := u.cloud.Cloud.RemoveFile(context.Background(), cert.Name[strings.Index(cert.Name, "/")+1:])
+			if removeErr != nil {
+				return http.StatusInternalServerError, fmt.Errorf("failed to remove portfolio: %v", err)
+			}
 			updPortfolio = append(portfolio[:index], portfolio[index+1:]...)
 		}
 	}
@@ -91,12 +96,6 @@ func (u *UserRepositoryImpl) DeletePortfolio(certificateName, ownerName string) 
 	owner.Portfolio = dbTypePortfolio
 
 	u.Db.Save(&owner)
-
-	filePath := filepath.Join(other.CERTIFICATES_STORAGE, certificateName)
-	err = os.Remove(filePath)
-	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("failed to delete file: %v", err)
-	}
 
 	return http.StatusOK, nil
 }
@@ -271,6 +270,10 @@ func (u *UserRepositoryImpl) EditProfile(EditProf request.EditProfileInfoForm) (
 		currentUser.Positions = EditProf.Positions
 	}
 	if EditProf.Avatar != "" {
+		removeErr := u.cloud.Cloud.RemoveFile(context.Background(), currentUser.Avatar[strings.Index(currentUser.Avatar, "/")+1:])
+		if removeErr != nil {
+			return http.StatusInternalServerError, fmt.Errorf("failed to remove avatar: %v", err)
+		}
 		currentUser.Avatar = EditProf.Avatar
 	}
 
