@@ -41,8 +41,11 @@ func New(cfg *Config) *Cloud {
 func (mw *S3Minio) InitBucket(ctx context.Context) error {
 	opts := minio.MakeBucketOptions{}
 	policy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + mw.config.InitBucket + `/*"]}]}`
-	mw.mc.MakeBucket(ctx, mw.config.InitBucket, opts)
-	return mw.mc.SetBucketPolicy(ctx, mw.config.InitBucket, policy)
+
+	_ = mw.mc.MakeBucket(ctx, mw.config.InitBucket, opts)
+	_ = mw.mc.SetBucketPolicy(ctx, mw.config.InitBucket, policy)
+
+	return nil
 }
 
 func (mw *S3Minio) UploadFile(ctx context.Context, uploadPath string, fileData bytes.Buffer) error {
