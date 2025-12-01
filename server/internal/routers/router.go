@@ -6,7 +6,6 @@ import (
 	"server/internal/cloud"
 	"server/internal/controllers"
 	"server/internal/gocron"
-	"server/internal/middleware"
 	"server/internal/onliner"
 	"server/internal/repositories"
 	v1 "server/internal/routers/api/v1"
@@ -44,7 +43,7 @@ func InitRouter(
 
 	r.GET("/service-info", userCtrl.GetActualInfo)
 
-	r.GET("/ws/online", middleware.AuthMiddleware(jwtService), userCtrl.Online)
+	r.GET("/ws/online", userCtrl.Online)
 	r.GET("/ws/notifications", userCtrl.SendNotifications)
 	r.GET("/ws/messenger/:teamId", userCtrl.FetchAllMessages)
 

@@ -245,7 +245,7 @@ func (uc *UserController) GetActualInfo(gCtx *gin.Context) {
 
 func (uc *UserController) Online(gCtx *gin.Context) {
 	ctx := gCtx.Request.Context()
-	username := gCtx.GetString("username")
+	username := gCtx.Query("username")
 
 	conn, err := gosocket.UpgradeSocket.Upgrade(gCtx.Writer, gCtx.Request, nil)
 	if err != nil {
