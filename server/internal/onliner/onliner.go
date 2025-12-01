@@ -3,7 +3,10 @@ package onliner
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
+	"server/internal/database"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -85,5 +88,49 @@ func (s *Service) Heartbeat(ctx context.Context, username string, stop <-chan st
 		case <-ticker.C:
 			s.redis.Expire(ctx, key, s.ttl)
 		}
+	}
+}
+
+func (s *Service) SyncOnce() {
+	ctx := context.Background()
+
+	var cursor uint64
+	onlineMap := make(map[string]bool)
+	for {
+		keys, cur, err := s.redis.Scan(ctx, cursor, "online:*", 100).Result()
+		if err != nil {
+			log.Printf("redis scan err: %v", err)
+			return
+		}
+		for _, k := range keys {
+			username := strings.TrimPrefix(k, "online:")
+			onlineMap[username] = true
+		}
+		cursor = cur
+		if cursor == 0 {
+			break
+		}
+	}
+
+	allUsers := make([]database.UserModel, 0)
+	s.db.Model(&database.UserModel{}).Find(&allUsers)
+	var toOffline []string
+	for _, user := range allUsers {
+		if user.Online && !onlineMap[user.Username] {
+			toOffline = append(toOffline, user.Username)
+		}
+	}
+
+	for _, username := range toOffline {
+		if err := s.db.Exec("UPDATE user_models SET online = FALSE WHERE username = $1", username); err != nil {
+			log.Printf("sync update err for %s: %v", username, err)
+		}
+	}
+}
+
+func (s *Service) SyncWorker(interval time.Duration) {
+	for {
+		s.SyncOnce()
+		time.Sleep(interval)
 	}
 }

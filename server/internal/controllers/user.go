@@ -271,7 +271,7 @@ func (uc *UserController) Online(gCtx *gin.Context) {
 	go uc.onliner.Onliner.Heartbeat(ctx, username, stopHeartbeat)
 
 	for {
-		if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+		if _, _, err := conn.NextReader(); err != nil {
 			close(stopHeartbeat)
 			if err := uc.onliner.Onliner.MarkOffline(ctx, username); err != nil {
 				gCtx.AbortWithError(

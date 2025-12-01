@@ -11,6 +11,7 @@ import (
 	"server/internal/repositories"
 	v1 "server/internal/routers/api/v1"
 	"server/internal/services"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron"
@@ -38,6 +39,8 @@ func InitRouter(
 	userService := services.NewUserServiceImpl(userRepo, cloud)
 	userCtrl := controllers.NewUserControllers(userService, cloud, onliner)
 	v1.NewUserRouters(r, jwtService, userCtrl)
+
+	go onliner.Onliner.SyncWorker(5 * time.Second)
 
 	r.GET("/service-info", userCtrl.GetActualInfo)
 
