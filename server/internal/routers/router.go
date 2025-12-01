@@ -39,7 +39,7 @@ func InitRouter(
 	userCtrl := controllers.NewUserControllers(userService, cloud, onliner)
 	v1.NewUserRouters(r, jwtService, userCtrl)
 
-	r.GET("/service-info", userCtrl.GetActualInfo) //TODO - новая ручка
+	r.GET("/service-info", userCtrl.GetActualInfo)
 
 	r.GET("/ws/online", middleware.AuthMiddleware(jwtService), userCtrl.Online)
 	r.GET("/ws/notifications", userCtrl.SendNotifications)
