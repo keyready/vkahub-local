@@ -6,6 +6,7 @@ import (
 	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/gosocket"
+	"server/internal/onliner"
 	"server/internal/services"
 	"server/internal/utils"
 	"server/pkg/app"
@@ -18,16 +19,81 @@ import (
 type UserController struct {
 	userService services.UserService
 	cloud       *cloud.Cloud
+	onliner     *onliner.Onliner
 }
 
 func NewUserControllers(
 	service services.UserService,
 	cloud *cloud.Cloud,
+	onliner *onliner.Onliner,
 ) *UserController {
 	return &UserController{
 		userService: service,
 		cloud:       cloud,
+		onliner:     onliner,
 	}
+}
+
+func (uc *UserController) GetSettings(gCtx *gin.Context) {
+	ctx := gCtx.Request.Context()
+	username := gCtx.GetString("username")
+
+	settings, err := uc.userService.GetSettings(ctx, username)
+	if err != nil {
+		gCtx.AbortWithError(
+			http.StatusInternalServerError,
+			err,
+		)
+
+		gCtx.JSON(
+			http.StatusInternalServerError,
+			err,
+		)
+
+		return
+	}
+
+	gCtx.JSON(http.StatusOK, gin.H{"settings": settings})
+}
+
+func (uc *UserController) SetSettings(gCtx *gin.Context) {
+	jsonForm := request.SetSettingsForm{}
+	if bindErr := gCtx.ShouldBindJSON(&jsonForm); bindErr != nil {
+		gCtx.AbortWithError(
+			http.StatusBadRequest,
+			bindErr,
+		)
+
+		gCtx.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": bindErr.Error()},
+		)
+
+		return
+	}
+
+	ctx := gCtx.Request.Context()
+	jsonForm.Username = gCtx.GetString("username")
+
+	err := uc.userService.SetSettings(ctx, jsonForm)
+	if err != nil {
+		gCtx.AbortWithError(
+			http.StatusInternalServerError,
+			err,
+		)
+
+		gCtx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	gCtx.JSON(
+		http.StatusOK,
+		gin.H{},
+	)
 }
 
 func (uc *UserController) GetBannedReason(gCtx *gin.Context) {
@@ -171,9 +237,40 @@ func (uc *UserController) FetchAllMessages(ctx *gin.Context) {
 	}
 }
 
-func (uc *UserController) GetOnlineUsers(ctx *gin.Context) {
-	appGin := app.Gin{Ctx: ctx}
-	conn, err := gosocket.UpgradeSocket.Upgrade(ctx.Writer, ctx.Request, nil)
+func (uc *UserController) GetActualInfo(gCtx *gin.Context) {
+	_, _, info := uc.userService.GetActualInfo()
+
+	ctx := gCtx.Request.Context()
+
+	onlineUsers, err := uc.onliner.Onliner.GetOnlineUsers(ctx)
+	if err != nil {
+		gCtx.AbortWithError(
+			http.StatusInternalServerError,
+			err,
+		)
+
+		gCtx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	info.OnlineClients = onlineUsers
+
+	gCtx.JSON(http.StatusOK, info)
+}
+
+func (uc *UserController) Online(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
+
+	// ctx := gCtx.Request.Context()
+
+	// username := gCtx.GetString("username")
+	clientIP := gCtx.ClientIP()
+
+	conn, err := gosocket.UpgradeSocket.Upgrade(gCtx.Writer, gCtx.Request, nil)
 	if err != nil {
 		appGin.ErrorResponse(http.StatusInternalServerError, err)
 		return
@@ -181,27 +278,25 @@ func (uc *UserController) GetOnlineUsers(ctx *gin.Context) {
 
 	defer func() {
 		_ = conn.Close()
-		delete(gosocket.ClientsOnline, conn)
+		delete(gosocket.ClientsOnline, clientIP)
 	}()
 
-	gosocket.ClientsOnline[conn] = true
+	gosocket.ClientsOnline[clientIP] = conn
 
-	lastOnline := 0
 	for {
 		if err = conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 			break
 		}
 
-		_, _, info := uc.userService.GetActualInfo()
-		info.OnlineClients = len(gosocket.ClientsOnline)
+		// userOnline := onliner.UserOnline{
+		// 	Username: username,
+		// 	IP:       clientIP,
+		// 	LastSeen: time.Now(),
+		// }
+		// jsonData := utils.ToJSON(userOnline)
+		// key := onliner.BuildKeyRecord(username)
 
-		if lastOnline != info.OnlineClients {
-			err = conn.WriteJSON(info)
-			if err != nil {
-				break
-			}
-		}
-		lastOnline = info.OnlineClients
+		// err := uc.onliner.Onliner.UpdateLastSeen(ctx, jsonData)
 	}
 }
 

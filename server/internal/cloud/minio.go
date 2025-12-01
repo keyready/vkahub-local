@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"log"
+	"net/url"
 	"server/internal/utils"
 	"time"
 
@@ -39,25 +40,27 @@ func New(cfg *Config) *Cloud {
 
 func (mw *S3Minio) InitBucket(ctx context.Context) error {
 	opts := minio.MakeBucketOptions{}
-	return mw.mc.MakeBucket(ctx, mw.config.MainBucket, opts)
+	policy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + mw.config.InitBucket + `/*"]}]}`
+	mw.mc.MakeBucket(ctx, mw.config.InitBucket, opts)
+	return mw.mc.SetBucketPolicy(ctx, mw.config.InitBucket, policy)
 }
 
 func (mw *S3Minio) UploadFile(ctx context.Context, uploadPath string, fileData bytes.Buffer) error {
 	opts := minio.PutObjectOptions{}
 	fileDataLen := int64(fileData.Len())
 
-	_, err := mw.mc.PutObject(ctx, mw.config.MainBucket, uploadPath, &fileData, fileDataLen, opts)
+	_, err := mw.mc.PutObject(ctx, mw.config.InitBucket, uploadPath, &fileData, fileDataLen, opts)
 	return err
 }
 
 func (mw *S3Minio) RemoveFile(ctx context.Context, filePath string) error {
 	opts := minio.RemoveObjectOptions{}
-	return mw.mc.RemoveObject(ctx, mw.config.MainBucket, filePath, opts)
+	return mw.mc.RemoveObject(ctx, mw.config.InitBucket, filePath, opts)
 }
 
 func (mw *S3Minio) GetSharedURL(ctx context.Context, filePath string, expires time.Duration) (string, error) {
-	params := make(map[string][]string)
-	url, err := mw.mc.PresignedGetObject(ctx, mw.config.MainBucket, filePath, expires, params)
+	params := make(url.Values)
+	url, err := mw.mc.PresignedGetObject(ctx, mw.config.InitBucket, filePath, expires, params)
 	if err != nil {
 		return "", err
 	}

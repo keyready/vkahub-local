@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"server/internal/cloud"
 	"server/internal/database"
 	"strings"
 
@@ -22,11 +23,18 @@ type ReportRepository interface {
 }
 
 type ReportRepositoryImpl struct {
-	DB *gorm.DB
+	DB    *gorm.DB
+	cloud *cloud.Cloud
 }
 
-func NewReportRepositoryImpl(DB *gorm.DB) ReportRepository {
-	return &ReportRepositoryImpl{DB: DB}
+func NewReportRepositoryImpl(
+	DB *gorm.DB,
+	cloud *cloud.Cloud,
+) ReportRepository {
+	return &ReportRepositoryImpl{
+		DB:    DB,
+		cloud: cloud,
+	}
 }
 
 func (r ReportRepositoryImpl) GenerateReport(eventId int64) (httpCode int, reportName string, err error) {
@@ -100,6 +108,8 @@ func (r ReportRepositoryImpl) GenerateReport(eventId int64) (httpCode int, repor
 	if err != nil {
 		return http.StatusInternalServerError, "", fmt.Errorf("failed to save new report: %v", err)
 	}
+
+	// TODO - перебросить в MiniO новый рапорт
 
 	return http.StatusOK, newReportName, nil
 }

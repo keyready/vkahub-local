@@ -47,7 +47,7 @@ func FromFile(filePath string) (*VkaHubConfig, error) {
 	viperInstance.SetDefault("cloud.username", "minio-root")
 	viperInstance.SetDefault("cloud.password", "minio-root")
 	viperInstance.SetDefault("cloud.enableSSL", false)
-	viperInstance.SetDefault("cloud.mainBucket", "vkahub-bucket")
+	viperInstance.SetDefault("cloud.initBucket", "vkahub-bucket")
 
 	if err := viperInstance.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read config file %s: %v", filePath, err)

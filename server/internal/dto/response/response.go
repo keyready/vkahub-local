@@ -86,6 +86,7 @@ type ProfileData struct {
 	Positions   pq.StringArray           `gorm:"type:varchar[]" json:"positions"`
 	CreatedAt   time.Time                `json:"created_at"`
 	Portfolio   []database.PortfolioFile `json:"portfolio"`
+	Settings    string                   `json:"settings"`
 }
 
 type FetchAllTeamsByParams struct {
@@ -115,5 +116,6 @@ type UserData struct {
 	TeamId           int64                    `json:"teamId"`
 	Username         string                   `json:"username"`
 	Portfolio        []database.PortfolioFile `json:"portfolio"`
+	Settings         string                   `json:"settings"`
 	RecoveryQuestion string                   `json:"recoveryQuestion"`
 }

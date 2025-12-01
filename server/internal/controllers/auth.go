@@ -6,6 +6,7 @@ import (
 	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
+	"server/internal/onliner"
 	"server/internal/services"
 	"server/internal/utils"
 	"server/pkg/app"
@@ -19,17 +20,20 @@ type AuthController struct {
 	authService services.AuthService
 	jwtService  *authorizer.Authorizer
 	cloud       *cloud.Cloud
+	onliner     *onliner.Onliner
 }
 
 func NewAuthController(
 	service services.AuthService,
 	jwtService *authorizer.Authorizer,
 	cloud *cloud.Cloud,
+	onliner *onliner.Onliner,
 ) *AuthController {
 	return &AuthController{
 		jwtService:  jwtService,
 		authService: service,
 		cloud:       cloud,
+		onliner:     onliner,
 	}
 }
 

@@ -14,7 +14,7 @@ var (
 			return true
 		},
 	}
-	ClientsOnline = make(map[*websocket.Conn]bool)
+	ClientsOnline = make(map[string]*websocket.Conn)
 	NotifyMembers = make(map[*websocket.Conn]bool)
 	ChatOnline    = make(map[*websocket.Conn]bool)
 )

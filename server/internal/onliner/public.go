@@ -1,21 +1,25 @@
 package onliner
 
+import (
+	"context"
+	"time"
+)
+
 type Onliner struct {
 	Onliner IOnliner
 }
 
 type IOnliner interface {
-	// IUser
-	// IManage
+	IUser
+	IOnline
 }
 
-// type IManage interface {
-// 	UpdateLastSeen()
-// 	MarkOnline()
-// }
+type IOnline interface {
+	UpdateLastSeen(ctx context.Context)
+	RegisterOnline(ctx context.Context, key string, onlineUser interface{}, ttl time.Duration) error
+	RemoveOnline(ctx context.Context)
+}
 
-// type IUser interface {
-// 	GetOnlineUsers()
-// 	IsUserOnline()
-// 	RemoveUser()
-// }
+type IUser interface {
+	GetOnlineUsers(ctx context.Context) (int, error)
+}

@@ -39,7 +39,7 @@ cloud:
   username: minio-root
   password: minio-root
   enableSSL: false
-  mainBucket: vkahub-bucket
+  InitBucket: vkahub-bucket
 ```
 
 ```env

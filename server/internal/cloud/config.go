@@ -5,5 +5,5 @@ type Config struct {
 	Username   string `mapstructure:"username"`
 	Password   string `mapstructure:"password"`
 	EnableSSL  bool   `mapstructure:"enableSSL"`
-	MainBucket string `mapstructure:"mainBucket"`
+	InitBucket string `mapstructure:"initBucket"`
 }

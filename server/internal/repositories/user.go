@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -35,6 +36,8 @@ type UserRepository interface {
 	AddPortfolio(addPortfolioReq request.AddPortfolioForm, certificateNames []string) (httpCode int, err error)
 	DeletePortfolio(certificateName, ownerName string) (httpCode int, err error)
 	GetBannedReason(ownerID int64) (httpCode int, err error, banned database.BanModel)
+	SetSettings(ctx context.Context, saveSettingsForm request.SetSettingsForm) error
+	GetSettings(ctx context.Context, username string) (string, error)
 }
 
 type UserRepositoryImpl struct {
@@ -43,6 +46,20 @@ type UserRepositoryImpl struct {
 
 func NewUserRepositoryImpl(Db *gorm.DB) UserRepository {
 	return &UserRepositoryImpl{Db: Db}
+}
+
+func (u *UserRepositoryImpl) GetSettings(ctx context.Context, username string) (string, error) {
+	userSettings := database.UserModel{}
+	u.Db.Where("username = ?", username).First(&userSettings)
+	return userSettings.Settings, nil
+}
+
+func (u *UserRepositoryImpl) SetSettings(ctx context.Context, saveSettingsForm request.SetSettingsForm) error {
+	userSettings := database.UserModel{}
+	u.Db.Where("username = ?", saveSettingsForm.Username).First(&userSettings)
+	userSettings.Settings = saveSettingsForm.Settings
+	u.Db.Save(&userSettings)
+	return nil
 }
 
 func (u *UserRepositoryImpl) GetBannedReason(ownerID int64) (httpCode int, err error, banned database.BanModel) {

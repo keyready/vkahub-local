@@ -6,6 +6,7 @@ import (
 	"server/internal/cloud"
 	"server/internal/controllers"
 	"server/internal/gocron"
+	"server/internal/middleware"
 	"server/internal/onliner"
 	"server/internal/repositories"
 	v1 "server/internal/routers/api/v1"
@@ -33,24 +34,26 @@ func InitRouter(
 	c.AddFunc("@monthly", gocron.ClearNotifications(db))
 	c.Start()
 
+	userRepo := repositories.NewUserRepositoryImpl(db)
+	userService := services.NewUserServiceImpl(userRepo, cloud)
+	userCtrl := controllers.NewUserControllers(userService, cloud, onliner)
+	v1.NewUserRouters(r, jwtService, userCtrl)
+
+	r.GET("/service-info", userCtrl.GetActualInfo) //TODO - новая ручка
+
+	r.GET("/ws/online", middleware.AuthMiddleware(jwtService), userCtrl.Online)
+	r.GET("/ws/notifications", userCtrl.SendNotifications)
+	r.GET("/ws/messenger/:teamId", userCtrl.FetchAllMessages)
+
 	authRepo := repositories.NewAuthRepositoryImpl(db, jwtService)
 	authService := services.NewAuthServiceImpl(authRepo)
-	authCtrl := controllers.NewAuthController(authService, jwtService, cloud)
+	authCtrl := controllers.NewAuthController(authService, jwtService, cloud, onliner)
 	v1.NewAuthRouters(r, jwtService, authCtrl)
 
 	teamRepo := repositories.NewTeamRepositoryImpl(db)
 	teamService := services.NewTeamServiceImpl(teamRepo, cloud)
 	teamCtrl := controllers.NewTeamController(teamService, cloud)
 	v1.NewTeamRouters(r, jwtService, teamCtrl)
-
-	userRepo := repositories.NewUserRepositoryImpl(db)
-	userService := services.NewUserServiceImpl(userRepo, cloud)
-	userCtrl := controllers.NewUserControllers(userService, cloud)
-	v1.NewUserRouters(r, jwtService, userCtrl)
-
-	r.GET("/ws/online", userCtrl.GetOnlineUsers)
-	r.GET("/ws/notifications", userCtrl.SendNotifications)
-	r.GET("/ws/messenger/:teamId", userCtrl.FetchAllMessages)
 
 	proposalRepo := repositories.NewProposalRepositoryImpl(db)
 	proposalService := services.NewProposalServiceImpl(proposalRepo)
@@ -82,7 +85,7 @@ func InitRouter(
 	positionCtrl := controllers.NewPositionController(positionService)
 	v1.NewPositionsRoutes(r, jwtService, positionCtrl)
 
-	reportRepo := repositories.NewReportRepositoryImpl(db)
+	reportRepo := repositories.NewReportRepositoryImpl(db, cloud)
 	reportService := services.NewReportServiceImpl(reportRepo)
 	reportCtrl := controllers.NewReportControllers(reportService)
 	v1.NewReportRoutes(r, jwtService, reportCtrl)
