@@ -62,11 +62,8 @@ export interface ServerUser {
     middlename: string;
     description: string;
 
-    // recovery
-    recovery: {
-        question: string;
-        answer: string;
-    };
+    recoveryQuestion: string;
+    recoveryAnswer: string;
 
     group_number: string;
     rank: string;

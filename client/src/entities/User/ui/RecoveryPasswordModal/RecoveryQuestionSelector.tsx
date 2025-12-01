@@ -34,6 +34,7 @@ export const RecoveryQuestionSelector = (props: RecoveryQuestionSelectorProps) =
             selectedKey={value}
             onSelectionChange={handleSelectionChange}
             listboxProps={{
+                disallowEmptySelection: true,
                 emptyContent: 'Вопросы не найдены, т.к. сервера недоступны. Попробуйте позже',
                 itemClasses: {
                     title: 'dark:text-white',

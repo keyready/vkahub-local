@@ -1,42 +1,58 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
+import useWebSocket, { Options } from 'react-use-websocket';
 
 const baseUrl = '/online';
 
 export function useSockets<T, M = any>(url?: string) {
-    const ws = useMemo(() => new WebSocket(`/ws${url || baseUrl}`), [url]);
+    const socketUrl = `ws://localhost:5000/ws${url || baseUrl}`;
 
-    const [socketData, setSocketData] = useState<T>();
-    const [error, setError] = useState<any>();
-
-    const sendMessage = useCallback(
-        (data: Partial<M>) => {
-            ws.send(JSON.stringify(data));
-        },
-        [ws],
+    // ✅ useMemo — критически важен!
+    const options = useMemo<Options>(
+        () => ({
+            share: true, // ← каждый вызов — отдельное соединение (как у тебя было)
+            // reconnect: false, // опционально: отключить авто-повтор
+            onOpen: () => console.log('[WS] Open'),
+            onClose: (e) => console.log(`[WS] Close: ${e.code}`),
+        }),
+        [], // ← пустые зависимости!
     );
 
-    useEffect(() => {
-        ws.onopen = () => {
-            console.log('Сокеты подключились');
-        };
+    const {
+        sendMessage: rawSend,
+        lastMessage,
+        readyState,
+        getWebSocket,
+    } = useWebSocket(
+        socketUrl,
+        options,
+        // ⚠️ Третий параметр (`connect`) НЕ передаём → always connected while mounted
+    );
 
-        ws.onmessage = (event) => {
-            setSocketData(event.data);
-        };
+    useEffect(
+        () => () => {
+            getWebSocket()?.close(1000, 'User initiated close'); // Optional: provide a code and reason
+        },
+        [getWebSocket],
+    );
 
-        ws.onerror = (error) => {
-            console.log('sockets error', error);
-            setError(error);
-        };
+    // Повторно парсим lastMessage.data → T
+    const data = lastMessage ? lastMessage.data : undefined;
 
-        return () => {
-            ws.close();
-        };
-    }, [ws]);
+    // sendMessage — как раньше: Partial<M> → JSON.stringify
+    const sendMessage = useCallback(
+        (message: Partial<M>) => {
+            if (readyState === WebSocket.OPEN) {
+                rawSend(JSON.stringify(message));
+            } else {
+                // Можно опционально буферизировать или игнорировать
+                console.warn('[useSockets] Message dropped: not OPEN', readyState);
+            }
+        },
+        [rawSend, readyState],
+    );
 
     return {
-        data: socketData,
+        data,
         sendMessage,
-        error,
     };
 }

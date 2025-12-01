@@ -16,7 +16,7 @@
     "author": "keyready",
     "license": "ISC",
     "devDependencies": {
-        "@hookform/resolvers": "^3.3.3",
+        "@hookform/resolvers": "^3.10.0",
         "@types/node": "^20.16.5",
         "@types/react": "^18.0.29",
         "@types/react-dom": "^18.0.11",
@@ -79,9 +79,11 @@
         "react-redux": "^7.2.6",
         "react-router-dom": "^6.2.1",
         "react-tag-autocomplete": "^7.3.0",
+        "react-use-websocket": "^4.13.0",
         "react-window": "^1.8.10",
         "swiper": "^11.1.9",
         "use-debounce": "^10.0.3",
-        "workbox-cli": "^7.1.0"
+        "workbox-cli": "^7.1.0",
+        "yup": "^1.7.1"
     }
 }

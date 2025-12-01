@@ -21,7 +21,7 @@ interface Statistics {
 }
 
 const MainPage = () => {
-    const { data, error } = useSockets<string, void>();
+    const { data } = useSockets<string, void>();
 
     const [statistics, setStatistics] = useState<Statistics>();
 
@@ -31,9 +31,7 @@ const MainPage = () => {
         if (data) {
             setStatistics(JSON.parse(data));
         }
-    }, [data, error]);
-
-    useEffect(() => {}, []);
+    }, [data]);
 
     const normalize_count_form = useCallback((number: number, words_arr: string[]) => {
         number = Math.abs(number);

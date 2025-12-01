@@ -16,7 +16,7 @@ export const approveRecoveryAnswer = createAsyncThunk<
     const { extra, rejectWithValue } = thunkAPI;
 
     try {
-        const response = await extra.api.post<string>('/api/auth/approve_recovery', recoveryProps);
+        const response = await extra.api.put<string>('/api/auth/approve_recovery', recoveryProps);
 
         if (!response.data) {
             throw new Error();

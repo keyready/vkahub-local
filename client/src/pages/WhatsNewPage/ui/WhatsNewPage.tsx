@@ -63,6 +63,29 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
             <VStack gap="36px" maxW align="start" className="overflow-y-auto relative">
                 <HStack maxW align="start" className="grid grid-cols-5">
                     <div className="col-span-1 sticky top-1">
+                        <h1 className="text-xl leading-tight">Версия 2.2.1 от 29.11.2025 г.</h1>
+                    </div>
+                    <VStack maxW gap="24px" className="col-span-4">
+                        <div>
+                            <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
+                                Исправление ошибок
+                            </h3>
+                            <h4 className="text-l leading-snug">
+                                - Нашлись умники, которые писали в username очень странные символы,
+                                в т.ч. кириллицу и пробелы. Мы, конечно же, рассчитывали на
+                                вменяемую аудиторию, к которой нужно предъявлять минимум контроля.
+                                Теперь все формы на регистрацию, авторизацию и смену пароля очень
+                                жестко валидируются. Настоятельно рекомендуем сменить пароль, потому
+                                что вскоре некоторые не смогут войти в аккаунту
+                                <br />
+                                -Кстати да, все аккаунты с невалидными логина мы удалили :(
+                            </h4>
+                        </div>
+                    </VStack>
+                </HStack>
+
+                <HStack maxW align="start" className="grid grid-cols-5">
+                    <div className="col-span-1 sticky top-1">
                         <h1 className="text-xl leading-tight">Версия 2.2.0 от 25.11.2025 г.</h1>
                     </div>
                     <VStack maxW gap="24px" className="col-span-4">
