@@ -42,7 +42,7 @@ type FetchPersonalAchievementResponse struct {
 
 type ActualInfo struct {
 	TotalUsers    int64 `json:"totalUsers"`
-	OnlineClients int   `json:"onlineClients"`
+	OnlineClients int64 `json:"onlineClients"`
 	TotalTeams    int64 `json:"totalTeams"`
 	TotalWinners  int64 `json:"totalWinners"`
 	TotalEvents   int64 `json:"totalEvents"`

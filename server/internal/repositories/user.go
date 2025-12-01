@@ -81,8 +81,8 @@ func (u *UserRepositoryImpl) DeletePortfolio(certificateName, ownerName string) 
 
 	updPortfolio := []database.PortfolioFile{}
 	for index, cert := range portfolio {
-		if strings.Compare(cert.Name, certificateName) == 0 {
-			removeErr := u.cloud.Cloud.RemoveFile(context.Background(), cert.Name[strings.Index(cert.Name, "/")+1:])
+		if strings.Compare(cert.Url, certificateName) == 0 {
+			removeErr := u.cloud.Cloud.RemoveFile(context.Background(), cert.Url[strings.Index(cert.Url, "/")+1:])
 			if removeErr != nil {
 				return http.StatusInternalServerError, fmt.Errorf("failed to remove portfolio: %v", err)
 			}
@@ -121,10 +121,9 @@ func (u *UserRepositoryImpl) AddPortfolio(addPortfolio request.AddPortfolioForm,
 		}
 
 		portfolioFile := database.PortfolioFile{
-			Name:      certName,
 			EventName: addPortfolio.EventName,
 			Place:     addPortfolio.Place,
-			Url:       filepath.Join(other.CERTIFICATES_STORAGE, certName),
+			Url:       certName,
 			Type:      t,
 		}
 
@@ -189,6 +188,10 @@ func (u *UserRepositoryImpl) GetActualInfo() (httpCode int, err error, info resp
 	var totalWinners int64
 	u.Db.Model(&database.AchievementModel{}).Where("result = ?", "winner").Count(&totalWinners)
 	info.TotalWinners = totalWinners
+
+	var onlineUsers int64
+	u.Db.Model(&database.UserModel{}).Where("online = true").Count(&onlineUsers)
+	info.OnlineClients = onlineUsers
 
 	return http.StatusOK, nil, info
 }

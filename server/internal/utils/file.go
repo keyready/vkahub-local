@@ -15,9 +15,9 @@ type ReadFileParams struct {
 }
 
 type ReadFileResult struct {
-	FileData bytes.Buffer
-	FilePath string
-	FileName string
+	FileData     bytes.Buffer
+	FileKey      string
+	FullFilePath string
 }
 
 func ReadFile(params ReadFileParams) (ReadFileResult, error) {
@@ -49,8 +49,8 @@ func ReadFile(params ReadFileParams) (ReadFileResult, error) {
 		fileName,
 	)
 
-	result.FilePath = filePath
-	result.FileName = fileName
+	result.FileKey = filePath
+	result.FullFilePath = filepath.Join("vkahub-bucket", filePath)
 
 	return result, nil
 }

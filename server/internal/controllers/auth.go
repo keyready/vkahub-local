@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"path/filepath"
 	"server/internal/authorizer"
 	"server/internal/cloud"
 	"server/internal/dto/other"
@@ -91,7 +90,7 @@ func (ac *AuthController) SignUp(gCtx *gin.Context) {
 	}
 
 	ctx := gCtx.Request.Context()
-	if saveErr := ac.cloud.Cloud.UploadFile(ctx, readFileResult.FilePath, readFileResult.FileData); saveErr != nil {
+	if saveErr := ac.cloud.Cloud.UploadFile(ctx, readFileResult.FileKey, readFileResult.FileData); saveErr != nil {
 		gCtx.AbortWithError(
 			http.StatusInternalServerError,
 			saveErr,
@@ -105,7 +104,7 @@ func (ac *AuthController) SignUp(gCtx *gin.Context) {
 		return
 	}
 
-	httpCode, serviceErr := ac.authService.SignUp(formData, filepath.Join("vkahub-bucket", readFileResult.FilePath))
+	httpCode, serviceErr := ac.authService.SignUp(formData, readFileResult.FullFilePath)
 	if serviceErr != nil {
 		gCtx.AbortWithError(
 			httpCode,

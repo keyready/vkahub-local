@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"path/filepath"
 	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
@@ -66,7 +65,7 @@ func (bc *BugController) AddBug(gCtx *gin.Context) {
 
 		if saveErr := bc.cloud.Cloud.UploadFile(
 			ctx,
-			readFileResult.FilePath,
+			readFileResult.FileKey,
 			readFileResult.FileData,
 		); saveErr != nil {
 			appGin.ErrorResponse(
@@ -75,7 +74,7 @@ func (bc *BugController) AddBug(gCtx *gin.Context) {
 			)
 		}
 
-		mediaNames = append(mediaNames, filepath.Join("vkahub-bucket", readFileResult.FilePath))
+		mediaNames = append(mediaNames, readFileResult.FullFilePath)
 	}
 
 	httpCode, err := bc.bugService.AddBug(formData, mediaNames)

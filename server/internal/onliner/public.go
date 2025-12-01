@@ -9,16 +9,11 @@ type Onliner struct {
 }
 
 type IOnliner interface {
-	IUser
 	IOnline
 }
 
 type IOnline interface {
-	UpdateLastSeen(ctx context.Context)
-	RegisterOnline(ctx context.Context)
-	RemoveOnline(ctx context.Context)
-}
-
-type IUser interface {
-	GetOnlineUsers(ctx context.Context)
+	MarkOnline(ctx context.Context, username string) error
+	MarkOffline(ctx context.Context, username string) error
+	Heartbeat(ctx context.Context, username string, stop <-chan struct{})
 }

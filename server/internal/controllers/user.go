@@ -1,8 +1,8 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
-	"path/filepath"
 	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
@@ -171,7 +171,7 @@ func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
 			return
 		}
 
-		if saveErr := uc.cloud.Cloud.UploadFile(ctx, readFileResult.FilePath, readFileResult.FileData); saveErr != nil {
+		if saveErr := uc.cloud.Cloud.UploadFile(ctx, readFileResult.FileKey, readFileResult.FileData); saveErr != nil {
 			appGin.ErrorResponse(
 				http.StatusInternalServerError,
 				saveErr,
@@ -179,7 +179,7 @@ func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
 			return
 		}
 
-		certificateNames = append(certificateNames, filepath.Join("vkahub-bucket", readFileResult.FilePath))
+		certificateNames = append(certificateNames, readFileResult.FullFilePath)
 	}
 
 	formData.Owner = appGin.Ctx.GetString("username")
@@ -240,12 +240,54 @@ func (uc *UserController) FetchAllMessages(ctx *gin.Context) {
 
 func (uc *UserController) GetActualInfo(gCtx *gin.Context) {
 	_, _, info := uc.userService.GetActualInfo()
-	// TODO
 	gCtx.JSON(http.StatusOK, info)
 }
 
 func (uc *UserController) Online(gCtx *gin.Context) {
-	// TODO
+	ctx := gCtx.Request.Context()
+	username := gCtx.GetString("username")
+
+	conn, err := gosocket.UpgradeSocket.Upgrade(gCtx.Writer, gCtx.Request, nil)
+	if err != nil {
+		gCtx.AbortWithError(
+			http.StatusInternalServerError,
+			err,
+		)
+
+		gCtx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+	defer conn.Close()
+
+	if err := uc.onliner.Onliner.MarkOnline(ctx, username); err != nil {
+		log.Printf("markOnline err: %v", err)
+	}
+
+	stopHeartbeat := make(chan struct{})
+	go uc.onliner.Onliner.Heartbeat(ctx, username, stopHeartbeat)
+
+	for {
+		if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+			close(stopHeartbeat)
+			if err := uc.onliner.Onliner.MarkOffline(ctx, username); err != nil {
+				gCtx.AbortWithError(
+					http.StatusInternalServerError,
+					err,
+				)
+
+				gCtx.JSON(
+					http.StatusInternalServerError,
+					gin.H{"error": err.Error()},
+				)
+
+				return
+			}
+		}
+	}
 }
 
 func (uc *UserController) SendNotifications(ctx *gin.Context) {
@@ -363,7 +405,7 @@ func (uc *UserController) EditProfile(gCtx *gin.Context) {
 			return
 		}
 
-		if saveErr := uc.cloud.Cloud.UploadFile(ctx, readFileResult.FilePath, readFileResult.FileData); saveErr != nil {
+		if saveErr := uc.cloud.Cloud.UploadFile(ctx, readFileResult.FileKey, readFileResult.FileData); saveErr != nil {
 			appGin.ErrorResponse(
 				http.StatusInternalServerError,
 				saveErr,
@@ -371,7 +413,7 @@ func (uc *UserController) EditProfile(gCtx *gin.Context) {
 			return
 		}
 
-		formData.Avatar = filepath.Join("vkahub-bucket", readFileResult.FilePath)
+		formData.Avatar = readFileResult.FullFilePath
 	} else {
 		formData.Avatar = ""
 	}

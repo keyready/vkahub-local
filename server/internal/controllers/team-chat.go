@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"path/filepath"
 	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
@@ -56,7 +55,7 @@ func (teamChatC *TeamChatController) CreateMessage(gCtx *gin.Context) {
 			return
 		}
 
-		if saveErr := teamChatC.cloud.Cloud.UploadFile(ctx, readFileResult.FilePath, readFileResult.FileData); saveErr != nil {
+		if saveErr := teamChatC.cloud.Cloud.UploadFile(ctx, readFileResult.FileKey, readFileResult.FileData); saveErr != nil {
 			appGin.ErrorResponse(
 				http.StatusInternalServerError,
 				saveErr,
@@ -64,7 +63,7 @@ func (teamChatC *TeamChatController) CreateMessage(gCtx *gin.Context) {
 			return
 		}
 
-		formData.AttachmentNames = append(formData.AttachmentNames, filepath.Join("vkahub-bucket", readFileResult.FilePath))
+		formData.AttachmentNames = append(formData.AttachmentNames, readFileResult.FullFilePath)
 	}
 
 	formData.Author = gCtx.GetString("username")

@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"path/filepath"
 	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
@@ -53,14 +52,14 @@ func (ec *EventController) AddEvent(gCtx *gin.Context) {
 	}
 
 	ctx := gCtx.Request.Context()
-	if saveErr := ec.cloud.Cloud.UploadFile(ctx, readFileResult.FilePath, readFileResult.FileData); saveErr != nil {
+	if saveErr := ec.cloud.Cloud.UploadFile(ctx, readFileResult.FileKey, readFileResult.FileData); saveErr != nil {
 		appGin.ErrorResponse(
 			http.StatusInternalServerError,
 			saveErr,
 		)
 	}
 
-	formData.Image.Filename = filepath.Join("vkahub-bucket", readFileResult.FilePath)
+	formData.Image.Filename = readFileResult.FullFilePath
 	_, err = ec.eventService.AddEvent(formData)
 	if err != nil {
 		appGin.ErrorResponse(http.StatusInternalServerError, err)

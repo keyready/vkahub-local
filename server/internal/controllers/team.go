@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"path/filepath"
 	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
@@ -58,7 +57,7 @@ func (tc *TeamController) EditTeam(gCtx *gin.Context) {
 			return
 		}
 
-		if saveErr := tc.cloud.Cloud.UploadFile(ctx, readFileResult.FilePath, readFileResult.FileData); saveErr != nil {
+		if saveErr := tc.cloud.Cloud.UploadFile(ctx, readFileResult.FileKey, readFileResult.FileData); saveErr != nil {
 			appGin.ErrorResponse(
 				http.StatusInternalServerError,
 				saveErr,
@@ -66,7 +65,7 @@ func (tc *TeamController) EditTeam(gCtx *gin.Context) {
 			return
 		}
 
-		formData.Image = readFileResult.FileName
+		formData.Image = readFileResult.FullFilePath
 	} else {
 		formData.Image = ""
 	}
@@ -163,7 +162,7 @@ func (tc *TeamController) RegisterTeam(gCtx *gin.Context) {
 		return
 	}
 
-	formData.Image.Filename = filepath.Join("vkahub-bucket", readFileResult.FilePath)
+	formData.Image.Filename = readFileResult.FullFilePath
 
 	httpCode, serviceErr := tc.teamService.RegisterTeam(formData)
 	if serviceErr != nil {
@@ -172,7 +171,7 @@ func (tc *TeamController) RegisterTeam(gCtx *gin.Context) {
 	}
 
 	ctx := gCtx.Request.Context()
-	if saveErr := tc.cloud.Cloud.UploadFile(ctx, readFileResult.FilePath, readFileResult.FileData); saveErr != nil {
+	if saveErr := tc.cloud.Cloud.UploadFile(ctx, readFileResult.FileKey, readFileResult.FileData); saveErr != nil {
 		appGin.ErrorResponse(
 			http.StatusInternalServerError,
 			saveErr,

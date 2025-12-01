@@ -178,6 +178,7 @@ type UserModel struct {
 
 	Portfolio datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"-"`
 
+	Online     bool      `json:"online"`
 	LastOnline time.Time `json:"lastOnline"`
 }
 

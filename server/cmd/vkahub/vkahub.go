@@ -21,13 +21,13 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	onlinerServ := onliner.New(&serviceConfig.Onliner)
-	cloudServ := cloud.New(&serviceConfig.Cloud)
-
 	db := database.DatabaseConnect(
 		&serviceConfig.Database,
 		&serviceConfig.Migrations,
 	)
+
+	onlinerServ := onliner.New(db, &serviceConfig.Onliner)
+	cloudServ := cloud.New(&serviceConfig.Cloud)
 
 	jwtService := authorizer.New(&serviceConfig.Authorizer)
 
