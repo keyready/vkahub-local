@@ -2,16 +2,19 @@ import { Button, Input, Modal, ModalContent } from '@nextui-org/react';
 import { FormEvent, useCallback, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Controller, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 
 import { sendRecoveryLink } from '../../model/services/authServices/sendRecoveryLink';
 import { getUserIsLoading } from '../../model/selectors/UserSelectors';
 import { approveRecoveryAnswer } from '../../model/services/authServices/approveRecoveryAnswer';
-import { changePassword } from '../../model/services/authServices/changePassword';
+import { changePasswordSchema } from '../../model/types/validationSchemas';
 
 import { classNames } from '@/shared/lib/classNames';
 import { VStack } from '@/shared/ui/Stack';
 import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
 import { toastDispatch } from '@/widgets/Toaster';
+import { changePassword } from '@/entities/User';
 
 interface RecoveryPasswordModalProps {
     className?: string;
@@ -34,19 +37,28 @@ export const RecoveryPasswordModal = (props: RecoveryPasswordModalProps) => {
     const [recoveryAnswer, setRecoveryAnswer] = useState<string>('');
     const [changePasswordStage, setChangePasswordStage] = useState<boolean>(false);
 
-    const [password, setPassword] = useState<string>('');
-    const [repPassword, setRepPassword] = useState<string>('');
+    const {
+        control,
+        handleSubmit,
+        formState: { errors, isValid },
+    } = useForm<{ newPassword: string; confirmNewPassword: string }>({
+        resolver: yupResolver(changePasswordSchema),
+        mode: 'onChange',
+    });
 
     const handleFormSubmit = useCallback(
         async (event: FormEvent<HTMLFormElement>) => {
             event.preventDefault();
             if (!recoveryAnswer && !recoveryQuestion) {
                 const result = await toastDispatch(dispatch(sendRecoveryLink(username)), {
-                    error: 'Пользователь с таким username не найден',
+                    error: {
+                        404: 'Пользователь с таким username не найден',
+                        406: 'Не указан способ восстановления пароля',
+                    },
                     success: 'Теперь введите ответ на вопрос',
                 });
 
-                if (sendRecoveryLink.fulfilled.match(result)) {
+                if (sendRecoveryLink.fulfilled.match(result) && result.payload.question) {
                     setRecoveryQuestion(result.payload.question);
                 }
                 return;
@@ -55,7 +67,7 @@ export const RecoveryPasswordModal = (props: RecoveryPasswordModalProps) => {
                 const result = await toastDispatch(
                     dispatch(approveRecoveryAnswer({ username, answer: recoveryAnswer })),
                     {
-                        error: 'Не удалось подтвердить подлинность ответа',
+                        error: 'Введен неверный ответ',
                         success: 'А теперь придумайте новый пароль',
                     },
                 );
@@ -63,14 +75,18 @@ export const RecoveryPasswordModal = (props: RecoveryPasswordModalProps) => {
                 if (approveRecoveryAnswer.fulfilled.match(result)) {
                     setChangePasswordStage(true);
                     setRecoveryQuestion('');
-                    return;
                 }
             }
+        },
+        [dispatch, recoveryAnswer, recoveryQuestion, username],
+    );
 
-            await toastDispatch(
+    const handleChangePassword = useCallback(
+        async (passwords: { newPassword: string; confirmNewPassword: string }) => {
+            const result = await toastDispatch(
                 dispatch(
                     changePassword({
-                        new_password: password,
+                        new_password: passwords.newPassword,
                         username,
                     }),
                 ),
@@ -78,15 +94,16 @@ export const RecoveryPasswordModal = (props: RecoveryPasswordModalProps) => {
                     success: 'Пароль изменен, пробуйте авторизоваться',
                 },
             );
-            setIsOpened(false);
-            setUsername('');
-            setRecoveryQuestion('');
-            setRecoveryAnswer('');
-            setChangePasswordStage(false);
-            setPassword('');
-            setRepPassword('');
+
+            if (changePassword.fulfilled.match(result)) {
+                setIsOpened(false);
+                setUsername('');
+                setRecoveryQuestion('');
+                setRecoveryAnswer('');
+                setChangePasswordStage(false);
+            }
         },
-        [dispatch, password, recoveryAnswer, recoveryQuestion, setIsOpened, username],
+        [dispatch, setIsOpened, username],
     );
 
     const isButtonDisabled = useMemo(() => {
@@ -96,7 +113,10 @@ export const RecoveryPasswordModal = (props: RecoveryPasswordModalProps) => {
 
     const renderChangePasswordForm = useMemo(
         () => (
-            <div className="flex flex-col gap-4 w-full">
+            <form
+                onSubmit={handleSubmit(handleChangePassword)}
+                className="flex flex-col gap-4 w-full"
+            >
                 <h1 className="text-primary text-xl italic">
                     <b>Пожалуйста</b>, запомните пароль, который введете!
                 </h1>
@@ -108,15 +128,25 @@ export const RecoveryPasswordModal = (props: RecoveryPasswordModalProps) => {
                     className="w-full"
                     key="password"
                 >
-                    <Input
-                        isDisabled={isUserLoading}
-                        value={password}
-                        onValueChange={setPassword}
-                        isRequired
-                        autoFocus
-                        size="sm"
-                        label="Введите пароль"
-                        type="password"
+                    <Controller
+                        render={({ field }) => (
+                            <Input
+                                isDisabled={isUserLoading}
+                                isRequired
+                                size="sm"
+                                label="Придумайте пароль"
+                                type="password"
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                isInvalid={Boolean(errors.newPassword?.message)}
+                                errorMessage={errors.newPassword?.message}
+                                classNames={{
+                                    errorMessage: 'text-start text-red-400 font-bold',
+                                }}
+                            />
+                        )}
+                        control={control}
+                        name="newPassword"
                     />
                 </motion.div>
                 <motion.div
@@ -127,29 +157,48 @@ export const RecoveryPasswordModal = (props: RecoveryPasswordModalProps) => {
                     className="w-full"
                     key="repeatedPassword"
                 >
-                    <Input
-                        isDisabled={isUserLoading}
-                        value={repPassword}
-                        onValueChange={setRepPassword}
-                        isRequired
-                        size="sm"
-                        label="Повторите пароль"
-                        type="password"
+                    <Controller
+                        render={({ field }) => (
+                            <Input
+                                isDisabled={isUserLoading}
+                                isRequired
+                                size="sm"
+                                label="Повторите пароль"
+                                type="password"
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                isInvalid={Boolean(errors.confirmNewPassword?.message)}
+                                errorMessage={errors.confirmNewPassword?.message}
+                                classNames={{
+                                    errorMessage: 'text-start text-red-400 font-bold',
+                                }}
+                            />
+                        )}
+                        control={control}
+                        name="confirmNewPassword"
                     />
                 </motion.div>
 
                 <Button
                     isLoading={isUserLoading}
-                    isDisabled={password !== repPassword}
+                    isDisabled={!isValid}
                     className="self-end"
                     type="submit"
                     color="primary"
                 >
                     {isUserLoading ? 'Ожидайте...' : 'Сменить пароль'}
                 </Button>
-            </div>
+            </form>
         ),
-        [isUserLoading, password, repPassword],
+        [
+            control,
+            errors.confirmNewPassword?.message,
+            errors.newPassword?.message,
+            handleChangePassword,
+            handleSubmit,
+            isUserLoading,
+            isValid,
+        ],
     );
 
     const renderGetRecoveryQuestionForm = useMemo(
@@ -160,7 +209,7 @@ export const RecoveryPasswordModal = (props: RecoveryPasswordModalProps) => {
                 </h1>
                 <Input
                     startContent={<p className="translate-y-0.5 dark:text-white">@</p>}
-                    isDisabled={isUserLoading}
+                    isDisabled={isUserLoading || Boolean(recoveryQuestion)}
                     value={username}
                     onValueChange={setUsername}
                     isRequired
@@ -236,13 +285,13 @@ export const RecoveryPasswordModal = (props: RecoveryPasswordModalProps) => {
                     flexGrow
                     justify="center"
                 >
-                    <form onSubmit={handleFormSubmit}>
-                        <AnimatePresence mode="wait">
-                            {changePasswordStage
-                                ? renderChangePasswordForm
-                                : renderGetRecoveryQuestionForm}
-                        </AnimatePresence>
-                    </form>
+                    <AnimatePresence mode="wait">
+                        {changePasswordStage ? (
+                            renderChangePasswordForm
+                        ) : (
+                            <form onSubmit={handleFormSubmit}>{renderGetRecoveryQuestionForm}</form>
+                        )}
+                    </AnimatePresence>
                 </VStack>
             </ModalContent>
         </Modal>

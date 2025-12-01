@@ -18,10 +18,10 @@ export function RequireAuth({ children, roles }: RequireAuthProps) {
 
     const hasRequiredRoles = useMemo(() => {
         if (!roles) return true;
-        if (!userData?.recovery?.answer) return false;
+        if (!userData?.recoveryQuestion) return false;
 
         return roles.every((requiredRole) => userRoles?.includes(requiredRole));
-    }, [roles, userData?.recovery?.answer, userRoles]);
+    }, [roles, userData?.recoveryQuestion, userRoles]);
 
     useEffect(() => {
         if (userRoles.includes(UserRoles.BANNED) && currentLocation.pathname !== RoutePath.banned) {
