@@ -179,7 +179,7 @@ func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
 			return
 		}
 
-		certificateNames = append(certificateNames, filepath.Join("vkahub-bucket", readFileResult.FileName))
+		certificateNames = append(certificateNames, filepath.Join("vkahub-bucket", readFileResult.FilePath))
 	}
 
 	formData.Owner = appGin.Ctx.GetString("username")
@@ -240,65 +240,12 @@ func (uc *UserController) FetchAllMessages(ctx *gin.Context) {
 
 func (uc *UserController) GetActualInfo(gCtx *gin.Context) {
 	_, _, info := uc.userService.GetActualInfo()
-
-	ctx := gCtx.Request.Context()
-
-	onlineUsers, err := uc.onliner.Onliner.GetOnlineUsers(ctx)
-	if err != nil {
-		gCtx.AbortWithError(
-			http.StatusInternalServerError,
-			err,
-		)
-
-		gCtx.JSON(
-			http.StatusInternalServerError,
-			gin.H{"error": err.Error()},
-		)
-
-		return
-	}
-
-	info.OnlineClients = onlineUsers
-
+	// TODO
 	gCtx.JSON(http.StatusOK, info)
 }
 
 func (uc *UserController) Online(gCtx *gin.Context) {
-	appGin := app.Gin{Ctx: gCtx}
-
-	// ctx := gCtx.Request.Context()
-
-	// username := gCtx.GetString("username")
-	clientIP := gCtx.ClientIP()
-
-	conn, err := gosocket.UpgradeSocket.Upgrade(gCtx.Writer, gCtx.Request, nil)
-	if err != nil {
-		appGin.ErrorResponse(http.StatusInternalServerError, err)
-		return
-	}
-
-	defer func() {
-		_ = conn.Close()
-		delete(gosocket.ClientsOnline, clientIP)
-	}()
-
-	gosocket.ClientsOnline[clientIP] = conn
-
-	for {
-		if err = conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-			break
-		}
-
-		// userOnline := onliner.UserOnline{
-		// 	Username: username,
-		// 	IP:       clientIP,
-		// 	LastSeen: time.Now(),
-		// }
-		// jsonData := utils.ToJSON(userOnline)
-		// key := onliner.BuildKeyRecord(username)
-
-		// err := uc.onliner.Onliner.UpdateLastSeen(ctx, jsonData)
-	}
+	// TODO
 }
 
 func (uc *UserController) SendNotifications(ctx *gin.Context) {

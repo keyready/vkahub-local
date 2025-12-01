@@ -2,7 +2,6 @@ package onliner
 
 import (
 	"context"
-	"time"
 )
 
 type Onliner struct {
@@ -16,10 +15,10 @@ type IOnliner interface {
 
 type IOnline interface {
 	UpdateLastSeen(ctx context.Context)
-	RegisterOnline(ctx context.Context, key string, onlineUser interface{}, ttl time.Duration) error
+	RegisterOnline(ctx context.Context)
 	RemoveOnline(ctx context.Context)
 }
 
 type IUser interface {
-	GetOnlineUsers(ctx context.Context) (int, error)
+	GetOnlineUsers(ctx context.Context)
 }

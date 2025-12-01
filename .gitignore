@@ -4,10 +4,3 @@ client-files
 server/bin
 
 server/static/reports/*.docx
-server/static/certificates
-server/static/reports
-server/static/user-avatars
-server/static/team-images
-server/static/bugs
-server/static/events
-server/static/attachments
