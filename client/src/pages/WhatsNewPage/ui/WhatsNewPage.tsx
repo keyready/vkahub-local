@@ -63,6 +63,48 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
             <VStack gap="36px" maxW align="start" className="overflow-y-auto relative">
                 <HStack maxW align="start" className="grid grid-cols-5">
                     <div className="col-span-1 sticky top-1">
+                        <h1 className="text-xl leading-tight">Версия 2.3.0 от 02.12.2025 г.</h1>
+                    </div>
+                    <VStack maxW gap="24px" className="col-span-4">
+                        <div>
+                            <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
+                                Новые функции
+                            </h3>
+                            <h4 className="text-l leading-snug">
+                                - Вынесли все статические пользовательские файлы в облачное
+                                хранилище, чтобы не было проблем с утерей аватарок, картинок команд
+                                и т.д.
+                                <br />- Соответственно перенесли все данные с сервера в хранилище,
+                                так что теперь они надежно хранятся вне досягаемости админов
+                                <br />- P.s. если у Вас пропала аватарка или любая другая статика,
+                                которую Вы загружали, придется загрузить заново. Это, конечно,
+                                маловероятно, но все возможно
+                                <br />- Так же временно ослабили валидацию форм регистрации и
+                                авторизации, потому что у некоторых пользователей не получилось
+                                войти в аккаунт под "невалидными" кредами
+                                <br />
+                                <br />
+                                <span className="duration-200 opacity-30 hover:opacity-100">
+                                    - P.p.s. если кто-то читает этот ченжлог, напиши в отзывы
+                                    че-нибудь прикольное, а то я тут монолог веду...(
+                                </span>
+                            </h4>
+                        </div>
+                        <div>
+                            <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
+                                Исправление ошибок
+                            </h3>
+                            <h4 className="text-l leading-snug">
+                                - Нашли причину и исправили давнюю ошибку, которая могла быть
+                                причиной бесконечных рендеров страницы при некоторых условиях
+                                заполнения данных пользователя
+                            </h4>
+                        </div>
+                    </VStack>
+                </HStack>
+
+                <HStack maxW align="start" className="grid grid-cols-5">
+                    <div className="col-span-1 sticky top-1">
                         <h1 className="text-xl leading-tight">Версия 2.2.1 от 29.11.2025 г.</h1>
                     </div>
                     <VStack maxW gap="24px" className="col-span-4">
