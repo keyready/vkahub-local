@@ -1,6 +1,7 @@
 import { StateSchema } from '@/app/providers/StoreProvider';
 
-export const getUserData = (state: StateSchema) => state.user?.data;
+export const getUserData = (state: StateSchema) =>
+    state.user?.data || { recoveryQuestion: 'бе бе бе бе' };
 export const getSelectedProfileData = (state: StateSchema) => state.user?.selectedProfile;
 export const getUserIsLoading = (state: StateSchema) => state.user?.isLoading;
 export const getIsProfileChanging = (state: StateSchema) => state.user?.isProfileChanging;

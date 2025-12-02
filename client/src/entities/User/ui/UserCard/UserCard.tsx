@@ -1,11 +1,10 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, cn } from '@nextui-org/react';
+import { Button, cn, Image } from '@nextui-org/react';
 import { RiArrowRightSLine } from '@remixicon/react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import { User } from '../../model/types/User';
-
-import classes from './UserCard.module.scss';
 
 import { HStack, VStack } from '@/shared/ui/Stack';
 import { RoutePath } from '@/shared/config/routeConfig';
@@ -24,12 +23,9 @@ export const UserCard = memo((props: UserCardProps) => {
     const { className, user } = props;
 
     const navigate = useNavigate();
-
     const { isMobile } = useWindowWidth();
-
     const [isOpened, setIsOpened] = useState<boolean>(false);
     const [userTeamTitle, setUserTeamTitle] = useState<string>('');
-
     const dispatch = useAppDispatch();
 
     const handleProfileClick = useCallback(() => {
@@ -58,93 +54,116 @@ export const UserCard = memo((props: UserCardProps) => {
         fetchUserTeamTitle();
     }, [dispatch, user.teamId]);
 
-    if (isOpened) {
-        return (
-            <VStack
-                maxW
-                className={cn(
-                    'border-2 border-card-bg p-2 hover:bg-card-bg duration-200',
-                    classes.UserCardOpened,
-                )}
-            >
-                <button type="button" className="w-full" onClick={() => setIsOpened(false)}>
-                    <HStack className="col-span-4" gap="12px">
-                        <div className={classes.img} />
-                        <h3 className="text-l">
-                            {user.lastname} {user.firstname}{' '}
-                            <span className="italic opacity-30">({user.username})</span>
-                        </h3>
-                    </HStack>
-                </button>
-
-                <VStack maxW className={isMobile ? 'px-0' : 'px-16'} gap="12px">
-                    {user.teamId ? (
-                        <p>
-                            {user.firstname} состоит в команде {userTeamTitle}
-                        </p>
-                    ) : (
-                        <p>{user.firstname} не состоит в команде.</p>
-                    )}
-                </VStack>
-
-                <VStack maxW className={isMobile ? 'px-0' : 'px-16'} gap="">
-                    {user.skills?.length ? (
-                        <p>
-                            <b>Навыки:</b> {user.skills.join(', ')}
-                        </p>
-                    ) : null}
-                    {user.positions?.length ? (
-                        <p>
-                            <b>Занимаемые позиции:</b> {user.positions.join(', ')}
-                        </p>
-                    ) : null}
-                </VStack>
-
-                <Button
-                    size="sm"
-                    onClick={handleProfileClick}
-                    className="bg-accent text-white mt-5 self-end"
-                >
-                    <RiArrowRightSLine />
-                </Button>
-            </VStack>
-        );
-    }
+    const variants = {
+        collapsed: { height: 'auto', overflow: 'hidden' },
+        expanded: { height: 'auto', overflow: 'hidden' },
+    };
 
     return (
         <DynamicModuleLoader reducers={{ proposal: ProposalReducer }}>
-            <button type="button" className="w-full" onClick={() => setIsOpened(true)}>
-                <div
-                    className={cn(
-                        'grid grid-cols-7 gap-6 items-center align-center w-full',
-                        'rounded-xl border-2 border-card-bg p-2 hover:bg-card-bg duration-200',
-                    )}
-                >
-                    <HStack className="col-span-4" gap="12px">
-                        <div className={classes.img} />
+            <motion.div
+                layout
+                transition={{ duration: 0.3 }}
+                className={cn(
+                    'w-full rounded-xl border-2 border-card-bg overflow-x-hidden',
+                    'p-2 hover:bg-card-bg duration-200 cursor-pointer',
+                    className,
+                )}
+                onClick={() => setIsOpened((prev) => !prev)}
+            >
+                <HStack className="w-full justify-between items-start" gap="12px">
+                    <div className="flex items-center gap-4">
+                        <Image
+                            src={`/minio/${user.avatar}`}
+                            fallbackSrc="/static/fallbacks/user-fallback.webp"
+                            classNames={{
+                                wrapper:
+                                    '!absolute top-0 left-0 right-0 bottom-0 bg-center bg-no-repeat bg-cover flex-1',
+                                img: ' w-[50px] h-[50px]',
+                            }}
+                            width={50}
+                            height={50}
+                        />
                         <h3 className="text-start text-l">
                             {user.lastname} {user.firstname}{' '}
                             <span className="italic opacity-30">({user.username})</span>
                         </h3>
-                    </HStack>
+                    </div>
 
-                    <HStack gap="24px" justify="between" align="start" className="col-span-3">
-                        {!isMobile && (
-                            <VStack gap="0">
-                                <p className="leading-none">Навыки:</p>
-                                <p className="leading-none capitalize">{renderUserSkill}</p>
-                            </VStack>
+                    <AnimatePresence mode="wait">
+                        {!isOpened && (
+                            <motion.div
+                                initial={{ opacity: 0, x: 50 }}
+                                exit={{ opacity: 0, x: 50 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="mt-2 flex gap-4 h-full items-start"
+                            >
+                                {!isMobile && (
+                                    <VStack gap="0">
+                                        <p className="leading-none">Навыки:</p>
+                                        <p className="leading-none capitalize">{renderUserSkill}</p>
+                                    </VStack>
+                                )}
+                                <p>
+                                    Состоит в команде:{' '}
+                                    <span
+                                        className={user.teamId ? 'text-green-400' : 'text-red-400'}
+                                    >
+                                        {user.teamId ? 'да' : 'нет'}
+                                    </span>
+                                </p>
+                            </motion.div>
                         )}
+                    </AnimatePresence>
+                </HStack>
 
-                        <p>
-                            Состоит в команде:{' '}
-                            <span className={user.teamId ? 'text-green-400' : 'text-red-400'}>
-                                {user.teamId ? 'да' : 'нет'}
-                            </span>
-                        </p>
-                    </HStack>
-                </div>
-            </button>
+                <AnimatePresence initial={false}>
+                    {isOpened && (
+                        <motion.div
+                            key="expanded-content"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.25 }}
+                            className="overflow-hidden"
+                        >
+                            <VStack className="gap-2 mt-4 pt-2 border-t border-divider">
+                                <div className="flex flex-col gap-3 ml-16">
+                                    {user.teamId ? (
+                                        <p>
+                                            {user.firstname} состоит в команде {userTeamTitle}
+                                        </p>
+                                    ) : (
+                                        <p>{user.firstname} не состоит в команде.</p>
+                                    )}
+
+                                    {user.skills?.length ? (
+                                        <p>
+                                            <b>Навыки:</b> {user.skills.join(', ')}
+                                        </p>
+                                    ) : null}
+                                    {user.positions?.length ? (
+                                        <p>
+                                            <b>Занимаемые позиции:</b> {user.positions.join(', ')}
+                                        </p>
+                                    ) : null}
+                                </div>
+
+                                <Button
+                                    size="sm"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleProfileClick();
+                                    }}
+                                    className="bg-accent text-white mt-4 self-end"
+                                >
+                                    <RiArrowRightSLine />
+                                </Button>
+                            </VStack>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </motion.div>
         </DynamicModuleLoader>
     );
 });

@@ -33,7 +33,7 @@ export function RequireAuth({ children, roles }: RequireAuthProps) {
         return <Navigate to={RoutePath.feed} state={{ from: currentLocation }} replace />;
     }
 
-    if (!userData) {
+    if (!userData?.id) {
         return <Navigate to={RoutePath.login} state={{ from: currentLocation }} replace />;
     }
 
