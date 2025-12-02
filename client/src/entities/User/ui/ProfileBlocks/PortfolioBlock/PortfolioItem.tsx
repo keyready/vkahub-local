@@ -36,7 +36,7 @@ export const PortfolioItem = ({
 
     const handleDownloadClick = useCallback(() => {
         const link = document.createElement('a');
-        link.href = file.url.split('/app')[1];
+        link.href = `/minio${file.url}`;
         link.download = file.name;
 
         document.body.appendChild(link);
@@ -136,7 +136,7 @@ export const PortfolioItem = ({
             {file.type === 'img' ? (
                 <div className={cn('group relative', getSizes)}>
                     <Image
-                        src={file.url.split('/app')[1]}
+                        src={`/minio/${file.url}`}
                         width={size === 'lg' ? 200 : 100}
                         height={size === 'lg' ? 355 : 177}
                     />
@@ -160,15 +160,6 @@ export const PortfolioItem = ({
                     </div>
                 </div>
             )}
-
-            <p
-                className={cn(
-                    'truncate text-center',
-                    size === 'lg' ? 'text-l w-[200px]' : 'text-s w-[100px]',
-                )}
-            >
-                {file.name}
-            </p>
         </motion.div>
     );
 };

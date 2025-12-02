@@ -34,14 +34,6 @@ services:
     networks:
       - vkahub-net
 
-  client-builder:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
-    container_name: vkahub-client-builder
-    volumes:
-      - ./client-files:/client/dist
-
   admin:
     image: dpage/pgadmin4:latest
     container_name: vkahub-admin
@@ -73,12 +65,20 @@ services:
     networks:
       - vkahub-net
     ports:
-      - '9000:9000'
-      - '9001:9001'
+      - '127.0.0.1:9000:9000'
+      - '127.0.0.1:9001:9001'
     env_file:
       - ./server/.env
     volumes:
      - minio_data:/data
+
+  client-builder:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: vkahub-client-builder
+    volumes:
+      - ./client-files:/client/dist
 
 networks:
   vkahub-net:

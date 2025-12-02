@@ -119,7 +119,7 @@ export const MyTeamPreviewBlock = (props: MyTeamPreviewBlockProps) => {
 
     const handleChangeTeamData = useCallback(async () => {
         if (isEditorMode) {
-            let formData = new FormData();            
+            let formData = new FormData();
 
             if (changedTeamData?.newImage) {
                 const team = {
@@ -137,7 +137,7 @@ export const MyTeamPreviewBlock = (props: MyTeamPreviewBlockProps) => {
             formData.append(
                 'wantedPositions',
                 selectedPositions.map((position) => position.value).join(','),
-            );            
+            );
 
             const result = await toastDispatch(dispatch(changeTeam(formData)), {
                 loading: 'Сохраняем изменения...',
@@ -258,21 +258,13 @@ export const MyTeamPreviewBlock = (props: MyTeamPreviewBlockProps) => {
                         (isEditorMode ? (
                             <ImageUpload
                                 className="w-[100px] h-[100px]"
-                                initialImage={
-                                    import.meta.env.DEV
-                                        ? `http://localhost/team-images/${changedTeamData?.image}`
-                                        : `/team-images/${changedTeamData?.image}`
-                                }
+                                initialImage={`/minio/${changedTeamData?.image}`}
                                 onChange={handleChangeTeamImage}
                             />
                         ) : (
                             <Image
                                 className="w-[100px] h-[100px]"
-                                src={
-                                    import.meta.env.DEV
-                                        ? `http://localhost/team-images/${changedTeamData?.image}`
-                                        : `/team-images/${changedTeamData?.image}`
-                                }
+                                src={`/minio/${changedTeamData?.image}`}
                                 fallbackSrc="/static/fallbacks/team-fallback.webp"
                                 classNames={{
                                     wrapper: classes.teamImageWrapper,
