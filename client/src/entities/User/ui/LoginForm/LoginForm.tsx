@@ -10,6 +10,7 @@ import { loginUser } from '../../model/services/authServices/loginUser';
 import { getUserAuthError, getUserIsLoading } from '../../model/selectors/UserSelectors';
 import { getUserDataService } from '../../model/services/profileServices/getUserData';
 import { UserActions } from '../../model/slice/UserSlice';
+import { registrationSchema } from '../../model/types/validationSchemas';
 
 import { classNames } from '@/shared/lib/classNames';
 import { VStack } from '@/shared/ui/Stack';
@@ -17,7 +18,6 @@ import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
 import { RoutePath } from '@/shared/config/routeConfig';
 import { TextButton } from '@/shared/ui/TextButton';
 import { getCurrentTheme, ThemeSwitcherActions } from '@/widgets/ThemeSwitcher';
-import { registrationSchema } from '@/entities/User/model/types/validationSchemas';
 
 interface LoginFormProps {
     className?: string;
