@@ -1,18 +1,17 @@
 package controllers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"path/filepath"
+	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/gosocket"
+	"server/internal/onliner"
 	"server/internal/services"
 	"server/internal/utils"
 	"server/pkg/app"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -20,12 +19,82 @@ import (
 
 type UserController struct {
 	userService services.UserService
+	cloud       *cloud.Cloud
+	onliner     *onliner.Onliner
 }
 
-func NewUserControllers(service services.UserService) *UserController {
+func NewUserControllers(
+	service services.UserService,
+	cloud *cloud.Cloud,
+	onliner *onliner.Onliner,
+) *UserController {
 	return &UserController{
 		userService: service,
+		cloud:       cloud,
+		onliner:     onliner,
 	}
+}
+
+func (uc *UserController) GetSettings(gCtx *gin.Context) {
+	ctx := gCtx.Request.Context()
+	username := gCtx.GetString("username")
+
+	settings, err := uc.userService.GetSettings(ctx, username)
+	if err != nil {
+		gCtx.AbortWithError(
+			http.StatusInternalServerError,
+			err,
+		)
+
+		gCtx.JSON(
+			http.StatusInternalServerError,
+			err,
+		)
+
+		return
+	}
+
+	gCtx.JSON(http.StatusOK, gin.H{"settings": settings})
+}
+
+func (uc *UserController) SetSettings(gCtx *gin.Context) {
+	jsonForm := request.SetSettingsForm{}
+	if bindErr := gCtx.ShouldBindJSON(&jsonForm); bindErr != nil {
+		gCtx.AbortWithError(
+			http.StatusBadRequest,
+			bindErr,
+		)
+
+		gCtx.JSON(
+			http.StatusBadRequest,
+			gin.H{"error": bindErr.Error()},
+		)
+
+		return
+	}
+
+	ctx := gCtx.Request.Context()
+	jsonForm.Username = gCtx.GetString("username")
+
+	err := uc.userService.SetSettings(ctx, jsonForm)
+	if err != nil {
+		gCtx.AbortWithError(
+			http.StatusInternalServerError,
+			err,
+		)
+
+		gCtx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	gCtx.JSON(
+		http.StatusOK,
+		gin.H{},
+	)
 }
 
 func (uc *UserController) GetBannedReason(gCtx *gin.Context) {
@@ -85,12 +154,24 @@ func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
 		return
 	}
 
+	ctx := gCtx.Request.Context()
 	certificateNames := make([]string, 0)
 	for _, cert := range formData.Certificates {
-		certName := fmt.Sprintf("%s_%s", formData.EventName, strings.ReplaceAll(cert.Filename, " ", "_"))
-		savePath := filepath.Join(other.CERTIFICATES_STORAGE, certName)
+		readFileParams := utils.ReadFileParams{
+			File:    cert,
+			SaveDir: other.CERTIFICATES_STORAGE,
+		}
 
-		if saveErr := appGin.Ctx.SaveUploadedFile(cert, savePath); saveErr != nil {
+		readFileResult, err := utils.ReadFile(readFileParams)
+		if err != nil {
+			appGin.ErrorResponse(
+				http.StatusInternalServerError,
+				err,
+			)
+			return
+		}
+
+		if saveErr := uc.cloud.Cloud.UploadFile(ctx, readFileResult.FileKey, readFileResult.FileData); saveErr != nil {
 			appGin.ErrorResponse(
 				http.StatusInternalServerError,
 				saveErr,
@@ -98,7 +179,7 @@ func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
 			return
 		}
 
-		certificateNames = append(certificateNames, certName)
+		certificateNames = append(certificateNames, readFileResult.FullFilePath)
 	}
 
 	formData.Owner = appGin.Ctx.GetString("username")
@@ -157,37 +238,55 @@ func (uc *UserController) FetchAllMessages(ctx *gin.Context) {
 	}
 }
 
-func (uc *UserController) GetOnlineUsers(ctx *gin.Context) {
-	appGin := app.Gin{Ctx: ctx}
-	conn, err := gosocket.UpgradeSocket.Upgrade(ctx.Writer, ctx.Request, nil)
+func (uc *UserController) GetActualInfo(gCtx *gin.Context) {
+	_, _, info := uc.userService.GetActualInfo()
+	gCtx.JSON(http.StatusOK, info)
+}
+
+func (uc *UserController) Online(gCtx *gin.Context) {
+	ctx := gCtx.Request.Context()
+	username := gCtx.GetString("username")
+
+	conn, err := gosocket.UpgradeSocket.Upgrade(gCtx.Writer, gCtx.Request, nil)
 	if err != nil {
-		appGin.ErrorResponse(http.StatusInternalServerError, err)
+		gCtx.AbortWithError(
+			http.StatusInternalServerError,
+			err,
+		)
+
+		gCtx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+
 		return
 	}
+	defer conn.Close()
 
-	defer func() {
-		_ = conn.Close()
-		delete(gosocket.ClientsOnline, conn)
-	}()
+	if err := uc.onliner.Onliner.MarkOnline(ctx, username); err != nil {
+		log.Printf("markOnline err: %v", err)
+	}
 
-	gosocket.ClientsOnline[conn] = true
+	stopHeartbeat := make(chan struct{})
+	go uc.onliner.Onliner.Heartbeat(ctx, username, stopHeartbeat)
 
-	lastOnline := 0
 	for {
-		if err = conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-			break
-		}
+		if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+			close(stopHeartbeat)
+			if err := uc.onliner.Onliner.MarkOffline(ctx, username); err != nil {
+				gCtx.AbortWithError(
+					http.StatusInternalServerError,
+					err,
+				)
 
-		_, _, info := uc.userService.GetActualInfo()
-		info.OnlineClients = len(gosocket.ClientsOnline)
+				gCtx.JSON(
+					http.StatusInternalServerError,
+					gin.H{"error": err.Error()},
+				)
 
-		if lastOnline != info.OnlineClients {
-			err = conn.WriteJSON(info)
-			if err != nil {
-				break
+				return
 			}
 		}
-		lastOnline = info.OnlineClients
 	}
 }
 
@@ -277,42 +376,36 @@ func (uc *UserController) FetchAllMembersByParams(ctx *gin.Context) {
 	appGin.SuccessResponse(httpCode, data)
 }
 
-func (uc *UserController) EditProfile(ctx *gin.Context) {
-	appGin := app.Gin{Ctx: ctx}
+func (uc *UserController) EditProfile(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
 	formData := request.EditProfileInfoForm{}
 
-	bindErr := ctx.ShouldBind(&formData)
-	if bindErr != nil {
+	if bindErr := gCtx.ShouldBind(&formData); bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
+
+	ctx := gCtx.Request.Context()
 
 	formData.Owner = appGin.Ctx.GetString("username")
 
 	avatar, err := appGin.Ctx.FormFile("avatar")
 	if err != http.ErrMissingFile {
-		delErr := utils.FindAndDeleteFile(
-			other.USER_AVATARS_STORAGE,
-			fmt.Sprintf(
-				"%s_%s",
-				appGin.Ctx.GetString("username"),
-				"avatar",
-			),
-		)
-		if delErr != nil {
-			log.Println("failed to delete old avatar", delErr.Error())
+		readFileParams := utils.ReadFileParams{
+			File:    avatar,
+			SaveDir: other.USER_AVATARS_STORAGE,
 		}
 
-		fileName := fmt.Sprintf(
-			"%s_%s_%s",
-			appGin.Ctx.GetString("username"),
-			"avatar",
-			strings.ReplaceAll(avatar.Filename, " ", "_"),
-		)
-		avatar.Filename = fileName
+		readFileResult, err := utils.ReadFile(readFileParams)
+		if err != nil {
+			appGin.ErrorResponse(
+				http.StatusInternalServerError,
+				err,
+			)
+			return
+		}
 
-		savePath := filepath.Join(other.USER_AVATARS_STORAGE, fileName)
-		if saveErr := appGin.Ctx.SaveUploadedFile(avatar, savePath); saveErr != nil {
+		if saveErr := uc.cloud.Cloud.UploadFile(ctx, readFileResult.FileKey, readFileResult.FileData); saveErr != nil {
 			appGin.ErrorResponse(
 				http.StatusInternalServerError,
 				saveErr,
@@ -320,7 +413,7 @@ func (uc *UserController) EditProfile(ctx *gin.Context) {
 			return
 		}
 
-		formData.Avatar = fileName
+		formData.Avatar = readFileResult.FullFilePath
 	} else {
 		formData.Avatar = ""
 	}

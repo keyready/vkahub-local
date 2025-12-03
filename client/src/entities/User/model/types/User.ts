@@ -1,3 +1,5 @@
+import { Theme } from '@/widgets/ThemeSwitcher';
+
 export type AuthErrorTypes =
     | 'Username not found'
     | 'Invalid password'
@@ -44,6 +46,19 @@ export interface MembersFilters {
 export interface RecoveryQuestion {
     id: number;
     question: string;
+}
+
+export interface Guidelines {
+    value: string;
+    label: string;
+    level?: number;
+    enabled: boolean;
+}
+
+export interface UserSettings {
+    theme: Theme;
+    animation: 'all' | 'transitions';
+    guidelines: Guidelines[];
 }
 
 export interface ServerUser {

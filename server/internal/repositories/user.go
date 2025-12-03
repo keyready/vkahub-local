@@ -1,12 +1,13 @@
 package repositories
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
+	"server/internal/cloud"
 	"server/internal/database"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
@@ -35,14 +36,31 @@ type UserRepository interface {
 	AddPortfolio(addPortfolioReq request.AddPortfolioForm, certificateNames []string) (httpCode int, err error)
 	DeletePortfolio(certificateName, ownerName string) (httpCode int, err error)
 	GetBannedReason(ownerID int64) (httpCode int, err error, banned database.BanModel)
+	SetSettings(ctx context.Context, saveSettingsForm request.SetSettingsForm) error
+	GetSettings(ctx context.Context, username string) (string, error)
 }
 
 type UserRepositoryImpl struct {
-	Db *gorm.DB
+	Db    *gorm.DB
+	cloud *cloud.Cloud
 }
 
-func NewUserRepositoryImpl(Db *gorm.DB) UserRepository {
-	return &UserRepositoryImpl{Db: Db}
+func NewUserRepositoryImpl(Db *gorm.DB, cloud *cloud.Cloud) UserRepository {
+	return &UserRepositoryImpl{Db: Db, cloud: cloud}
+}
+
+func (u *UserRepositoryImpl) GetSettings(ctx context.Context, username string) (string, error) {
+	userSettings := database.UserModel{}
+	u.Db.Where("username = ?", username).First(&userSettings)
+	return userSettings.Settings, nil
+}
+
+func (u *UserRepositoryImpl) SetSettings(ctx context.Context, saveSettingsForm request.SetSettingsForm) error {
+	userSettings := database.UserModel{}
+	u.Db.Where("username = ?", saveSettingsForm.Username).First(&userSettings)
+	userSettings.Settings = saveSettingsForm.Settings
+	u.Db.Save(&userSettings)
+	return nil
 }
 
 func (u *UserRepositoryImpl) GetBannedReason(ownerID int64) (httpCode int, err error, banned database.BanModel) {
@@ -63,7 +81,11 @@ func (u *UserRepositoryImpl) DeletePortfolio(certificateName, ownerName string) 
 
 	updPortfolio := []database.PortfolioFile{}
 	for index, cert := range portfolio {
-		if strings.Compare(cert.Name, certificateName) == 0 {
+		if strings.Compare(cert.Url, certificateName) == 0 {
+			removeErr := u.cloud.Cloud.RemoveFile(context.Background(), cert.Url[strings.Index(cert.Url, "/")+1:])
+			if removeErr != nil {
+				return http.StatusInternalServerError, fmt.Errorf("failed to remove portfolio: %v", err)
+			}
 			updPortfolio = append(portfolio[:index], portfolio[index+1:]...)
 		}
 	}
@@ -74,12 +96,6 @@ func (u *UserRepositoryImpl) DeletePortfolio(certificateName, ownerName string) 
 	owner.Portfolio = dbTypePortfolio
 
 	u.Db.Save(&owner)
-
-	filePath := filepath.Join(other.CERTIFICATES_STORAGE, certificateName)
-	err = os.Remove(filePath)
-	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("failed to delete file: %v", err)
-	}
 
 	return http.StatusOK, nil
 }
@@ -105,10 +121,9 @@ func (u *UserRepositoryImpl) AddPortfolio(addPortfolio request.AddPortfolioForm,
 		}
 
 		portfolioFile := database.PortfolioFile{
-			Name:      certName,
 			EventName: addPortfolio.EventName,
 			Place:     addPortfolio.Place,
-			Url:       filepath.Join(other.CERTIFICATES_STORAGE, certName),
+			Url:       certName,
 			Type:      t,
 		}
 
@@ -173,6 +188,10 @@ func (u *UserRepositoryImpl) GetActualInfo() (httpCode int, err error, info resp
 	var totalWinners int64
 	u.Db.Model(&database.AchievementModel{}).Where("result = ?", "winner").Count(&totalWinners)
 	info.TotalWinners = totalWinners
+
+	var onlineUsers int64
+	u.Db.Model(&database.UserModel{}).Where("online = true").Count(&onlineUsers)
+	info.OnlineClients = onlineUsers
 
 	return http.StatusOK, nil, info
 }
@@ -254,6 +273,10 @@ func (u *UserRepositoryImpl) EditProfile(EditProf request.EditProfileInfoForm) (
 		currentUser.Positions = EditProf.Positions
 	}
 	if EditProf.Avatar != "" {
+		removeErr := u.cloud.Cloud.RemoveFile(context.Background(), currentUser.Avatar[strings.Index(currentUser.Avatar, "/")+1:])
+		if removeErr != nil {
+			return http.StatusInternalServerError, fmt.Errorf("failed to remove avatar: %v", err)
+		}
 		currentUser.Avatar = EditProf.Avatar
 	}
 
@@ -274,8 +297,6 @@ func (u *UserRepositoryImpl) EditProfile(EditProf request.EditProfileInfoForm) (
 		jsonData, _ := json.Marshal(recovery)
 		currentUser.Recovery = datatypes.JSON(jsonData)
 	}
-
-	currentUser.IsProfileConfirmed = true
 
 	u.Db.Save(&currentUser)
 

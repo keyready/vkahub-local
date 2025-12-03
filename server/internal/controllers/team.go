@@ -1,58 +1,63 @@
 package controllers
 
 import (
-	"fmt"
-	"log"
 	"net/http"
-	"path/filepath"
+	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/services"
 	"server/internal/utils"
 	"server/pkg/app"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 type TeamController struct {
 	teamService services.TeamService
+	cloud       *cloud.Cloud
 }
 
-func NewTeamController(service services.TeamService) *TeamController {
+func NewTeamController(
+	service services.TeamService,
+	cloud *cloud.Cloud,
+) *TeamController {
 	return &TeamController{
 		teamService: service,
+		cloud:       cloud,
 	}
 }
 
-func (tc *TeamController) EditTeam(ctx *gin.Context) {
-	appGin := app.Gin{Ctx: ctx}
+func (tc *TeamController) EditTeam(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
 	formData := request.EditTeamInfoForm{}
 
-	bindErr := ctx.ShouldBind(&formData)
-	if bindErr != nil {
+	if bindErr := gCtx.ShouldBind(&formData); bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
+	ctx := gCtx.Request.Context()
+
 	image, err := appGin.Ctx.FormFile("image")
 	if err != http.ErrMissingFile {
-		delErr := utils.FindAndDeleteFile(other.TEAM_IMAGES_STORAGE, formData.Title)
-		if delErr != nil {
-			log.Println("failed to remove old image", delErr.Error())
+		// err := tc.cloud.Cloud.RemoveFile(ctx,)
+
+		params := utils.ReadFileParams{
+			File:    image,
+			SaveDir: other.TEAM_IMAGES_STORAGE,
 		}
 
-		fileName := fmt.Sprintf(
-			"%s_%s",
-			strings.ReplaceAll(formData.Title, " ", "_"),
-			strings.ReplaceAll(image.Filename, " ", "_"),
-		)
+		readFileResult, err := utils.ReadFile(params)
+		if err != nil {
+			appGin.ErrorResponse(
+				http.StatusInternalServerError,
+				err,
+			)
+			return
+		}
 
-		image.Filename = fileName
-		savePath := filepath.Join(other.TEAM_IMAGES_STORAGE, fileName)
-
-		if saveErr := appGin.Ctx.SaveUploadedFile(image, savePath); bindErr != nil {
+		if saveErr := tc.cloud.Cloud.UploadFile(ctx, readFileResult.FileKey, readFileResult.FileData); saveErr != nil {
 			appGin.ErrorResponse(
 				http.StatusInternalServerError,
 				saveErr,
@@ -60,7 +65,7 @@ func (tc *TeamController) EditTeam(ctx *gin.Context) {
 			return
 		}
 
-		formData.Image = fileName
+		formData.Image = readFileResult.FullFilePath
 	} else {
 		formData.Image = ""
 	}
@@ -133,19 +138,31 @@ func (tc *TeamController) DeleteMember(ctx *gin.Context) {
 	appGin.SuccessResponse(http.StatusOK, gin.H{})
 }
 
-func (tc *TeamController) RegisterTeam(ctx *gin.Context) {
-	appGin := app.Gin{Ctx: ctx}
+func (tc *TeamController) RegisterTeam(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
 
 	formData := request.RegisterTeamForm{}
 
-	bindErr := ctx.ShouldBind(&formData)
-	if bindErr != nil {
+	if bindErr := gCtx.ShouldBind(&formData); bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	fileName := fmt.Sprintf("%s_%s", formData.Title, strings.ReplaceAll(formData.Image.Filename, " ", "_"))
-	formData.Image.Filename = fileName
+	readFileParams := utils.ReadFileParams{
+		File:    formData.Image,
+		SaveDir: other.TEAM_IMAGES_STORAGE,
+	}
+
+	readFileResult, err := utils.ReadFile(readFileParams)
+	if err != nil {
+		appGin.ErrorResponse(
+			http.StatusInternalServerError,
+			err,
+		)
+		return
+	}
+
+	formData.Image.Filename = readFileResult.FullFilePath
 
 	httpCode, serviceErr := tc.teamService.RegisterTeam(formData)
 	if serviceErr != nil {
@@ -153,8 +170,8 @@ func (tc *TeamController) RegisterTeam(ctx *gin.Context) {
 		return
 	}
 
-	savePath := filepath.Join(other.TEAM_IMAGES_STORAGE, fileName)
-	if saveErr := appGin.Ctx.SaveUploadedFile(formData.Image, savePath); saveErr != nil {
+	ctx := gCtx.Request.Context()
+	if saveErr := tc.cloud.Cloud.UploadFile(ctx, readFileResult.FileKey, readFileResult.FileData); saveErr != nil {
 		appGin.ErrorResponse(
 			http.StatusInternalServerError,
 			saveErr,

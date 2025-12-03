@@ -227,11 +227,7 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                     {isEditorMode ? (
                         <ImageUpload
                             className="w-[200px] h-[200px]"
-                            initialImage={
-                                import.meta.env.DEV
-                                    ? `http://localhost/user-avatars/${userData?.avatar}`
-                                    : `/user-avatars/${userData?.avatar}`
-                            }
+                            initialImage={`/minio${userData?.avatar}`}
                             onChange={setAvatar}
                         />
                     ) : (
@@ -240,11 +236,7 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                             width={200}
                             height={200}
                             classNames={{ wrapper: classes.profileAvatar }}
-                            src={
-                                import.meta.env.DEV
-                                    ? `http://localhost/user-avatars/${userData?.avatar}`
-                                    : `/user-avatars/${userData?.avatar}`
-                            }
+                            src={`/minio${userData?.avatar}`}
                             alt="Аватар пользователя"
                         />
                     )}

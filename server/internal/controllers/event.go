@@ -1,57 +1,66 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
-	"path/filepath"
+	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
 	"server/internal/services"
+	"server/internal/utils"
 	"server/pkg/app"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type EventController struct {
 	eventService services.EventService
+	cloud        *cloud.Cloud
 }
 
-func NewEventController(service services.EventService) *EventController {
-	return &EventController{eventService: service}
+func NewEventController(
+	service services.EventService,
+	cloud *cloud.Cloud,
+) *EventController {
+	return &EventController{
+		eventService: service,
+		cloud:        cloud,
+	}
 }
 
-func (ec *EventController) AddEvent(ctx *gin.Context) {
-	appGin := app.Gin{Ctx: ctx}
+func (ec *EventController) AddEvent(gCtx *gin.Context) {
+	appGin := app.Gin{Ctx: gCtx}
 	formData := request.AddEventReq{}
 
-	bindErr := appGin.Ctx.Bind(&formData)
-	if bindErr != nil {
+	if bindErr := appGin.Ctx.ShouldBind(&formData); bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	formData.Image.Filename = fmt.Sprintf(
-		"%s%s",
-		uuid.NewString(),
-		filepath.Ext(formData.Image.Filename),
-	)
+	readFileParams := utils.ReadFileParams{
+		File:    formData.Image,
+		SaveDir: other.EVENTS_STORAGE,
+	}
 
-	if saveErr := ctx.SaveUploadedFile(
-		formData.Image,
-		filepath.Join(
-			other.EVENTS_STORAGE,
-			formData.Image.Filename,
-		),
-	); saveErr != nil {
+	readFileResult, err := utils.ReadFile(readFileParams)
+	if err != nil {
+		appGin.ErrorResponse(
+			http.StatusInternalServerError,
+			err,
+		)
+		return
+	}
+
+	ctx := gCtx.Request.Context()
+	if saveErr := ec.cloud.Cloud.UploadFile(ctx, readFileResult.FileKey, readFileResult.FileData); saveErr != nil {
 		appGin.ErrorResponse(
 			http.StatusInternalServerError,
 			saveErr,
 		)
 	}
 
-	_, err := ec.eventService.AddEvent(formData)
+	formData.Image.Filename = readFileResult.FullFilePath
+	_, err = ec.eventService.AddEvent(formData)
 	if err != nil {
 		appGin.ErrorResponse(http.StatusInternalServerError, err)
 		return

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"server/internal/cloud"
 	"server/internal/dto/request"
 	"server/internal/dto/response"
 	"server/internal/repositories"
@@ -21,11 +22,16 @@ type TeamService interface {
 
 type TeamServiceImpl struct {
 	TeamRepository repositories.TeamRepository
+	cloud          *cloud.Cloud
 }
 
-func NewTeamServiceImpl(teamRepository repositories.TeamRepository) TeamService {
+func NewTeamServiceImpl(
+	teamRepository repositories.TeamRepository,
+	cloud *cloud.Cloud,
+) TeamService {
 	return &TeamServiceImpl{
 		TeamRepository: teamRepository,
+		cloud:          cloud,
 	}
 }
 

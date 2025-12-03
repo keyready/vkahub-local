@@ -54,7 +54,7 @@ const LoginPage = memo((props: LoginPageProps) => {
         );
     }
 
-    if (userData) {
+    if (userData.id) {
         let originLocation = '';
         if (location.state?.from) {
             const { pathname, search } = location.state.from;
@@ -85,10 +85,10 @@ const LoginPage = memo((props: LoginPageProps) => {
                     isOpened={isRegisterModalOpened}
                     setIsOpened={setIsRegisterModalOpened}
                 />
-                 <RecoveryPasswordModal 
-                    isOpened={isRecoveryModalOpened} 
-                    setIsOpened={setIsRecoveryModalOpened} 
-                 /> 
+                <RecoveryPasswordModal
+                    isOpened={isRecoveryModalOpened}
+                    setIsOpened={setIsRecoveryModalOpened}
+                />
             </VStack>
         </Page>
     );

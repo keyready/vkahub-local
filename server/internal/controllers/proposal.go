@@ -23,7 +23,6 @@ func (pc *ProposalController) CancelProposal(ctx *gin.Context) {
 
 	propId, _ := strconv.ParseInt(ctx.PostForm("proposalId"), 10, 64)
 	aprProp := request.ApproveProposalRequest{
-		Username:   ctx.GetString("username"),
 		ProposalId: propId,
 	}
 

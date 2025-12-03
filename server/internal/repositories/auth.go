@@ -19,7 +19,6 @@ type AuthRepository interface {
 	Login(login request.LoginRequest) (httpCode int, err error)
 	RefreshToken(refreshToken string) (tokens authorizer.TokensResponse, err error)
 	Logout(username string) (httpCode int, err error)
-
 	GetRecoveryQuestions() (httpCode int, questions []database.RecoveryQuestionModel, err error)
 	GetPersonalQuestion(getPersonalQuestionForm request.GetPersonalQuestionForm) (httpCode int, err error, question string)
 	ApproveRecovery(approveRecoveryForm request.ApproveRecoveryForm) (httpCode int, err error)

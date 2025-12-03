@@ -86,7 +86,7 @@ export const TeamInfoBlock = (props: TeamInfoBlockProps) => {
                         fallbackSrc="/static/fallbacks/team-fallback.webp"
                         classNames={{ wrapper: classes.blurredBackgroundImage }}
                         className="w-full h-full"
-                        src={`/team-images/${team?.image}`}
+                        src={`/minio/${team?.image}`}
                         alt={team?.title}
                     />
                 </HStack>

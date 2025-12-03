@@ -99,7 +99,7 @@ export const EventCard = (props: EventCardProps) => {
             <HStack gap="24px" align="start" justify="start" maxW>
                 <Image
                     fallbackSrc={`/static/events-types/${event?.type}-fallback.webp`}
-                    src={`/events-images/${event?.image}`}
+                    src={`/minio/${event?.image}`}
                     width={75}
                     height={75}
                     classNames={{

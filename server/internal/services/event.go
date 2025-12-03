@@ -1,6 +1,7 @@
 package services
 
 import (
+	"server/internal/cloud"
 	"server/internal/database"
 	"server/internal/dto/request"
 	"server/internal/repositories"
@@ -15,10 +16,17 @@ type EventService interface {
 
 type EventServiceImpl struct {
 	EventRepository repositories.EventRepository
+	cloud           *cloud.Cloud
 }
 
-func NewEventServiceImpl(eventRepository repositories.EventRepository) EventService {
-	return &EventServiceImpl{EventRepository: eventRepository}
+func NewEventServiceImpl(
+	eventRepository repositories.EventRepository,
+	cloud *cloud.Cloud,
+) EventService {
+	return &EventServiceImpl{
+		EventRepository: eventRepository,
+		cloud:           cloud,
+	}
 }
 func (e EventServiceImpl) AddEvent(addEventReq request.AddEventReq) (httpCode int, err error) {
 	httpCode, err = e.EventRepository.AddEvent(addEventReq)

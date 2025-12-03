@@ -153,7 +153,7 @@ export const EventInfoBlock = (props: EventInfoBlockProps) => {
                             classNames={{
                                 wrapper: classes.img,
                             }}
-                            src={`/events-images/${event?.image}`}
+                            src={`/minio/${event?.image}`}
                             className="w-full h-full"
                             fallbackSrc={`/static/events-types/${event?.type}-fallback.webp`}
                         />

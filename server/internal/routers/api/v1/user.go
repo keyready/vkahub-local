@@ -21,5 +21,7 @@ func NewUserRouters(r *gin.Engine, jwtService *authorizer.Authorizer, uc *contro
 		userRouters.POST("/user/add_portfolio", uc.AddPortfolio)
 		userRouters.POST("/user/delete_portfolio", uc.DeletePortfolio)
 		userRouters.GET("/user/get_banned_reason", uc.GetBannedReason)
+		userRouters.POST("/user/settings", uc.SetSettings)
+		userRouters.GET("/user/settings", uc.GetSettings)
 	}
 }

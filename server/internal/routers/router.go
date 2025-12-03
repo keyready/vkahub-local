@@ -1,9 +1,13 @@
 package routers
 
 import (
+	"context"
 	"server/internal/authorizer"
+	"server/internal/cloud"
 	"server/internal/controllers"
 	"server/internal/gocron"
+	"server/internal/middleware"
+	"server/internal/onliner"
 	"server/internal/repositories"
 	v1 "server/internal/routers/api/v1"
 	"server/internal/services"
@@ -16,34 +20,40 @@ import (
 func InitRouter(
 	db *gorm.DB,
 	jwtService *authorizer.Authorizer,
+	onliner *onliner.Onliner,
+	cloud *cloud.Cloud,
 ) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
+
+	_ = cloud.Cloud.InitBucket(context.Background())
 
 	c := cron.New()
 	// c.AddFunc("@weekly", gocron.Banned(db))
 	c.AddFunc("@monthly", gocron.ClearNotifications(db))
 	c.Start()
 
+	userRepo := repositories.NewUserRepositoryImpl(db, cloud)
+	userService := services.NewUserServiceImpl(userRepo, cloud)
+	userCtrl := controllers.NewUserControllers(userService, cloud, onliner)
+	v1.NewUserRouters(r, jwtService, userCtrl)
+
+	r.GET("/service-info", userCtrl.GetActualInfo)
+
+	r.GET("/ws/online", middleware.AuthMiddleware(jwtService), userCtrl.Online)
+	r.GET("/ws/notifications", userCtrl.SendNotifications)
+	r.GET("/ws/messenger/:teamId", userCtrl.FetchAllMessages)
+
 	authRepo := repositories.NewAuthRepositoryImpl(db, jwtService)
 	authService := services.NewAuthServiceImpl(authRepo)
-	authCtrl := controllers.NewAuthController(authService, jwtService)
+	authCtrl := controllers.NewAuthController(authService, jwtService, cloud, onliner)
 	v1.NewAuthRouters(r, jwtService, authCtrl)
 
 	teamRepo := repositories.NewTeamRepositoryImpl(db)
-	teamService := services.NewTeamServiceImpl(teamRepo)
-	teamCtrl := controllers.NewTeamController(teamService)
+	teamService := services.NewTeamServiceImpl(teamRepo, cloud)
+	teamCtrl := controllers.NewTeamController(teamService, cloud)
 	v1.NewTeamRouters(r, jwtService, teamCtrl)
-
-	userRepo := repositories.NewUserRepositoryImpl(db)
-	userService := services.NewUserServiceImpl(userRepo)
-	userCtrl := controllers.NewUserControllers(userService)
-	v1.NewUserRouters(r, jwtService, userCtrl)
-
-	r.GET("/ws/online", userCtrl.GetOnlineUsers)
-	r.GET("/ws/notifications", userCtrl.SendNotifications)
-	r.GET("/ws/messenger/:teamId", userCtrl.FetchAllMessages)
 
 	proposalRepo := repositories.NewProposalRepositoryImpl(db)
 	proposalService := services.NewProposalServiceImpl(proposalRepo)
@@ -51,8 +61,8 @@ func InitRouter(
 	v1.NewProposalRouters(r, jwtService, proposalCtrl)
 
 	eventRepo := repositories.NewEventRepositoryImpl(db)
-	eventService := services.NewEventServiceImpl(eventRepo)
-	eventCtrl := controllers.NewEventController(eventService)
+	eventService := services.NewEventServiceImpl(eventRepo, cloud)
+	eventCtrl := controllers.NewEventController(eventService, cloud)
 	v1.NewEventRouters(r, jwtService, eventCtrl)
 
 	trackRepo := repositories.NewTrackRepositoryImpl(db)
@@ -75,14 +85,14 @@ func InitRouter(
 	positionCtrl := controllers.NewPositionController(positionService)
 	v1.NewPositionsRoutes(r, jwtService, positionCtrl)
 
-	reportRepo := repositories.NewReportRepositoryImpl(db)
+	reportRepo := repositories.NewReportRepositoryImpl(db, cloud)
 	reportService := services.NewReportServiceImpl(reportRepo)
 	reportCtrl := controllers.NewReportControllers(reportService)
 	v1.NewReportRoutes(r, jwtService, reportCtrl)
 
 	bugRepo := repositories.NewBugRepositoryImpl(db)
-	bugService := services.NewBugServiceImpl(bugRepo)
-	bugCtrl := controllers.NewBugControllers(bugService)
+	bugService := services.NewBugServiceImpl(bugRepo, cloud)
+	bugCtrl := controllers.NewBugControllers(bugService, cloud)
 	v1.NewBugRoutes(r, jwtService, bugCtrl)
 
 	feedbackRepo := repositories.NewFeedbackImpl(db)
@@ -92,7 +102,7 @@ func InitRouter(
 
 	teamChatRep := repositories.NewTeamChatServiceImpl(db)
 	teamCharSer := services.NewTeamChatServiceImpl(teamChatRep)
-	teamChatC := controllers.NewTeamChatController(teamCharSer)
+	teamChatC := controllers.NewTeamChatController(teamCharSer, cloud)
 	v1.NewTeamChatRoutes(r, jwtService, teamChatC)
 
 	return r

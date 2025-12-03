@@ -235,3 +235,8 @@ type RecoveryPasswordForm struct {
 	Username    string `json:"username"`
 	NewPassword string `json:"new_password"`
 }
+
+type SetSettingsForm struct {
+	Settings string `json:"settings"`
+	Username string
+}

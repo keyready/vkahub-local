@@ -174,8 +174,11 @@ type UserModel struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 	MemberSince time.Time `json:"memberSince"`
 
+	Settings string `json:"settings"`
+
 	Portfolio datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"-"`
 
+	Online     bool      `json:"online"`
 	LastOnline time.Time `json:"lastOnline"`
 }
 

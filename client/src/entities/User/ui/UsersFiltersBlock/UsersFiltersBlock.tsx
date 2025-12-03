@@ -70,6 +70,7 @@ export const UsersFiltersBlock = (props: UsersFiltersBlockProps) => {
                     />
 
                     <Autocomplete
+                        isDisabled
                         value={localFilters.wanted}
                         onSelectionChange={(event) =>
                             setLocalFilters({ ...filters, wanted: event as string })
@@ -120,6 +121,7 @@ export const UsersFiltersBlock = (props: UsersFiltersBlockProps) => {
                     </Autocomplete>
 
                     <Autocomplete
+                        isDisabled
                         value={localFilters.skills}
                         onSelectionChange={(event) =>
                             setLocalFilters({ ...filters, wanted: event as string })
@@ -183,12 +185,10 @@ export const UsersFiltersBlock = (props: UsersFiltersBlockProps) => {
                     </Autocomplete>
 
                     <Checkbox
-                        isSelected={!localFilters.isMember}
-                        onChange={(event) =>
-                            setLocalFilters({ ...filters, isMember: !event.target.checked })
-                        }
+                        isSelected={localFilters.isMember}
+                        onValueChange={(state) => setLocalFilters({ ...filters, isMember: state })}
                     >
-                        Ищет команду?
+                        Состоит в команде?
                     </Checkbox>
                 </VStack>
             </form>

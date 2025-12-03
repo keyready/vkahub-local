@@ -17,6 +17,7 @@ import {
     ProfileInfoBlock,
     SkillsBlock,
     UserRoles,
+    UserSettingsTab,
 } from '@/entities/User';
 import { useWindowWidth } from '@/shared/lib/hooks/useWindowWidth';
 import { DynamicModuleLoader } from '@/shared/lib/DynamicModuleLoader';
@@ -80,8 +81,11 @@ const FeedPage = memo((props: FeedPageProps) => {
                     <Tab key="profile" title="Личная информация">
                         <ProfileInfoBlock />
                     </Tab>
-                    <Tab key="settings" title="Данные аккаунта">
+                    <Tab key="data-settings" title="Данные аккаунта">
                         <AccountSettings />
+                    </Tab>
+                    <Tab key="user-settings" title="Настройки">
+                        <UserSettingsTab />
                     </Tab>
                     <Tab key="portfolio" title="Портфолио">
                         <PortfolioBlock />

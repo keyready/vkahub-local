@@ -1,16 +1,12 @@
 package other
 
-import "path/filepath"
-
-const BASE_DIR = "/app/static"
-
 var (
-	USER_AVATARS_STORAGE     = filepath.Join(BASE_DIR, "user-avatars")
-	BUGS_STORAGE             = filepath.Join(BASE_DIR, "bugs")
-	EVENTS_STORAGE           = filepath.Join(BASE_DIR, "events")
-	CERTIFICATES_STORAGE     = filepath.Join(BASE_DIR, "certificates")
-	TEAM_IMAGES_STORAGE      = filepath.Join(BASE_DIR, "team-images")
-	CHAT_ATTACHMENTS_STORAGE = filepath.Join(BASE_DIR, "attachments")
+	USER_AVATARS_STORAGE     = "user-avatars"
+	BUGS_STORAGE             = "bugs"
+	EVENTS_STORAGE           = "events"
+	CERTIFICATES_STORAGE     = "certificates"
+	TEAM_IMAGES_STORAGE      = "team-images"
+	CHAT_ATTACHMENTS_STORAGE = "attachments"
 )
 
 type NotificationData struct {

@@ -1,6 +1,8 @@
 package services
 
 import (
+	"context"
+	"server/internal/cloud"
 	"server/internal/database"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
@@ -21,16 +23,31 @@ type UserService interface {
 	AddPortfolio(addPortfolioReq request.AddPortfolioForm, certificateNames []string) (httpCode int, err error)
 	DeletePortfolio(certificateName, ownerName string) (httpCode int, err error)
 	GetBannedReason(ownerID int64) (httpCode int, err error, banned database.BanModel)
+	SetSettings(ctx context.Context, saveSettingsForm request.SetSettingsForm) error
+	GetSettings(ctx context.Context, username string) (string, error)
 }
 
 type UserServiceImpl struct {
 	UserRepository repositories.UserRepository
+	cloud          *cloud.Cloud
 }
 
-func NewUserServiceImpl(userRepository repositories.UserRepository) UserService {
+func NewUserServiceImpl(
+	userRepository repositories.UserRepository,
+	cloud *cloud.Cloud,
+) UserService {
 	return &UserServiceImpl{
 		UserRepository: userRepository,
+		cloud:          cloud,
 	}
+}
+
+func (u UserServiceImpl) GetSettings(ctx context.Context, username string) (string, error) {
+	return u.UserRepository.GetSettings(ctx, username)
+}
+
+func (u UserServiceImpl) SetSettings(ctx context.Context, saveSettingsForm request.SetSettingsForm) error {
+	return u.UserRepository.SetSettings(ctx, saveSettingsForm)
 }
 
 func (u UserServiceImpl) GetBannedReason(ownerID int64) (httpCode int, err error, banned database.BanModel) {
@@ -88,7 +105,7 @@ func (u UserServiceImpl) GetUserData(username string) (httpCode int, err error, 
 	return httpCode, err, userData
 }
 
-func (u UserServiceImpl) GetProfile(username string) (httpCode int, err error, userData response.ProfileData) {
-	httpCode, err, userData = u.UserRepository.GetProfile(username)
-	return httpCode, err, userData
+func (u UserServiceImpl) GetProfile(username string) (httpCode int, err error, profileData response.ProfileData) {
+	httpCode, err, profileData = u.UserRepository.GetProfile(username)
+	return httpCode, err, profileData
 }

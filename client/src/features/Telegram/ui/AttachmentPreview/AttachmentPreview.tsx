@@ -41,7 +41,7 @@ export const AttachmentPreview = (props: AttachmentPreviewProps) => {
                     classNames={{
                         wrapper: classes.attachedFilePreview,
                     }}
-                    src={`${import.meta.env.VITE_MINIO_ENDPOINT}/attachments_bucket/${attachment}`}
+                    src={`/minio/${attachment}`}
                     fallbackSrc="/static/image-unavailable.webp"
                     alt={attachment}
                     className="rounded-md"
@@ -58,7 +58,7 @@ export const AttachmentPreview = (props: AttachmentPreviewProps) => {
                             classNames={{
                                 wrapper: classes.imagePreview,
                             }}
-                            src={`${import.meta.env.VITE_MINIO_ENDPOINT}/attachments_bucket/${attachment}`}
+                            src={`/minio/${attachment}`}
                             fallbackSrc="/static/image-unavailable.webp"
                             alt={attachment}
                             className="rounded-md"
@@ -80,7 +80,7 @@ export const AttachmentPreview = (props: AttachmentPreviewProps) => {
                 aria-label="Download attachment"
                 download
                 target="_blank"
-                href={`${import.meta.env.VITE_MINIO_ENDPOINT}/attachments_bucket/${attachment}`}
+                href={`/minio/${attachment}`}
                 rel="noreferrer"
             >
                 <RiFile3Line size={60} />

@@ -1,13 +1,14 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
-	"path/filepath"
 	"server/internal/authorizer"
+	"server/internal/cloud"
 	"server/internal/dto/other"
 	"server/internal/dto/request"
+	"server/internal/onliner"
 	"server/internal/services"
+	"server/internal/utils"
 	"server/pkg/app"
 	"strings"
 
@@ -18,15 +19,21 @@ import (
 type AuthController struct {
 	authService services.AuthService
 	jwtService  *authorizer.Authorizer
+	cloud       *cloud.Cloud
+	onliner     *onliner.Onliner
 }
 
 func NewAuthController(
 	service services.AuthService,
 	jwtService *authorizer.Authorizer,
+	cloud *cloud.Cloud,
+	onliner *onliner.Onliner,
 ) *AuthController {
 	return &AuthController{
 		jwtService:  jwtService,
 		authService: service,
+		cloud:       cloud,
+		onliner:     onliner,
 	}
 }
 
@@ -62,15 +69,42 @@ func (ac *AuthController) SignUp(gCtx *gin.Context) {
 		return
 	}
 
-	avatarName := fmt.Sprintf(
-		"%s_%s_%s",
-		formData.Username,
-		"avatar",
-		strings.ReplaceAll(avatar.Filename, " ", "_"),
-	)
-	avatar.Filename = avatarName
+	readFileParams := utils.ReadFileParams{
+		File:    avatar,
+		SaveDir: other.USER_AVATARS_STORAGE,
+	}
 
-	httpCode, serviceErr := ac.authService.SignUp(formData, avatarName)
+	readFileResult, err := utils.ReadFile(readFileParams)
+	if err != nil {
+		gCtx.AbortWithError(
+			http.StatusInternalServerError,
+			err,
+		)
+
+		gCtx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+
+		return
+	}
+
+	ctx := gCtx.Request.Context()
+	if saveErr := ac.cloud.Cloud.UploadFile(ctx, readFileResult.FileKey, readFileResult.FileData); saveErr != nil {
+		gCtx.AbortWithError(
+			http.StatusInternalServerError,
+			saveErr,
+		)
+
+		gCtx.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": saveErr.Error()},
+		)
+
+		return
+	}
+
+	httpCode, serviceErr := ac.authService.SignUp(formData, readFileResult.FullFilePath)
 	if serviceErr != nil {
 		gCtx.AbortWithError(
 			httpCode,
@@ -80,21 +114,6 @@ func (ac *AuthController) SignUp(gCtx *gin.Context) {
 		gCtx.JSON(
 			httpCode,
 			gin.H{"error": serviceErr.Error()},
-		)
-
-		return
-	}
-
-	savePath := filepath.Join(other.USER_AVATARS_STORAGE, avatarName)
-	if saveErr := gCtx.SaveUploadedFile(avatar, savePath); saveErr != nil {
-		gCtx.AbortWithError(
-			http.StatusInternalServerError,
-			saveErr,
-		)
-
-		gCtx.JSON(
-			http.StatusInternalServerError,
-			gin.H{"error": saveErr.Error()},
 		)
 
 		return

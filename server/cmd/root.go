@@ -13,8 +13,10 @@ var serviceConfig *config.VkaHubConfig
 var rootCmd = &cobra.Command{
 	Use:     "./vkahub",
 	Version: "1.0.0",
-	Short:   "VkaHub",
-	Long:    "VkaHub",
+	Short:   "VkaHub - проект, разработанный для аггрегации и мониторинга деятельности военно-научного общества 61 кафедры ВКА им.А.Ф.Можайского",
+	Long: `
+		VkaHub - проект, разработанный для аггрегации и мониторинга деятельности военно-научного общества 61 кафедры ВКА им.А.Ф.Можайского
+	`,
 
 	Run: func(cmd *cobra.Command, _ []string) {
 		var parseErr error
