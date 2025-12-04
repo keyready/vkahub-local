@@ -17,7 +17,14 @@ export const getUserDataService = createAsyncThunk<User, void, ThunkConfig<strin
                 throw new Error();
             }
 
-            return { ...response.data };
+            // FIXME replace with real data
+            return {
+                ...response.data,
+                avatar: {
+                    image: response.data.avatar as unknown as string,
+                    hash: 'UOGu5$tS7%x]$eWAE1WB0KRO,ARPIUt8aeoM',
+                },
+            } as User;
         } catch (e) {
             const axiosError = e as AxiosError;
             // @ts-ignore

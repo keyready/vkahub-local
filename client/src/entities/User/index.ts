@@ -32,3 +32,4 @@ export { AccountSettings } from './ui/ProfileBlocks/AccountSettings/AccountSetti
 export { PortfolioBlock } from './ui/ProfileBlocks/PortfolioBlock/PortfolioBlock';
 export { SkillsBlock } from './ui/ProfileBlocks/SkillsBlock/SkillsBlock';
 export { UserSettingsTab } from './ui/ProfileBlocks/UserSettingsTab/UserSettingsTab';
+export { PortfolioItem } from './ui/ProfileBlocks/PortfolioBlock/PortfolioItem';

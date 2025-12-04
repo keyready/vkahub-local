@@ -4,16 +4,18 @@ import classes from './ImageUpload.module.scss';
 
 import { classNames, Mods } from '@/shared/lib/classNames';
 import { ImageCropper } from '@/shared/ui/ImageCropper';
+import { encodeImageToBlurhash } from '@/shared/ui/Image';
 
 interface ImageUploadProps {
     className?: string;
     onChange: (file: File) => void;
+    onImageHashGenerated?: (hash: string) => void;
     isLoading?: boolean;
     initialImage?: string;
 }
 
 export const ImageUpload = (props: ImageUploadProps) => {
-    const { className, isLoading, initialImage, onChange } = props;
+    const { className, isLoading, onImageHashGenerated, initialImage, onChange } = props;
 
     const [uploadedImageSrc, setUploadedImageSrc] = useState<string>();
     const [isDragStart, setIsDragStart] = useState<boolean>(false);
@@ -68,10 +70,12 @@ export const ImageUpload = (props: ImageUploadProps) => {
 
     const handleSetCroppedImage = useCallback(
         (image: File) => {
-            setCroppedImage(URL.createObjectURL(image));
+            const imageUrl = URL.createObjectURL(image);
+            setCroppedImage(imageUrl);
             onChange(image);
+            encodeImageToBlurhash(imageUrl).then(onImageHashGenerated);
         },
-        [onChange],
+        [onChange, onImageHashGenerated],
     );
 
     const mods: Mods = {

@@ -7,10 +7,12 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    overflow-x: hidden;
 }
 
 .grid {
     display: grid;
     grid-gap: 24px;
     grid-template-columns: repeat(4, 1fr);
+    overflow-x: hidden;
 }

@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, cn, Image } from '@nextui-org/react';
+import { Button, cn } from '@nextui-org/react';
 import { RiArrowRightSLine } from '@remixicon/react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { User } from '../../model/types/User';
 
 import { HStack, VStack } from '@/shared/ui/Stack';
+import { Image } from '@/shared/ui/Image';
 import { RoutePath } from '@/shared/config/routeConfig';
 import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
 import { ProposalReducer } from '@/entities/Proposal';
@@ -54,11 +55,6 @@ export const UserCard = memo((props: UserCardProps) => {
         fetchUserTeamTitle();
     }, [dispatch, user.teamId]);
 
-    const variants = {
-        collapsed: { height: 'auto', overflow: 'hidden' },
-        expanded: { height: 'auto', overflow: 'hidden' },
-    };
-
     return (
         <DynamicModuleLoader reducers={{ proposal: ProposalReducer }}>
             <motion.div
@@ -74,12 +70,11 @@ export const UserCard = memo((props: UserCardProps) => {
                 <HStack className="w-full justify-between items-start" gap="12px">
                     <div className="flex items-center gap-4">
                         <Image
-                            src={`/minio/${user.avatar}`}
+                            src={`/minio/${user.avatar?.image}`}
+                            hash={user.avatar?.hash}
                             fallbackSrc="/static/fallbacks/user-fallback.webp"
                             classNames={{
-                                wrapper:
-                                    '!absolute top-0 left-0 right-0 bottom-0 bg-center bg-no-repeat bg-cover flex-1',
-                                img: ' w-[50px] h-[50px]',
+                                wrapper: 'rounded-full',
                             }}
                             width={50}
                             height={50}

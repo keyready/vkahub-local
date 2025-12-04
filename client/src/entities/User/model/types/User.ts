@@ -1,4 +1,5 @@
 import { Theme } from '@/widgets/ThemeSwitcher';
+import { ImageObj } from '@/shared/ui/Image';
 
 export type AuthErrorTypes =
     | 'Username not found'
@@ -67,8 +68,10 @@ export interface ServerUser {
     mail: string;
     username: string;
     password: string;
-    avatar: string;
+
+    avatar: ImageObj;
     newAvatar?: File;
+
     roles: UserRoles[];
     portfolio?: PortfolioFile[];
 
