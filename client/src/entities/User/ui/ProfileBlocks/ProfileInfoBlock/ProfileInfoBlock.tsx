@@ -65,6 +65,7 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
 
     const [isEditorMode, setIsEditorMode] = useState<boolean>(false);
     const [avatar, setAvatar] = useState<File>();
+    const [avatarHash, setAvatarHash] = useState<string>('');
 
     const {
         control,
@@ -122,13 +123,20 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
     const handleChangeProfile = useCallback(
         async (profile: UserProfileFormValues) => {
             await toastDispatch(
-                dispatch(changeUserProfile({ ...profile, newAvatar: avatar, id: userData?.id })),
+                dispatch(
+                    changeUserProfile({
+                        ...profile,
+                        newAvatar: avatar,
+                        avatarHash,
+                        id: userData?.id,
+                    }),
+                ),
             );
 
             await dispatch(getUserDataService());
             setIsEditorMode(false);
         },
-        [avatar, dispatch, userData?.id],
+        [avatar, avatarHash, dispatch, userData?.id],
     );
 
     const handleChangeEditorMode = useCallback(() => {
@@ -212,6 +220,7 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                             className="w-[200px] h-[200px]"
                             initialImage={`/minio/${userData?.avatar}`}
                             onChange={setAvatar}
+                            onImageHashGenerated={setAvatarHash}
                         />
                     ) : (
                         <Image

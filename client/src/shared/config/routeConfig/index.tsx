@@ -1,9 +1,6 @@
 import { RouteProps } from 'react-router-dom';
 
-import { MainPage } from '@/pages/MainPage';
 import { NotFound } from '@/pages/NotFound';
-import { TeamsPage } from '@/pages/TeamsPage';
-import { MembersPage } from '@/pages/MembersPage';
 import { FeedPage } from '@/pages/FeedPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { DetailedTeamPage } from '@/pages/DetailedTeamPage';
@@ -20,6 +17,9 @@ import { UserRoles } from '@/entities/User';
 import { BannedPage } from '@/pages/BannedPage';
 import { CommunityRulesPage } from '@/pages/CommunityRulesPage';
 import { TeamChatPage } from '@/pages/TeamChatPage';
+import { MainPage } from '@/pages/MainPage';
+import { TeamsPage } from '@/pages/TeamsPage';
+import { MembersPage } from '@/pages/MembersPage';
 
 export type AppRoutesProps = RouteProps & {
     authOnly?: boolean;
@@ -99,6 +99,25 @@ export const routerConfig: Record<AppRoutes, AppRoutesProps> = {
         path: RoutePath.rules,
         element: <CommunityRulesPage />,
     },
+    [AppRoutes.MAIN]: {
+        path: RoutePath.main,
+        element: <MainPage />,
+    },
+    [AppRoutes.TEAMS]: {
+        path: RoutePath.teams,
+        element: <TeamsPage />,
+        roles: [UserRoles.MAIL_CONFIRMED, UserRoles.PROFILE_CONFIRMED],
+    },
+    [AppRoutes.MEMBERS]: {
+        path: RoutePath.members,
+        element: <MembersPage />,
+        roles: [UserRoles.MAIL_CONFIRMED, UserRoles.PROFILE_CONFIRMED],
+    },
+    [AppRoutes.MEMBER]: {
+        path: `${RoutePath.member}:username`,
+        element: <DetailedMemberPage />,
+        roles: [UserRoles.MAIL_CONFIRMED, UserRoles.PROFILE_CONFIRMED],
+    },
 
     // закрытые роуты
     [AppRoutes.BANNED]: {
@@ -106,11 +125,6 @@ export const routerConfig: Record<AppRoutes, AppRoutesProps> = {
         element: <BannedPage />,
         authOnly: true,
         roles: [UserRoles.BANNED],
-    },
-    [AppRoutes.MAIN]: {
-        path: RoutePath.main,
-        element: <MainPage />,
-        authOnly: true,
     },
     [AppRoutes.TEAMMESSENGER]: {
         path: `${RoutePath.teammessenger}:teamId/messenger/`,
@@ -124,12 +138,6 @@ export const routerConfig: Record<AppRoutes, AppRoutesProps> = {
         authOnly: true,
         roles: [UserRoles.MAIL_CONFIRMED, UserRoles.PROFILE_CONFIRMED],
     },
-    [AppRoutes.TEAMS]: {
-        path: RoutePath.teams,
-        element: <TeamsPage />,
-        authOnly: true,
-        roles: [UserRoles.MAIL_CONFIRMED, UserRoles.PROFILE_CONFIRMED],
-    },
     [AppRoutes.EVENT]: {
         path: `${RoutePath.event}:eventId`,
         element: <DetailedEventPage />,
@@ -139,18 +147,6 @@ export const routerConfig: Record<AppRoutes, AppRoutesProps> = {
     [AppRoutes.EVENTS]: {
         path: RoutePath.events,
         element: <EventsPage />,
-        authOnly: true,
-        roles: [UserRoles.MAIL_CONFIRMED, UserRoles.PROFILE_CONFIRMED],
-    },
-    [AppRoutes.MEMBER]: {
-        path: `${RoutePath.member}:username`,
-        element: <DetailedMemberPage />,
-        authOnly: true,
-        roles: [UserRoles.MAIL_CONFIRMED, UserRoles.PROFILE_CONFIRMED],
-    },
-    [AppRoutes.MEMBERS]: {
-        path: RoutePath.members,
-        element: <MembersPage />,
         authOnly: true,
         roles: [UserRoles.MAIL_CONFIRMED, UserRoles.PROFILE_CONFIRMED],
     },

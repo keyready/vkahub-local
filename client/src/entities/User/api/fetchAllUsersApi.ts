@@ -30,6 +30,16 @@ const fetchAllUsersApi = rtkApi.injectEndpoints({
             query: (filters) => ({
                 url: `/api/members${membersFiltersString(filters)}`,
             }),
+
+            // FIXME remove before production
+            transformResponse: (users: User[]) =>
+                users.map((user) => ({
+                    ...user,
+                    avatar: {
+                        image: user.avatar as unknown as string,
+                        hash: 'UOGu5$tS7%x]$eWAE1WB0KRO,ARPIUt8aeoM',
+                    },
+                })),
         }),
     }),
 });
