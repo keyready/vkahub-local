@@ -8,8 +8,6 @@ import {
 import { useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { useSelector } from 'react-redux';
-import queryString from 'query-string';
-import { useSearchParams } from 'react-router-dom';
 
 import { MembersFilters } from '../../model/types/User';
 import { getMembersFilters } from '../../model/selectors/UserSelectors';
@@ -28,8 +26,6 @@ interface UsersFiltersBlockProps {
 export const UsersFiltersBlock = (props: UsersFiltersBlockProps) => {
     const { className } = props;
 
-    const [_, setParams] = useSearchParams();
-
     const dispatch = useAppDispatch();
     const filters = useSelector(getMembersFilters);
 
@@ -38,15 +34,8 @@ export const UsersFiltersBlock = (props: UsersFiltersBlockProps) => {
     const [debouncedFilters] = useDebounce<MembersFilters>(localFilters, 500);
 
     useEffect(() => {
-        const parsedFilters = queryString.parse(location.search);
-        setLocalFilters(parsedFilters);
-    }, []);
-
-    useEffect(() => {
         dispatch(UserActions.setMembersFilters(debouncedFilters));
-        const stringifiedFilters = queryString.stringify(debouncedFilters);
-        setParams(new URLSearchParams(stringifiedFilters));
-    }, [debouncedFilters, dispatch, setParams]);
+    }, [debouncedFilters, dispatch]);
 
     return (
         <div className={classNames(classes.UsersFiltersBlock, {}, [className])}>

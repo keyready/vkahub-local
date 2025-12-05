@@ -4,7 +4,6 @@ import { RiCommandLine, RiSparkling2Line, RiTeamLine, RiUser2Line } from '@remix
 
 import classes from './MainPage.module.scss';
 
-import { Image as BlurHashImage } from '@/shared/ui/Image';
 import { Page } from '@/widgets/Page';
 import { classNames } from '@/shared/lib/classNames';
 import { Helmet } from '@/widgets/Helmet';
@@ -56,18 +55,6 @@ const MainPage = () => {
                     'Здесь вы найдете обзор текущих проектов, команд и участников.'
                 }
             />
-
-            <div className="flex gap-4 flex-wrap">
-                {new Array(10).fill(0).map((_, index) => (
-                    <BlurHashImage
-                        isSecured={index % 3 === 0}
-                        secureText="Авторизуйтесь для просмотра"
-                        key={index}
-                        hash="UFFrhc0100?u1BWR=VMzDg%M^lMw8y-=K6Rj"
-                        src="https://papik.pro/uploads/posts/2023-02/1676117434_papik-pro-p-risunki-hd-3.jpg"
-                    />
-                ))}
-            </div>
 
             <VStack maxW gap="24px">
                 <HStack maxW align="start" gap="24px">

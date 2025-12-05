@@ -12,28 +12,19 @@ export const fetchEvent = createAsyncThunk<Event, string, ThunkConfig<string>>(
 
         try {
             const response = await extra.api.get<Event>(`/api/events/event?eventId=${eventId}`);
-            //
-            // const response: { data: Event } = {
-            //     data: {
-            //         id: 1,
-            //         title: 'Поел говна, поешь и палки',
-            //         description:
-            //             'Описание мероприятия, может быть очень большое, потому что никто не запрещает так делать, да и юай поддерживает',
-            //         shortDescription: 'А это очень короткое описание',
-            //         sponsors: ['Кафедра', 'Сбора', 'и', 'обработки', 'информации'],
-            //         image: 'string',
-            //         type: 'hack',
-            //         startDate: addDays(new Date(), 10),
-            //         finishDate: addDays(new Date(), 17),
-            //         registerUntil: addDays(new Date(), 8),
-            //     },
-            // };
 
             if (!response.data) {
                 throw new Error();
             }
 
-            return response.data;
+            // FIXME replace with real data
+            return {
+                ...response.data,
+                image: {
+                    image: response.data.image as unknown as string,
+                    hash: 'eA9jfh%2IAs:E1tRbbR*WpWB00Rjx]Rj%MIAiwxao1oz_NNGIoozRj',
+                },
+            } as Event;
         } catch (e) {
             const axiosError = e as AxiosError;
             // @ts-ignore

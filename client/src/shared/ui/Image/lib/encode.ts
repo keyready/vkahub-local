@@ -26,7 +26,7 @@ export const encodeImageToBlurhash = async (imageUrl: string, x?: number, y?: nu
 
     const imageData = getImageData(image);
     if (imageData) {
-        return encode(imageData.data, imageData.width, imageData.height, x || 4, y || 4);
+        return encode(imageData.data, imageData.width, imageData.height, x || 6, y || 6);
     }
     return '';
 };

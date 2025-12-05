@@ -41,9 +41,9 @@ export const Image = (props: HashImageProps) => {
             <AnimatePresence mode="wait">
                 <motion.div
                     key={isSecured || isImageLoading || !image ? `hash-${src}` : `image-${src}`}
-                    initial={{ opacity: 0 }}
-                    exit={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, y: -5 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.1 }}
                 >
                     {isSecured || isImageLoading || !image ? (
