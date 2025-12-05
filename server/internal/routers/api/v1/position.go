@@ -12,7 +12,7 @@ func NewPositionsRoutes(r *gin.Engine, jwtService *authorizer.Authorizer, rc *co
 	positionRoutes := r.Group("/api/positions")
 	positionRoutes.Use(middleware.AuthMiddleware(jwtService))
 	{
-		positionRoutes.GET("", rc.FetchAllPositions)
+		positionRoutes.GET("", rc.GetPositions)
 		positionRoutes.POST("/create", rc.AddPosition)
 	}
 }

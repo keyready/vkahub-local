@@ -2,14 +2,14 @@ package services
 
 import (
 	"server/internal/database"
-	"server/internal/dto/request"
+	"server/internal/forms/request"
 	"server/internal/repositories"
 )
 
 type TrackService interface {
-	AddTrack(addTrack request.AddTrackDto) (httpCode int, err error)
-	FetchOneTrack(fetchOneTrack request.FetchOneTrackReq) (httpCode int, err error, data database.TrackModel)
-	PartTeamInTrack(pTeamInTrack request.PartTeamInTrackRequest) (httpCode int, err error)
+	AddTrack(addTrackForm request.AddTrackForm) (int, error)
+	PartTeamInTrack(partTeamInTrackForm request.PartTeamInTrackForm) (int, error)
+	GetTrack(getTrackForm request.GetTrackForm) (int, database.TrackModel, error)
 }
 
 type TrackServiceImpl struct {
@@ -22,17 +22,17 @@ func NewTrackServiceImpl(trackRepository repositories.TrackRepository) TrackServ
 	}
 }
 
-func (t TrackServiceImpl) PartTeamInTrack(partTeamInTrack request.PartTeamInTrackRequest) (httpCode int, err error) {
-	httpCode, err = t.TrackRepository.PartTeamInTrack(partTeamInTrack)
+func (t TrackServiceImpl) PartTeamInTrack(partTeamInTrackForm request.PartTeamInTrackForm) (int, error) {
+	httpCode, err := t.TrackRepository.PartTeamInTrack(partTeamInTrackForm)
 	return httpCode, err
 }
 
-func (t TrackServiceImpl) FetchOneTrack(fetchOneTrack request.FetchOneTrackReq) (httpCode int, err error, data database.TrackModel) {
-	httpCode, err, data = t.TrackRepository.FetchOneTrack(fetchOneTrack)
-	return httpCode, err, data
+func (t TrackServiceImpl) GetTrack(getTrackForm request.GetTrackForm) (int, database.TrackModel, error) {
+	httpCode, track, err := t.TrackRepository.GetTrack(getTrackForm)
+	return httpCode, track, err
 }
 
-func (t TrackServiceImpl) AddTrack(addTrack request.AddTrackDto) (httpCode int, err error) {
-	httpCode, err = t.TrackRepository.AddTrack(addTrack)
+func (t TrackServiceImpl) AddTrack(addTrackForm request.AddTrackForm) (int, error) {
+	httpCode, err := t.TrackRepository.AddTrack(addTrackForm)
 	return httpCode, err
 }

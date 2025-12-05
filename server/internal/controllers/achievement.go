@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"net/http"
-	"server/internal/dto/request"
+	"server/internal/forms/request"
 	"server/internal/services"
 	"strconv"
 
@@ -17,24 +17,24 @@ func NewAchievementController(aService services.AchievementService) *Achievement
 	return &AchievementController{aService: aService}
 }
 
-func (ac *AchievementController) FetchAchievementsTeam(gCtx *gin.Context) {
-	form := request.FetchAllAcRequest{}
+func (ac *AchievementController) GetAchievementsTeam(gCtx *gin.Context) {
+	formData := request.GetAchievementsForm{}
 
 	userId := gCtx.Query("userId")
 	teamId := gCtx.Query("teamId")
 
 	switch {
 	case userId == "":
-		form.Owner = "team"
+		formData.Owner = "team"
 		valueID, _ := strconv.Atoi(teamId)
-		form.ValueId = int64(valueID)
+		formData.ValueId = int64(valueID)
 	default:
-		form.Owner = "user"
+		formData.Owner = "user"
 		valueID, _ := strconv.Atoi(userId)
-		form.ValueId = int64(valueID)
+		formData.ValueId = int64(valueID)
 	}
 
-	httpCode, err, achievements := ac.aService.FetchAchievementsTeam(form)
+	httpCode, err, achievements := ac.aService.GetAchievementsTeam(formData)
 	if err != nil {
 		gCtx.AbortWithError(
 			httpCode,
@@ -53,7 +53,7 @@ func (ac *AchievementController) FetchAchievementsTeam(gCtx *gin.Context) {
 }
 
 func (ac *AchievementController) AddAchievement(gCtx *gin.Context) {
-	jsonForm := request.AddAchievementReq{}
+	jsonForm := request.AddAchievementForm{}
 
 	if bindErr := gCtx.ShouldBindJSON(&jsonForm); bindErr != nil {
 		gCtx.AbortWithError(

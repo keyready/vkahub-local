@@ -13,7 +13,7 @@ func NewProposalRouters(r *gin.Engine, jwtService *authorizer.Authorizer, rc *co
 	proposalRouters.Use(middleware.AuthMiddleware(jwtService))
 	{
 		proposalRouters.POST("/create", rc.CreateProposal)
-		proposalRouters.GET("", rc.FetchPersonalProposals)
+		proposalRouters.GET("", rc.GetPersonalProposals)
 		proposalRouters.POST("/approve", rc.ApproveProposal)
 		proposalRouters.POST("/cancel", rc.CancelProposal)
 	}

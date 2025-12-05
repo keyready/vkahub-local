@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 	"server/internal/cloud"
-	"server/internal/dto/other"
-	"server/internal/dto/request"
+	"server/internal/forms/dto"
+	"server/internal/forms/request"
 	"server/internal/gosocket"
 	"server/internal/onliner"
 	"server/internal/services"
@@ -101,7 +101,7 @@ func (uc *UserController) GetBannedReason(gCtx *gin.Context) {
 	appGin := app.Gin{Ctx: gCtx}
 
 	ownerID := int64(1)
-	httpCode, err, banned := uc.userService.GetBannedReason(ownerID)
+	httpCode, banned, err := uc.userService.GetBannedReason(ownerID)
 	if err != nil {
 		appGin.ErrorResponse(
 			httpCode,
@@ -154,12 +154,14 @@ func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
 		return
 	}
 
+	multipartForm, err := gCtx.MultipartForm()
+
 	ctx := gCtx.Request.Context()
 	certificateNames := make([]string, 0)
-	for _, cert := range formData.Certificates {
+	for _, cert := range multipartForm.File["certificates"] {
 		readFileParams := utils.ReadFileParams{
 			File:    cert,
-			SaveDir: other.CERTIFICATES_STORAGE,
+			SaveDir: dto.CERTIFICATES_FOLDER,
 		}
 
 		readFileResult, err := utils.ReadFile(readFileParams)
@@ -183,8 +185,9 @@ func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
 	}
 
 	formData.Owner = appGin.Ctx.GetString("username")
+	formData.Certificates = certificateNames
 
-	httpCode, err := uc.userService.AddPortfolio(formData, certificateNames)
+	httpCode, err := uc.userService.AddPortfolio(formData)
 	if err != nil {
 		appGin.ErrorResponse(
 			http.StatusInternalServerError,
@@ -203,7 +206,7 @@ func (uc *UserController) FetchAllMessages(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
 	teamId, _ := strconv.ParseInt(ctx.Param("teamId"), 10, 64)
 
-	fetchAllMessage := request.FetchAllMessages{
+	form := request.GetMessagesForm{
 		TeamId: teamId,
 		Member: ctx.GetString("username"),
 	}
@@ -227,7 +230,7 @@ func (uc *UserController) FetchAllMessages(ctx *gin.Context) {
 			break
 		}
 
-		_, _, messages := uc.userService.FetchAllMessages(fetchAllMessage)
+		_, messages, err := uc.userService.GetMessages(form)
 
 		if lastLengthHistory != len(messages) {
 			if err = conn.WriteJSON(messages); err != nil {
@@ -239,7 +242,7 @@ func (uc *UserController) FetchAllMessages(ctx *gin.Context) {
 }
 
 func (uc *UserController) GetActualInfo(gCtx *gin.Context) {
-	_, _, info := uc.userService.GetActualInfo()
+	info := uc.userService.GetActualInfo()
 	gCtx.JSON(http.StatusOK, info)
 }
 
@@ -292,10 +295,15 @@ func (uc *UserController) Online(gCtx *gin.Context) {
 
 func (uc *UserController) SendNotifications(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var filterNtfs request.FetchAllNotifications
+	queryForm := request.GetNotificationsForm{}
 
-	filterNtfs.UserId = ctx.Query("userId")
-	filterNtfs.Type = ctx.Query("type")
+	if bindErr := ctx.ShouldBindQuery(&queryForm); bindErr != nil {
+		appGin.ErrorResponse(
+			http.StatusBadRequest,
+			bindErr,
+		)
+		return
+	}
 
 	conn, err := gosocket.UpgradeSocket.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
@@ -316,28 +324,35 @@ func (uc *UserController) SendNotifications(ctx *gin.Context) {
 			break
 		}
 
-		_, _, notifications := uc.userService.FetchAllPersonalNotifications(filterNtfs)
+		httpCode, notifications := uc.userService.GetPersonalNotifications(queryForm)
 
-		if totalNotifications != len(notifications) {
+		switch httpCode {
+		case http.StatusNotFound:
 			if err = conn.WriteJSON(notifications); err != nil {
 				break
 			}
+		case http.StatusOK:
+			if totalNotifications != len(notifications) {
+				if err = conn.WriteJSON(notifications); err != nil {
+					break
+				}
+			}
+			totalNotifications = len(notifications)
 		}
-		totalNotifications = len(notifications)
 	}
 }
 
 func (uc *UserController) UpdateNotification(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var updateNtf other.UpdateNotificationData
+	updNotificationDTO := request.UpdateNotificationForm{}
 
-	bindErr := ctx.ShouldBindJSON(&updateNtf)
+	bindErr := ctx.ShouldBindJSON(&updNotificationDTO)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	httpCode, err := uc.userService.UpdateNotification(updateNtf)
+	httpCode, err := uc.userService.UpdateNotificationStatus(updNotificationDTO)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return
@@ -346,13 +361,13 @@ func (uc *UserController) UpdateNotification(ctx *gin.Context) {
 	appGin.SuccessResponse(http.StatusOK, gin.H{})
 }
 
-func (uc *UserController) FetchPersonalAchievements(ctx *gin.Context) {
+func (uc *UserController) GetPersonalAchievements(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
 
 	username := ctx.Query("username")
 	personalUsername := ctx.GetString("username")
 
-	httpCode, err, personalAchievements := uc.userService.FetchPersonalAchievements(username, personalUsername)
+	httpCode, personalAchievements, err := uc.userService.GetPersonalAchievements(username, personalUsername)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return
@@ -361,19 +376,19 @@ func (uc *UserController) FetchPersonalAchievements(ctx *gin.Context) {
 	appGin.SuccessResponse(http.StatusOK, personalAchievements)
 }
 
-func (uc *UserController) FetchAllMembersByParams(ctx *gin.Context) {
+func (uc *UserController) GetMembersByParams(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var FetchAllMembers request.FetchAllMembersByParamsRequest
+	queryForm := request.GetMembersByParamsForm{}
 
-	bindErr := ctx.ShouldBindQuery(&FetchAllMembers)
+	bindErr := ctx.ShouldBindQuery(&queryForm)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	httpCode, _, data := uc.userService.FetchAllMembersByParams(FetchAllMembers)
+	httpCode, members, _ := uc.userService.GetMembersByParams(queryForm)
 
-	appGin.SuccessResponse(httpCode, data)
+	appGin.SuccessResponse(httpCode, members)
 }
 
 func (uc *UserController) EditProfile(gCtx *gin.Context) {
@@ -393,7 +408,7 @@ func (uc *UserController) EditProfile(gCtx *gin.Context) {
 	if err != http.ErrMissingFile {
 		readFileParams := utils.ReadFileParams{
 			File:    avatar,
-			SaveDir: other.USER_AVATARS_STORAGE,
+			SaveDir: dto.USER_AVATARS_FOLDER,
 		}
 
 		readFileResult, err := utils.ReadFile(readFileParams)
@@ -432,24 +447,24 @@ func (uc *UserController) GetUserData(ctx *gin.Context) {
 
 	username := ctx.GetString("username")
 
-	httpCode, serviceErr, data := uc.userService.GetUserData(username)
-	if serviceErr != nil {
-		appGin.ErrorResponse(httpCode, serviceErr)
+	httpCode, userData, err := uc.userService.GetUserData(username)
+	if err != nil {
+		appGin.ErrorResponse(httpCode, err)
 		return
 	}
 
-	appGin.SuccessResponse(http.StatusOK, data)
+	appGin.SuccessResponse(http.StatusOK, userData)
 }
 
 func (uc *UserController) GetProfile(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
 	username := ctx.Query("username")
 
-	httpCode, serviceErr, data := uc.userService.GetProfile(username)
-	if serviceErr != nil {
-		appGin.ErrorResponse(httpCode, serviceErr)
+	httpCode, profileData, err := uc.userService.GetProfile(username)
+	if err != nil {
+		appGin.ErrorResponse(httpCode, err)
 		return
 	}
 
-	appGin.SuccessResponse(http.StatusOK, data)
+	appGin.SuccessResponse(http.StatusOK, profileData)
 }

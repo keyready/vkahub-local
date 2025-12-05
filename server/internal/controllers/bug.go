@@ -3,8 +3,8 @@ package controllers
 import (
 	"net/http"
 	"server/internal/cloud"
-	"server/internal/dto/other"
-	"server/internal/dto/request"
+	"server/internal/forms/dto"
+	"server/internal/forms/request"
 	"server/internal/services"
 	"server/internal/utils"
 	"server/pkg/app"
@@ -27,9 +27,9 @@ func NewBugControllers(
 	}
 }
 
-func (bc *BugController) AddBug(gCtx *gin.Context) {
+func (bc *BugController) RegisterBug(gCtx *gin.Context) {
 	appGin := app.Gin{Ctx: gCtx}
-	formData := request.AddBugReq{}
+	formData := request.RegisterBugForm{}
 
 	formData.Author = gCtx.GetString("username")
 
@@ -51,7 +51,7 @@ func (bc *BugController) AddBug(gCtx *gin.Context) {
 	for _, img := range multipartForm.File["media"] {
 		readFileParams := utils.ReadFileParams{
 			File:    img,
-			SaveDir: other.BUGS_STORAGE,
+			SaveDir: dto.BUGS_FOLDER,
 		}
 
 		readFileResult, err := utils.ReadFile(readFileParams)
@@ -77,7 +77,9 @@ func (bc *BugController) AddBug(gCtx *gin.Context) {
 		mediaNames = append(mediaNames, readFileResult.FullFilePath)
 	}
 
-	httpCode, err := bc.bugService.AddBug(formData, mediaNames)
+	formData.MediaNames = mediaNames
+
+	httpCode, err := bc.bugService.RegisterBug(formData)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return
@@ -86,11 +88,11 @@ func (bc *BugController) AddBug(gCtx *gin.Context) {
 	appGin.SuccessResponse(http.StatusCreated, gin.H{})
 }
 
-func (bc *BugController) FetchAllBugs(ctx *gin.Context) {
+func (bc *BugController) GetBugs(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
 	t := ctx.Query("status")
 
-	httpCode, err, bugs := bc.bugService.FetchAllBugs(t)
+	httpCode, bugs, err := bc.bugService.GetBugs(t)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return
@@ -101,7 +103,7 @@ func (bc *BugController) FetchAllBugs(ctx *gin.Context) {
 
 func (bc *BugController) UpdateBug(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var updateBugReq request.UpdateBugReq
+	updateBugReq := request.UpdateBugForm{}
 
 	bindErr := ctx.ShouldBindJSON(&updateBugReq)
 	if bindErr != nil {

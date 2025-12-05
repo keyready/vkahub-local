@@ -21,6 +21,6 @@ COPY --from=builder /build/configs /app/configs
 COPY --from=builder /build/migrations /app/migrations
 COPY --from=builder /build/static/reports/template /app/static/reports/template
 
-ENTRYPOINT ["/app/main","--config-path=/app/configs/production.yaml"]
-
 EXPOSE 5000
+
+ENTRYPOINT ["/app/main","--config-path=/app/configs/production.yaml"]

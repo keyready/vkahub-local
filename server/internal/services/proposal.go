@@ -1,16 +1,16 @@
 package services
 
 import (
-	"server/internal/dto/request"
-	"server/internal/dto/response"
+	"server/internal/forms/request"
+	"server/internal/forms/response"
 	"server/internal/repositories"
 )
 
 type ProposalService interface {
-	CreateProposal(CreateProp request.CreateProposalRequest) (httpCode int, err error)
-	FetchPersonalProposals(FetchProp request.FetchProposalRequest) (httpCode int, err error, data []response.FetchProposalEntityResponse)
-	ApproveProposal(aprProp request.ApproveProposalRequest) (httpCode int, err error)
-	CancelProposal(proposalId int64) (httpCode int, err error)
+	CreateProposal(createPropForm request.CreateProposalForm) (int, error)
+	GetPersonalProposals(getProposalsForm request.GetProposalForm) (int, []response.Proposal, error)
+	ApproveProposal(approveProposalForm request.ApproveProposalForm) (int, error)
+	CancelProposal(proposalID int64) (int, error)
 }
 
 type ProposalServiceImpl struct {
@@ -21,22 +21,22 @@ func NewProposalServiceImpl(proposalRepository repositories.ProposalRepository) 
 	return &ProposalServiceImpl{ProposalRepository: proposalRepository}
 }
 
-func (p ProposalServiceImpl) ApproveProposal(aprProp request.ApproveProposalRequest) (httpCode int, err error) {
-	httpCode, err = p.ProposalRepository.ApproveProposal(aprProp)
+func (p ProposalServiceImpl) ApproveProposal(approveProposalForm request.ApproveProposalForm) (int, error) {
+	httpCode, err := p.ProposalRepository.ApproveProposal(approveProposalForm)
 	return httpCode, err
 }
 
-func (p ProposalServiceImpl) CancelProposal(proposalId int64) (httpCode int, err error) {
-	httpCode, err = p.ProposalRepository.CancelProposal(proposalId)
+func (p ProposalServiceImpl) CancelProposal(proposalID int64) (int, error) {
+	httpCode, err := p.ProposalRepository.CancelProposal(proposalID)
 	return httpCode, err
 }
 
-func (p ProposalServiceImpl) FetchPersonalProposals(FetchProp request.FetchProposalRequest) (httpCode int, err error, data []response.FetchProposalEntityResponse) {
-	httpCode, err, data = p.ProposalRepository.FetchPersonalProposals(FetchProp)
-	return httpCode, err, data
+func (p ProposalServiceImpl) GetPersonalProposals(getProposalsForm request.GetProposalForm) (int, []response.Proposal, error) {
+	httpCode, proposals, err := p.ProposalRepository.GetPersonalProposals(getProposalsForm)
+	return httpCode, proposals, err
 }
 
-func (p ProposalServiceImpl) CreateProposal(CreateProp request.CreateProposalRequest) (httpCode int, err error) {
-	httpCode, err = p.ProposalRepository.CreateProposal(CreateProp)
+func (p ProposalServiceImpl) CreateProposal(createPropForm request.CreateProposalForm) (int, error) {
+	httpCode, err := p.ProposalRepository.CreateProposal(createPropForm)
 	return httpCode, err
 }

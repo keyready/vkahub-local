@@ -3,8 +3,8 @@ package controllers
 import (
 	"net/http"
 	"server/internal/cloud"
-	"server/internal/dto/other"
-	"server/internal/dto/request"
+	"server/internal/forms/dto"
+	"server/internal/forms/request"
 	"server/internal/services"
 	"server/internal/utils"
 	"server/pkg/app"
@@ -28,18 +28,26 @@ func NewEventController(
 	}
 }
 
-func (ec *EventController) AddEvent(gCtx *gin.Context) {
+func (ec *EventController) RegisterEvent(gCtx *gin.Context) {
 	appGin := app.Gin{Ctx: gCtx}
-	formData := request.AddEventReq{}
+	formData := request.RegisterEventForm{}
 
 	if bindErr := appGin.Ctx.ShouldBind(&formData); bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
+	image, err := gCtx.FormFile("image")
+	if err != nil {
+		appGin.ErrorResponse(
+			http.StatusInternalServerError, err,
+		)
+		return
+	}
+
 	readFileParams := utils.ReadFileParams{
-		File:    formData.Image,
-		SaveDir: other.EVENTS_STORAGE,
+		File:    image,
+		SaveDir: dto.EVENTS_FOLDER,
 	}
 
 	readFileResult, err := utils.ReadFile(readFileParams)
@@ -59,8 +67,8 @@ func (ec *EventController) AddEvent(gCtx *gin.Context) {
 		)
 	}
 
-	formData.Image.Filename = readFileResult.FullFilePath
-	_, err = ec.eventService.AddEvent(formData)
+	formData.Image = readFileResult.FullFilePath
+	_, err = ec.eventService.RegisterEvent(formData)
 	if err != nil {
 		appGin.ErrorResponse(http.StatusInternalServerError, err)
 		return
@@ -69,47 +77,47 @@ func (ec *EventController) AddEvent(gCtx *gin.Context) {
 	appGin.SuccessResponse(http.StatusCreated, gin.H{})
 }
 
-func (ec *EventController) FetchOneEvent(ctx *gin.Context) {
+func (ec *EventController) GetEvent(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
 
 	eventIdString := ctx.Query("eventId")
 	eventId, _ := strconv.ParseInt(eventIdString, 10, 64)
 
-	httpCode, err, data := ec.eventService.FetchOneEvent(eventId)
+	httpCode, event, err := ec.eventService.GetEvent(eventId)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 	}
 
-	appGin.SuccessResponse(httpCode, data)
+	appGin.SuccessResponse(httpCode, event)
 }
 
-func (ec *EventController) FetchAllEvents(ctx *gin.Context) {
+func (ec *EventController) GetEvents(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var fetchAllEvents request.FetchAllEventsRequest
+	form := request.GetEventsForm{}
 
-	fetchAllEvents.Type = ctx.Query("type")
-	fetchAllEvents.Username = ctx.GetString("username")
+	form.Type = ctx.Query("type")
+	form.Username = ctx.GetString("username")
 
-	httpCode, serviceErr, events := ec.eventService.FetchAllEvents(fetchAllEvents)
-	if serviceErr != nil {
-		appGin.ErrorResponse(httpCode, serviceErr)
+	httpCode, events, err := ec.eventService.GetEvents(form)
+	if err != nil {
+		appGin.ErrorResponse(httpCode, err)
 		return
 	}
 
 	appGin.SuccessResponse(http.StatusOK, events)
 }
 
-func (ec *EventController) FetchTracksEvent(ctx *gin.Context) {
+func (ec *EventController) GetTracksEvent(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
 
 	eventIdString := ctx.Query("eventId")
 	eventId, _ := strconv.ParseInt(eventIdString, 10, 64)
 
-	httpCode, err, data := ec.eventService.FetchTracksEvent(eventId)
+	httpCode, tracks, err := ec.eventService.GetTracksEvent(eventId)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return
 	}
 
-	appGin.SuccessResponse(http.StatusOK, data)
+	appGin.SuccessResponse(http.StatusOK, tracks)
 }

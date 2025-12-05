@@ -11,3 +11,8 @@ type RecoveryQuestion struct {
 	Question string `json:"recoveryQuestion"`
 	Answer   string `json:"recoveryAnswer"`
 }
+
+type ImageObj struct {
+	Image string `json:"image"`
+	Hash  string `json:"hash"`
+}

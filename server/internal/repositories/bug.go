@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"server/internal/database"
-	"server/internal/dto/request"
+	"server/internal/forms/request"
 	"slices"
 	"time"
 
@@ -12,9 +12,9 @@ import (
 )
 
 type BugRepository interface {
-	AddBug(addBug request.AddBugReq, mediaNames []string) (httpCode int, err error)
-	FetchAllBugs(t string) (httpCode int, err error, bugs []database.BugModel)
-	UpdateBug(updateBug request.UpdateBugReq) (httpCode int, err error)
+	RegisterBug(regBugFrom request.RegisterBugForm) (int, error)
+	GetBugs(typeBug string) (int, []database.BugModel, error)
+	UpdateBug(updBugForm request.UpdateBugForm) (int, error)
 }
 
 type BugRepositoryImpl struct {
@@ -25,26 +25,26 @@ func NewBugRepositoryImpl(db *gorm.DB) BugRepository {
 	return &BugRepositoryImpl{DB: db}
 }
 
-func (b BugRepositoryImpl) UpdateBug(updateBugReq request.UpdateBugReq) (httpCode int, err error) {
-	var updateBug database.BugModel
-	b.DB.Where("id = ?", updateBugReq.BugID).First(&updateBug)
+func (b BugRepositoryImpl) UpdateBug(updBugForm request.UpdateBugForm) (int, error) {
+	updBug := database.BugModel{}
+	b.DB.Where("id = ?", updBugForm.BugID).First(&updBug)
 
 	updatedAt, _ := time.Parse(time.RFC3339, time.Now().String())
 
-	updateBug.Status = updateBugReq.StatusName
-	updateBug.UpdatedAt = updatedAt
-	b.DB.Save(&updateBug)
+	updBug.Status = updBugForm.StatusName
+	updBug.UpdatedAt = updatedAt
+	b.DB.Save(&updBug)
 
-	var ownerAchievement database.UserModel
-	var bugAchievement database.PersonalAchievementModel
-	b.DB.Where("username = ?", updateBugReq.Author).First(&ownerAchievement)
+	ownerAchievement := database.UserModel{}
+	bugAchievement := database.PersonalAchievementModel{}
+	b.DB.Where("username = ?", updBugForm.Author).First(&ownerAchievement)
 	b.DB.Where("key = ?", "bug").First(&bugAchievement)
 
 	if !slices.Contains(bugAchievement.OwnerIds, ownerAchievement.ID) {
 		bugAchievement.OwnerIds = append(bugAchievement.OwnerIds, ownerAchievement.ID)
 		b.DB.Save(&bugAchievement)
-		var author database.UserModel
-		b.DB.Where("username = ?", updateBugReq.Author).First(&author)
+	 	author := database.UserModel{}
+		b.DB.Where("username = ?", updBugForm.Author).First(&author)
 		b.DB.Create(&database.NotificationModel{
 			OwnerId: author.ID,
 			Message: fmt.Sprintf(
@@ -66,21 +66,21 @@ func (b BugRepositoryImpl) UpdateBug(updateBugReq request.UpdateBugReq) (httpCod
 	return http.StatusOK, nil
 }
 
-func (b BugRepositoryImpl) AddBug(addBug request.AddBugReq, mediaNames []string) (httpCode int, err error) {
-	var allBugs []database.BugModel
+func (b BugRepositoryImpl) RegisterBug(regBugFrom request.RegisterBugForm) (int, error) {
+	allBugs := make([]database.BugModel, 0)
 	b.DB.Find(&allBugs)
 
-	var author database.UserModel
-	b.DB.Where("username = ?", addBug.Author).First(&author)
+	author := database.UserModel{}
+	b.DB.Where("username = ?", regBugFrom.Author).First(&author)
 
 	createdAt, _ := time.Parse(time.RFC3339, time.Now().String())
 	newBug := database.BugModel{
-		Description: addBug.Description,
-		Additional:  addBug.Additional, //Примечания
-		Expected:    addBug.Expected,   //Ожидаемые действия
-		Author:      addBug.Author,
-		Produce:     addBug.Produce, //Вывод
-		Media:       mediaNames,
+		Description: regBugFrom.Description,
+		Additional:  regBugFrom.Additional, //Примечания
+		Expected:    regBugFrom.Expected,   //Ожидаемые действия
+		Author:      regBugFrom.Author,
+		Produce:     regBugFrom.Produce, //Вывод
+		Media:       regBugFrom.MediaNames,
 		CreatedAt:   createdAt,
 	}
 	b.DB.Create(&newBug)
@@ -92,15 +92,17 @@ func (b BugRepositoryImpl) AddBug(addBug request.AddBugReq, mediaNames []string)
 			author.Username),
 	})
 
-	return http.StatusOK, err
+	return http.StatusOK, nil
 }
 
-func (b BugRepositoryImpl) FetchAllBugs(t string) (httpCode int, err error, bugs []database.BugModel) {
-	switch t {
+func (b BugRepositoryImpl) GetBugs(typeBug string) (int, []database.BugModel, error) {
+	bugModels := make([]database.BugModel, 0)
+
+	switch typeBug {
 	case "":
-		b.DB.Where("status = ?", t).Find(&bugs)
+		b.DB.Where("status = ?", typeBug).Find(&bugModels)
 	default:
-		b.DB.Find(&bugs)
+		b.DB.Find(&bugModels)
 	}
-	return http.StatusOK, nil, bugs
+	return http.StatusOK, bugModels, nil
 }

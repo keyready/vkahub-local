@@ -3,8 +3,8 @@ package repositories
 import (
 	"fmt"
 	"net/http"
-	"server/internal/dto/request"
 	"server/internal/database"
+	"server/internal/forms/request"
 	"slices"
 	"time"
 
@@ -12,8 +12,8 @@ import (
 )
 
 type FeedbackRepository interface {
-	AddFeed(addFeed request.AddFeedReq) (httpCode int, err error)
-	FetchAllFeed() (httpCode int, err error, feeds []database.FeedbackModel)
+	AddFeedback(addFeedbackForm request.AddFeedbackForm) (int, error)
+	GetFeedbacks() (int, []database.FeedbackModel, error)
 }
 
 type FeedbackRepositoryImpl struct {
@@ -24,14 +24,14 @@ func NewFeedbackImpl(db *gorm.DB) FeedbackRepository {
 	return &FeedbackRepositoryImpl{DB: db}
 }
 
-func (f FeedbackRepositoryImpl) AddFeed(addFeed request.AddFeedReq) (httpCode int, err error) {
-	var owner database.UserModel
-	f.DB.Where("username = ?", addFeed.Author).First(&owner)
+func (f FeedbackRepositoryImpl) AddFeedback(addFeedbackForm request.AddFeedbackForm) (int, error) {
+	owner := database.UserModel{}
+	f.DB.Where("username = ?", addFeedbackForm.Author).First(&owner)
 
 	createdAt, _ := time.Parse(time.RFC3339, time.Now().String())
 	newFeed := database.FeedbackModel{
-		Message:   addFeed.Message,
-		Author:    addFeed.Author,
+		Message:   addFeedbackForm.Message,
+		Author:    addFeedbackForm.Author,
 		CreatedAt: createdAt,
 	}
 	f.DB.Create(&newFeed)
@@ -44,7 +44,7 @@ func (f FeedbackRepositoryImpl) AddFeed(addFeed request.AddFeedReq) (httpCode in
 	var achievement database.PersonalAchievementModel
 	var ownerAchievement database.UserModel
 	f.DB.Where("key = ?", "feedback").First(&achievement)
-	f.DB.Where("username = ?", addFeed.Author).First(&ownerAchievement)
+	f.DB.Where("username = ?", addFeedbackForm.Author).First(&ownerAchievement)
 
 	if !slices.Contains(achievement.OwnerIds, ownerAchievement.ID) {
 		achievement.OwnerIds = append(achievement.OwnerIds, ownerAchievement.ID)
@@ -58,7 +58,8 @@ func (f FeedbackRepositoryImpl) AddFeed(addFeed request.AddFeedReq) (httpCode in
 	return http.StatusCreated, nil
 }
 
-func (f FeedbackRepositoryImpl) FetchAllFeed() (httpCode int, err error, feeds []database.FeedbackModel) {
-	f.DB.Find(&feeds)
-	return http.StatusOK, nil, feeds
+func (f FeedbackRepositoryImpl) GetFeedbacks() (int, []database.FeedbackModel, error) {
+	feedbacks := make([]database.FeedbackModel, 0)
+	f.DB.Find(&feedbacks)
+	return http.StatusOK, feedbacks, nil
 }

@@ -2,8 +2,8 @@ package repositories
 
 import (
 	"net/http"
-	"server/internal/dto/request"
 	"server/internal/database"
+	"server/internal/forms/request"
 	"strconv"
 	"strings"
 
@@ -11,8 +11,8 @@ import (
 )
 
 type PositionRepository interface {
-	AddPosition(addPosition request.AddPositionReq) (httpCode int, err error)
-	FetchAllPositions(positionIdsString string) (httpCode int, err error, positions []database.PositionModel)
+	AddPosition(addPositionForm request.AddPositionForm) (int, error)
+	GetPositions(positionIDs string) (int, []database.PositionModel, error)
 }
 
 type PositionRepositoryImpl struct {
@@ -23,29 +23,23 @@ func NewPositionRepImpl(DB *gorm.DB) PositionRepository {
 	return &PositionRepositoryImpl{DB: DB}
 }
 
-func (p *PositionRepositoryImpl) AddPosition(addPosition request.AddPositionReq) (httpCode int, err error) {
+func (p *PositionRepositoryImpl) AddPosition(addPositionForm request.AddPositionForm) (int, error) {
 	if addDdErr := p.DB.Create(
 		&database.PositionModel{
-			Name:   addPosition.Name,
-			Author: addPosition.Author,
+			Name:   addPositionForm.Name,
+			Author: addPositionForm.Author,
 		}).Error; addDdErr != nil {
 		return http.StatusBadRequest, addDdErr
 	}
 
-	// deletedKeys, _ := p.RedisClient.Keys(context.TODO(), "positionsCache:*").Result()
-	// if len(deletedKeys) > 0 {
-	// 	_, err = p.RedisClient.Del(context.TODO(), deletedKeys...).Result()
-	// 	if err != nil {
-	// 		return http.StatusInternalServerError, err
-	// 	}
-	// }
-
 	return http.StatusOK, nil
 }
 
-func (p *PositionRepositoryImpl) FetchAllPositions(positionIdsString string) (httpCode int, err error, positions []database.PositionModel) {
-	if positionIdsString != "" {
-		positionIdsSlice := strings.Split(positionIdsString, ",")
+func (p *PositionRepositoryImpl) GetPositions(positionIDs string) (int, []database.PositionModel, error) {
+	positions := make([]database.PositionModel, 0)
+
+	if positionIDs != "" {
+		positionIdsSlice := strings.Split(positionIDs, ",")
 		var positionIds []int64
 		for _, positionIdStr := range positionIdsSlice {
 			positionId, _ := strconv.ParseInt(positionIdStr, 10, 64)
@@ -57,5 +51,5 @@ func (p *PositionRepositoryImpl) FetchAllPositions(positionIdsString string) (ht
 		p.DB.Find(&positions)
 	}
 
-	return http.StatusOK, nil, positions
+	return http.StatusOK, positions, nil
 }

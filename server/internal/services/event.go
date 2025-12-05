@@ -3,15 +3,16 @@ package services
 import (
 	"server/internal/cloud"
 	"server/internal/database"
-	"server/internal/dto/request"
+	"server/internal/forms/request"
+	"server/internal/forms/response"
 	"server/internal/repositories"
 )
 
 type EventService interface {
-	FetchAllEvents(fetchAllEvents request.FetchAllEventsRequest) (int, error, []database.EventModel)
-	FetchTracksEvent(eventId int64) (int, error, []database.TrackModel)
-	FetchOneEvent(eventId int64) (httpCode int, err error, data *database.EventModel)
-	AddEvent(addEventReq request.AddEventReq) (httpCode int, err error)
+	GetEvents(getEventsForms request.GetEventsForm) (int, []*response.Event, error)
+	GetTracksEvent(eventID int64) (int, []database.TrackModel, error)
+	GetEvent(eventID int64) (int, *response.Event, error)
+	RegisterEvent(registerEventForm request.RegisterEventForm) (int, error)
 }
 
 type EventServiceImpl struct {
@@ -28,22 +29,22 @@ func NewEventServiceImpl(
 		cloud:           cloud,
 	}
 }
-func (e EventServiceImpl) AddEvent(addEventReq request.AddEventReq) (httpCode int, err error) {
-	httpCode, err = e.EventRepository.AddEvent(addEventReq)
+func (e EventServiceImpl) RegisterEvent(registerEventForm request.RegisterEventForm) (int, error) {
+	httpCode, err := e.EventRepository.RegisterEvent(registerEventForm)
 	return httpCode, err
 }
 
-func (e EventServiceImpl) FetchOneEvent(eventId int64) (httpCode int, err error, data *database.EventModel) {
-	httpCode, err, data = e.EventRepository.FetchOneEvent(eventId)
-	return httpCode, err, data
+func (e EventServiceImpl) GetEvent(eventID int64) (int, *response.Event, error) {
+	httpCode, event, err := e.EventRepository.GetEvent(eventID)
+	return httpCode, event, err
 }
 
-func (e EventServiceImpl) FetchTracksEvent(eventId int64) (int, error, []database.TrackModel) {
-	httpCode, err, data := e.EventRepository.FetchTracksEvent(eventId)
-	return httpCode, err, data
+func (e EventServiceImpl) GetTracksEvent(eventID int64) (int, []database.TrackModel, error) {
+	httpCode, tracks, err := e.EventRepository.GetTracksEvent(eventID)
+	return httpCode, tracks, err
 }
 
-func (e EventServiceImpl) FetchAllEvents(fetchAllEvents request.FetchAllEventsRequest) (int, error, []database.EventModel) {
-	httpCode, err, data := e.EventRepository.FetchAllEvents(fetchAllEvents)
-	return httpCode, err, data
+func (e EventServiceImpl) GetEvents(getEventsForms request.GetEventsForm) (int, []*response.Event, error) {
+	httpCode, events, err := e.EventRepository.GetEvents(getEventsForms)
+	return httpCode, events, err
 }

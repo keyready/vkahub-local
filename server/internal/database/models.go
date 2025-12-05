@@ -39,14 +39,14 @@ type BugModel struct {
 }
 
 type EventModel struct {
-	ID                   int64         `gorm:"primaryKey" json:"id"`
-	Type                 string        `gorm:"not null;index'" json:"type"`
-	Title                string        `gorm:"unique;not null" json:"title"`
-	ShortDescription     string        `json:"shortDescription"`
-	Description          string        `gorm:"unique;not null" json:"description"`
-	Image                string        `json:"image"`
-	ParticipantsTeamsIds pq.Int64Array `gorm:"type:integer[]" json:"participantsTeamsIds"`
-	TracksId             pq.Int64Array `gorm:"type:integer[]" json:"trackId"`
+	ID                   int64          `gorm:"primaryKey" json:"id"`
+	Type                 string         `gorm:"not null;index'" json:"type"`
+	Title                string         `gorm:"unique;not null" json:"title"`
+	ShortDescription     string         `json:"shortDescription"`
+	Description          string         `gorm:"unique;not null" json:"description"`
+	Image                datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"image"`
+	ParticipantsTeamsIds pq.Int64Array  `gorm:"type:integer[]" json:"participantsTeamsIds"`
+	TracksId             pq.Int64Array  `gorm:"type:integer[]" json:"trackId"`
 
 	StartDate     time.Time `json:"startDate"`
 	FinishDate    time.Time `json:"finishDate"`
@@ -125,7 +125,7 @@ type TeamModel struct {
 	Title           string         `gorm:"unique;not null;index" json:"title"`
 	Description     string         `gorm:"not null" json:"description"`
 	CaptainId       int64          `gorm:"unique; not null" json:"captain_id"`
-	Image           string         `json:"image"`
+	Image           datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"image"`
 	MembersId       pq.Int64Array  `gorm:"type:integer[]" json:"members"`
 	WantedPositions pq.StringArray `gorm:"type:varchar[]" json:"wantedPositions"`
 	EventLocation   string         `gorm:"default:'г. Санкт-Петербург'" json:"eventLocation"`
@@ -148,7 +148,7 @@ type UserModel struct {
 
 	Recovery datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"recovery"`
 
-	Avatar string `json:"avatar"`
+	Avatar datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"avatar"`
 
 	Firstname  string `json:"firstname"`
 	Middlename string `json:"middlename"`
@@ -178,7 +178,7 @@ type UserModel struct {
 
 	Portfolio datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"-"`
 
-	Online     bool      `json:"online"`
+	Online     bool      `gorm:"default:false" json:"online"`
 	LastOnline time.Time `json:"lastOnline"`
 }
 

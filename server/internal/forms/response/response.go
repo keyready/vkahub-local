@@ -7,7 +7,7 @@ import (
 	"github.com/lib/pq"
 )
 
-type FetchProposalEntityResponse struct {
+type Proposal struct {
 	ID        int64  `json:"id"`
 	Type      string `json:"type"`
 	TeamId    int64  `json:"teamId"`
@@ -18,7 +18,7 @@ type FetchProposalEntityResponse struct {
 	CreatedAt string `json:"createdAt"`
 }
 
-type FetchAllAchievementResponse struct {
+type Achievement struct {
 	Id int64 `json:"id"`
 
 	TeamId int64 `json:"teamId"`
@@ -32,7 +32,7 @@ type FetchAllAchievementResponse struct {
 	Result string `json:"result"`
 }
 
-type FetchPersonalAchievementResponse struct {
+type PersonalAchievement struct {
 	ID          int64   `json:"id"`
 	Title       string  `json:"title"`
 	Description string  `json:"description"`
@@ -51,9 +51,10 @@ type ActualInfo struct {
 type MessageAvatar struct {
 	Username string `json:"username"`
 	Avatar   string `json:"avatar"`
+	Hash     string `json:"hash"`
 }
 
-type FetchAllMessagesResponse struct {
+type Message struct {
 	ID          int64         `json:"id"`
 	Author      MessageAvatar `json:"author"`
 	Message     string        `json:"message"`
@@ -64,14 +65,15 @@ type FetchAllMessagesResponse struct {
 	DeletedAt   time.Time     `json:"deletedAt"`
 }
 
-type FetchAllMembers struct {
-	ID        int64          `json:"id"`
-	Username  string         `json:"username"`
-	TeamId    int64          `json:"teamId"`
-	Firstname string         `json:"firstname"`
-	Lastname  string         `json:"lastname"`
-	Skills    pq.StringArray `gorm:"type:varchar[]" json:"skills"`
-	Positions pq.StringArray `gorm:"type:varchar[]" json:"positions"`
+type Member struct {
+	ID        int64             `json:"id"`
+	Username  string            `json:"username"`
+	TeamId    int64             `json:"teamId"`
+	Firstname string            `json:"firstname"`
+	Lastname  string            `json:"lastname"`
+	Avatar    database.ImageObj `json:"avatar"`
+	Skills    pq.StringArray    `json:"skills"`
+	Positions pq.StringArray    `json:"positions"`
 }
 
 type ProfileData struct {
@@ -81,38 +83,55 @@ type ProfileData struct {
 	Firstname   string                   `json:"firstname"`
 	Lastname    string                   `json:"lastname"`
 	Description string                   `json:"description"`
-	Avatar      string                   `json:"avatar"`
-	Skills      pq.StringArray           `gorm:"type:varchar[]" json:"skills"`
-	Positions   pq.StringArray           `gorm:"type:varchar[]" json:"positions"`
+	Avatar      database.ImageObj        `json:"avatar"`
+	Skills      pq.StringArray           `json:"skills"`
+	Positions   pq.StringArray           `json:"positions"`
 	CreatedAt   time.Time                `json:"created_at"`
 	Portfolio   []database.PortfolioFile `json:"portfolio"`
 	Settings    string                   `json:"settings"`
 }
 
-type FetchAllTeamsByParams struct {
-	ID              int64          `json:"id"`
-	Title           string         `json:"title"`
-	Description     string         `json:"description"`
-	Image           string         `json:"image"`
-	CaptainId       int64          `gorm:"unique; not null" json:"captain_id"`
-	WantedPositions pq.StringArray `gorm:"type:varchar[]" json:"wantedPositions"`
-	EventLocation   string         `gorm:"default:'г. Санкт-Петербург'" json:"eventLocation"`
-	MembersId       pq.Int64Array  `gorm:"type:integer[]" json:"members"`
+type Team struct {
+	ID              int64             `json:"id"`
+	Title           string            `json:"title"`
+	Description     string            `json:"description"`
+	Image           database.ImageObj `json:"image"`
+	CaptainId       int64             `json:"captain_id"`
+	WantedPositions pq.StringArray    `json:"wantedPositions"`
+	EventLocation   string            `json:"eventLocation"`
+	MembersId       pq.Int64Array     `json:"members"`
+}
+
+type Event struct {
+	ID                   int64             `json:"id"`
+	Type                 string            `json:"type"`
+	Title                string            `json:"title"`
+	ShortDescription     string            `json:"shortDescription"`
+	Description          string            `json:"description"`
+	Image                database.ImageObj `json:"image"`
+	ParticipantsTeamsIds pq.Int64Array     `json:"participantsTeamsIds"`
+	TracksId             pq.Int64Array     `json:"trackId"`
+
+	StartDate     time.Time `json:"startDate"`
+	FinishDate    time.Time `json:"finishDate"`
+	RegisterUntil time.Time `json:"registerUntil"`
+
+	Sponsors pq.StringArray `json:"sponsors"`
 }
 
 type UserData struct {
-	Avatar           string                   `json:"avatar"`
+	ID               int64                    `json:"id"`
 	CreatedAt        time.Time                `json:"createdAt"`
 	Description      string                   `json:"description"`
 	Firstname        string                   `json:"firstname"`
 	Middlename       string                   `json:"middlename"`
 	Lastname         string                   `json:"lastname"`
 	GroupNumber      string                   `json:"group_number"`
-	ID               int64                    `json:"id"`
-	Positions        pq.StringArray           `gorm:"type:varchar[]" json:"positions"`
+	Avatar           database.ImageObj        `json:"avatar"`
+	Positions        pq.StringArray           `json:"positions"`
 	Rank             string                   `json:"rank"`
-	Roles            pq.StringArray           `gorm:"type:varchar[]" json:"roles"`
-	Skills           pq.StringArray           `gorm:"type:varchar[]" json:"skills"`
+	Roles            pq.StringArray           `json:"roles"`
+	Skills           pq.StringArray           `json:"skills"`
 	TeamId           int64                    `json:"teamId"`
 	Username         string                   `json:"username"`
 	Portfolio        []database.PortfolioFile `json:"portfolio"`

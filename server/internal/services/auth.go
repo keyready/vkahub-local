@@ -3,19 +3,19 @@ package services
 import (
 	"server/internal/authorizer"
 	"server/internal/database"
-	"server/internal/dto/request"
+	"server/internal/forms/request"
 	"server/internal/repositories"
 )
 
 type AuthService interface {
-	SignUp(singUp request.SignUpRequest, avatarName string) (httpCode int, err error)
-	Login(login request.LoginRequest) (httpCode int, err error)
-	RefreshToken(refreshToken string) (data authorizer.TokensResponse, err error)
-	Logout(username string) (httpCode int, err error)
-	GetRecoveryQuestions() (httpCode int, questions []database.RecoveryQuestionModel, err error)
-	GetPersonalQuestion(getPersonalQuestionForm request.GetPersonalQuestionForm) (httpCode int, err error, question string)
-	ApproveRecovery(approveRecoveryForm request.ApproveRecoveryForm) (httpCode int, err error)
-	ChangePassword(recoveryPasswordForm request.RecoveryPasswordForm) (httpCode int, err error)
+	SignUp(singUpForm request.SignUpForm) (int, error)
+	Login(loginForm request.LoginForm) (int, error)
+	RefreshToken(refreshToken string) (*authorizer.TokensResponse, error)
+	Logout(username string) (int, error)
+	GetRecoveryQuestions() (int, []database.RecoveryQuestionModel, error)
+	GetPersonalQuestion(getPersonalQuestionForm request.GetPersonalQuestionForm) (int, string, error)
+	ApproveRecovery(approveRecoveryForm request.ApproveRecoveryForm) (int, error)
+	ChangePassword(recoveryPasswordForm request.RecoveryPasswordForm) (int, error)
 }
 
 type AuthServiceImpl struct {
@@ -28,42 +28,42 @@ func NewAuthServiceImpl(authRepository repositories.AuthRepository) AuthService 
 	}
 }
 
-func (a AuthServiceImpl) ChangePassword(recoveryPasswordForm request.RecoveryPasswordForm) (httpCode int, err error) {
-	httpCode, err = a.AuthRepository.ChangePassword(recoveryPasswordForm)
+func (a AuthServiceImpl) ChangePassword(recoveryPasswordForm request.RecoveryPasswordForm) (int, error) {
+	httpCode, err := a.AuthRepository.ChangePassword(recoveryPasswordForm)
 	return httpCode, err
 }
 
-func (a AuthServiceImpl) ApproveRecovery(approveRecovery request.ApproveRecoveryForm) (httpCode int, err error) {
-	httpCode, err = a.AuthRepository.ApproveRecovery(approveRecovery)
+func (a AuthServiceImpl) ApproveRecovery(approveRecovery request.ApproveRecoveryForm) (int, error) {
+	httpCode, err := a.AuthRepository.ApproveRecovery(approveRecovery)
 	return httpCode, err
 }
 
-func (a AuthServiceImpl) GetPersonalQuestion(getPersonalQuestionFormForm request.GetPersonalQuestionForm) (httpCode int, err error, question string) {
-	httpCode, err, question = a.AuthRepository.GetPersonalQuestion(getPersonalQuestionFormForm)
-	return httpCode, err, question
+func (a AuthServiceImpl) GetPersonalQuestion(getPersonalQuestionFormForm request.GetPersonalQuestionForm) (int, string, error) {
+	httpCode, err, question := a.AuthRepository.GetPersonalQuestion(getPersonalQuestionFormForm)
+	return httpCode, question, err
 }
 
-func (a AuthServiceImpl) GetRecoveryQuestions() (httpCode int, questions []database.RecoveryQuestionModel, err error) {
-	httpCode, questions, err = a.AuthRepository.GetRecoveryQuestions()
+func (a AuthServiceImpl) GetRecoveryQuestions() (int, []database.RecoveryQuestionModel, error) {
+	httpCode, questions, err := a.AuthRepository.GetRecoveryQuestions()
 	return httpCode, questions, err
 }
 
-func (a AuthServiceImpl) SignUp(signUp request.SignUpRequest, avatarName string) (httpCode int, err error) {
-	httpCode, err = a.AuthRepository.SignUp(signUp, avatarName)
+func (a AuthServiceImpl) SignUp(signUpForm request.SignUpForm) (int, error) {
+	httpCode, err := a.AuthRepository.SignUp(signUpForm)
 	return httpCode, err
 }
 
-func (a AuthServiceImpl) Login(login request.LoginRequest) (httpCode int, err error) {
-	httpCode, err = a.AuthRepository.Login(login)
+func (a AuthServiceImpl) Login(loginForm request.LoginForm) (int, error) {
+	httpCode, err := a.AuthRepository.Login(loginForm)
 	return httpCode, err
 }
 
-func (a AuthServiceImpl) RefreshToken(refreshToken string) (authorizer.TokensResponse, error) {
+func (a AuthServiceImpl) RefreshToken(refreshToken string) (*authorizer.TokensResponse, error) {
 	tokens, err := a.AuthRepository.RefreshToken(refreshToken)
 	return tokens, err
 }
 
-func (a AuthServiceImpl) Logout(username string) (httpCode int, err error) {
-	httpCode, err = a.AuthRepository.Logout(username)
+func (a AuthServiceImpl) Logout(username string) (int, error) {
+	httpCode, err := a.AuthRepository.Logout(username)
 	return httpCode, err
 }

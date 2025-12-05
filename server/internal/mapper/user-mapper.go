@@ -1,26 +1,49 @@
 package mapper
 
 import (
-	"encoding/json"
 	"server/internal/database"
-	"server/internal/dto/response"
+	"server/internal/forms/response"
+	"server/internal/utils"
 )
 
-func UserModelToUserData(userModel database.UserModel) (response.UserData, error) {
-	portfolio := []database.PortfolioFile{}
+func UserModelToMember(userModel database.UserModel) (*response.Member, error) {
+	avatarObj := database.ImageObj{}
+	utils.FromJSON(userModel.Avatar, &avatarObj)
+
+	member := &response.Member{
+		ID:        userModel.ID,
+		Username:  userModel.Username,
+		TeamId:    userModel.TeamId,
+		Firstname: userModel.Firstname,
+		Lastname:  userModel.Lastname,
+		Avatar:    avatarObj,
+		Skills:    userModel.Skills,
+		Positions: userModel.Positions,
+	}
+
+	return member, nil
+}
+
+func UserModelToUserData(userModel database.UserModel) (*response.UserData, error) {
+	portfolio := make([]database.PortfolioFile, 0)
 	recovery := database.RecoveryQuestion{}
+	avatarObj := database.ImageObj{}
 
-	if decodeErr := json.Unmarshal(userModel.Portfolio, &portfolio); decodeErr != nil {
-		return response.UserData{}, decodeErr
+	if decodeErr := utils.FromJSON(userModel.Portfolio, &portfolio); decodeErr != nil {
+		return nil, decodeErr
 	}
 
-	if decodeErr := json.Unmarshal(userModel.Recovery, &recovery); decodeErr != nil {
-		return response.UserData{}, decodeErr
+	if decodeErr := utils.FromJSON(userModel.Recovery, &recovery); decodeErr != nil {
+		return nil, decodeErr
 	}
 
-	userData := response.UserData{
+	if decodeErr := utils.FromJSON(userModel.Avatar, &avatarObj); decodeErr != nil {
+		return nil, decodeErr
+	}
+
+	userData := &response.UserData{
 		ID:               userModel.ID,
-		Avatar:           userModel.Avatar,
+		Avatar:           avatarObj,
 		CreatedAt:        userModel.CreatedAt,
 		Description:      userModel.Description,
 		Firstname:        userModel.Firstname,
@@ -40,21 +63,26 @@ func UserModelToUserData(userModel database.UserModel) (response.UserData, error
 	return userData, nil
 }
 
-func UserModelToUserProfile(userModel database.UserModel) (response.ProfileData, error) {
-	portfolio := []database.PortfolioFile{}
+func UserModelToUserProfile(userModel database.UserModel) (*response.ProfileData, error) {
+	portfolio := make([]database.PortfolioFile, 0)
+	avatarObj := database.ImageObj{}
 
-	if decodeErr := json.Unmarshal(userModel.Portfolio, &portfolio); decodeErr != nil {
-		return response.ProfileData{}, decodeErr
+	if decodeErr := utils.FromJSON(userModel.Portfolio, &portfolio); decodeErr != nil {
+		return nil, decodeErr
 	}
 
-	profileData := response.ProfileData{
+	if decodeErr := utils.FromJSON(userModel.Avatar, &avatarObj); decodeErr != nil {
+		return nil, decodeErr
+	}
+
+	profileData := &response.ProfileData{
 		ID:          userModel.ID,
 		Username:    userModel.Username,
 		TeamId:      userModel.TeamId,
 		Firstname:   userModel.Firstname,
 		Lastname:    userModel.Lastname,
 		Description: userModel.Description,
-		Avatar:      userModel.Avatar,
+		Avatar:      avatarObj,
 		Skills:      userModel.Skills,
 		Positions:   userModel.Positions,
 		CreatedAt:   userModel.CreatedAt,

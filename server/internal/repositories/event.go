@@ -4,18 +4,22 @@ import (
 	"fmt"
 	"net/http"
 	"server/internal/database"
-	"server/internal/dto/request"
+	"server/internal/forms/request"
+	"server/internal/forms/response"
+	"server/internal/mapper"
+	"server/internal/utils"
 	"strings"
 	"time"
 
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
 type EventRepository interface {
-	FetchAllEvents(fetchAllEvents request.FetchAllEventsRequest) (httpCode int, err error, events []database.EventModel)
-	FetchTracksEvent(eventId int64) (httpCode int, err error, tracks []database.TrackModel)
-	FetchOneEvent(eventId int64) (httpCode int, err error, data *database.EventModel)
-	AddEvent(addEventReq request.AddEventReq) (httpCode int, err error)
+	GetEvents(getEventsForms request.GetEventsForm) (int, []*response.Event, error)
+	GetTracksEvent(eventID int64) (int, []database.TrackModel, error)
+	GetEvent(eventID int64) (int, *response.Event, error)
+	RegisterEvent(registerEventForm request.RegisterEventForm) (int, error)
 }
 
 type EventRepositoryImpl struct {
@@ -26,45 +30,49 @@ func NewEventRepositoryImpl(Db *gorm.DB) EventRepository {
 	return &EventRepositoryImpl{Db: Db}
 }
 
-func (e *EventRepositoryImpl) AddEvent(addEventReq request.AddEventReq) (httpCode int, err error) {
-	sponsors := strings.Split(addEventReq.Sponsors, ",")
+func (e *EventRepositoryImpl) RegisterEvent(registerEventForm request.RegisterEventForm) (int, error) {
+	sponsors := strings.Split(registerEventForm.Sponsors, ",")
+
+	imageObj := database.ImageObj{
+		Image: registerEventForm.Image,
+		Hash:  registerEventForm.Hash,
+	}
+	jsonDataObj := utils.ToJSON(imageObj)
 
 	newEvent := database.EventModel{
-		Type:             addEventReq.Type,
-		Title:            addEventReq.Title,
-		Description:      addEventReq.Description,
-		ShortDescription: addEventReq.ShortDescription,
-		StartDate:        addEventReq.StartDate,
-		FinishDate:       addEventReq.FinishDate,
-		Image:            addEventReq.Image.Filename,
-		RegisterUntil:    addEventReq.RegisterUntil,
+		Type:             registerEventForm.Type,
+		Title:            registerEventForm.Title,
+		Description:      registerEventForm.Description,
+		ShortDescription: registerEventForm.ShortDescription,
+		StartDate:        registerEventForm.StartDate,
+		FinishDate:       registerEventForm.FinishDate,
+		Image:            datatypes.JSON(jsonDataObj),
+		RegisterUntil:    registerEventForm.RegisterUntil,
 		Sponsors:         sponsors,
 	}
 
 	dbErr := e.Db.Create(&newEvent).Error
 	if dbErr != nil {
-		return http.StatusBadRequest, fmt.Errorf("DB create event error: %v", dbErr)
+		return http.StatusBadRequest, fmt.Errorf("failed to register event: %v", dbErr)
 	}
 
-	var users []database.UserModel
-	e.Db.Where("is_profile_confirmed = ?", true).
-		Where("is_mail_confirmed = ?", true).
-		Find(&users)
+	users := make([]database.UserModel, 0)
+	e.Db.Where("is_profile_confirmed = ?", true).Find(&users)
 
 	go func() {
 		for _, user := range users {
 			e.Db.Create(&database.NotificationModel{
 				OwnerId: user.ID,
-				Message: fmt.Sprintf("Анонсированно новое событие %s", addEventReq.Title),
+				Message: fmt.Sprintf("Анонсированно новое событие %s", registerEventForm.Title),
 			})
 			e.Db.Create(&database.NotificationModel{
 				OwnerId: user.ID,
 				Message: fmt.Sprintf(
 					"Уважаемый %s! Анонсировано новое событие %s. \n Даты проведения: с %s по %s \n Успейте пройти регистрацию и принять участие!",
 					user.Username,
-					addEventReq.Title,
-					addEventReq.StartDate.Format("2006-01-02"),
-					addEventReq.FinishDate.Format("2006-01-02"),
+					registerEventForm.Title,
+					registerEventForm.StartDate.Format("2006-01-02"),
+					registerEventForm.FinishDate.Format("2006-01-02"),
 				),
 			})
 		}
@@ -72,55 +80,68 @@ func (e *EventRepositoryImpl) AddEvent(addEventReq request.AddEventReq) (httpCod
 	return http.StatusOK, nil
 }
 
-func (e *EventRepositoryImpl) FetchOneEvent(eventId int64) (httpCode int, err error, data *database.EventModel) {
-	var event database.EventModel
-	if err = e.Db.First(&event, eventId).Error; err != nil {
-		return http.StatusNotFound, err, nil
+func (e *EventRepositoryImpl) GetEvent(eventID int64) (int, *response.Event, error) {
+	event := database.EventModel{}
+	if err := e.Db.First(&event, eventID).Error; err != nil {
+		return http.StatusNotFound, nil, err
 	}
-	return http.StatusOK, nil, &event
+
+	eventResponse, _ := mapper.EventModelToEventResponse(event)
+
+	return http.StatusOK, eventResponse, nil
 }
 
-func (e *EventRepositoryImpl) FetchTracksEvent(eventId int64) (httpCode int, err error, tracks []database.TrackModel) {
-	var event database.EventModel
-	var eventTracks []database.TrackModel
+func (e *EventRepositoryImpl) GetTracksEvent(eventID int64) (int, []database.TrackModel, error) {
+	event := database.EventModel{}
+	eventTracks := make([]database.TrackModel, 0)
 
-	e.Db.Where("id = ?", eventId).First(&event)
+	e.Db.Where("id = ?", eventID).First(&event)
 
 	for _, id := range event.TracksId {
-		var track database.TrackModel
+		track := database.TrackModel{}
 		e.Db.Where("id = ?", id).First(&track)
 		eventTracks = append(eventTracks, track)
 	}
 
-	return http.StatusOK, nil, eventTracks
+	return http.StatusOK, eventTracks, nil
 }
 
-func (e *EventRepositoryImpl) FetchAllEvents(fetchAllEvents request.FetchAllEventsRequest) (httpCode int, err error, events []database.EventModel) {
-	switch fetchAllEvents.Type {
+func (e *EventRepositoryImpl) GetEvents(getEventsForms request.GetEventsForm) (int, []*response.Event, error) {
+	eventModels := make([]database.EventModel, 0)
+	eventsResponse := make([]*response.Event, 0)
+
+	switch getEventsForms.Type {
 	case "all":
-		e.Db.Find(&events)
+		e.Db.Find(&eventModels)
 	case "old":
-		var team database.TeamModel
-		var user database.UserModel
-		e.Db.Where("username = ?", fetchAllEvents.Username).First(&user)
+		var (
+			team database.TeamModel
+			user database.UserModel
+		)
+		e.Db.Where("username = ?", getEventsForms.Username).First(&user)
 		e.Db.First(&team, user.TeamId)
 		currentTime := time.Now().Format(time.RFC3339)
 		e.Db.Where("finish_date < ?", currentTime).
 			Where("? = ANY(participants_teams_ids)", user.TeamId).
-			Find(&events)
+			Find(&eventModels)
 
-		var oldEvents []database.EventModel
-		for _, event := range events {
+		oldEvents := make([]database.EventModel, 0)
+		for _, event := range eventModels {
 			var teamAchievement database.AchievementModel
 			e.Db.Where("type = 'team' AND event_id = ?", event.ID).First(&teamAchievement)
 			if teamAchievement.Result == "" {
 				oldEvents = append(oldEvents, event)
 			}
 		}
-		events = oldEvents
+		eventModels = oldEvents
 	default:
-		e.Db.Where("type = ?", fetchAllEvents.Type).Find(&events)
+		e.Db.Where("type = ?", getEventsForms.Type).Find(&eventModels)
 	}
 
-	return http.StatusOK, nil, events
+	for _, eventModel := range eventModels {
+		eventResponse, _ := mapper.EventModelToEventResponse(eventModel)
+		eventsResponse = append(eventsResponse, eventResponse)
+	}
+
+	return http.StatusOK, eventsResponse, nil
 }

@@ -3,16 +3,16 @@ package repositories
 import (
 	"fmt"
 	"net/http"
-	"server/internal/dto/request"
 	"server/internal/database"
+	"server/internal/forms/request"
 
 	"gorm.io/gorm"
 )
 
 type TrackRepository interface {
-	AddTrack(addTrack request.AddTrackDto) (httpCode int, err error)
-	PartTeamInTrack(partTeamInTrack request.PartTeamInTrackRequest) (httpCode int, err error)
-	FetchOneTrack(fetchOneTrack request.FetchOneTrackReq) (httpCode int, err error, data database.TrackModel)
+	AddTrack(addTrackForm request.AddTrackForm) (int, error)
+	PartTeamInTrack(partTeamInTrackForm request.PartTeamInTrackForm) (int, error)
+	GetTrack(getTrackForm request.GetTrackForm) (int, database.TrackModel, error)
 }
 
 type TrackRepositoryImpl struct {
@@ -23,23 +23,24 @@ func NewTrackRepositoryImpl(db *gorm.DB) TrackRepository {
 	return &TrackRepositoryImpl{Db: db}
 }
 
-func (t *TrackRepositoryImpl) FetchOneTrack(fetchOneTrack request.FetchOneTrackReq) (httpCode int, findTrackErr error, track database.TrackModel) {
-	if findTrackErr = t.Db.First(&track, fetchOneTrack.TrackId).Where("event_id = ?", fetchOneTrack.EventId).Error; findTrackErr != nil {
-		return http.StatusNotFound, findTrackErr, database.TrackModel{ID: 0}
+func (t *TrackRepositoryImpl) GetTrack(getTrackForm request.GetTrackForm) (int, database.TrackModel, error) {
+	track := database.TrackModel{}
+	if err := t.Db.First(&track, getTrackForm.TrackId).Where("event_id = ?", getTrackForm.EventId).Error; err != nil {
+		return http.StatusNotFound, database.TrackModel{}, err
 	}
-	return http.StatusOK, nil, track
+	return http.StatusOK, track, nil
 }
 
-func (t *TrackRepositoryImpl) PartTeamInTrack(pTeamInTrack request.PartTeamInTrackRequest) (httpCode int, err error) {
+func (t *TrackRepositoryImpl) PartTeamInTrack(partTeamInTrackForm request.PartTeamInTrackForm) (int, error) {
 	var track database.TrackModel
 	var event database.EventModel
 
-	if pTeamInTrack.TrackId != 0 {
-		t.Db.Where("id = ?", pTeamInTrack.TrackId).First(&track)
+	if partTeamInTrackForm.TrackId != 0 {
+		t.Db.Where("id = ?", partTeamInTrackForm.TrackId).First(&track)
 		t.Db.Where("id = ?", track.EventId).First(&event)
-		track.ParticipantsTeamsIds = append(track.ParticipantsTeamsIds, pTeamInTrack.TeamId)
+		track.ParticipantsTeamsIds = append(track.ParticipantsTeamsIds, partTeamInTrackForm.TeamId)
 		t.Db.Save(&track)
-		event.ParticipantsTeamsIds = append(event.ParticipantsTeamsIds, pTeamInTrack.TeamId)
+		event.ParticipantsTeamsIds = append(event.ParticipantsTeamsIds, partTeamInTrackForm.TeamId)
 		t.Db.Save(&event)
 		for _, teamId := range event.ParticipantsTeamsIds {
 			var team database.TeamModel
@@ -57,8 +58,8 @@ func (t *TrackRepositoryImpl) PartTeamInTrack(pTeamInTrack request.PartTeamInTra
 			}
 		}
 	} else {
-		t.Db.Where("id = ?", pTeamInTrack.EventId).First(&event)
-		event.ParticipantsTeamsIds = append(event.ParticipantsTeamsIds, pTeamInTrack.TeamId)
+		t.Db.Where("id = ?", partTeamInTrackForm.EventId).First(&event)
+		event.ParticipantsTeamsIds = append(event.ParticipantsTeamsIds, partTeamInTrackForm.TeamId)
 		t.Db.Save(&event)
 		for _, teamId := range event.ParticipantsTeamsIds {
 			var team database.TeamModel
@@ -79,19 +80,19 @@ func (t *TrackRepositoryImpl) PartTeamInTrack(pTeamInTrack request.PartTeamInTra
 	return http.StatusOK, nil
 }
 
-func (t *TrackRepositoryImpl) AddTrack(addTrack request.AddTrackDto) (httpCode int, err error) {
+func (t *TrackRepositoryImpl) AddTrack(addTrackForm request.AddTrackForm) (int, error) {
 	var event database.EventModel
 	newTrack := database.TrackModel{
-		Title:                addTrack.Title,
-		Description:          addTrack.Description,
-		EventId:              addTrack.EventId,
+		Title:                addTrackForm.Title,
+		Description:          addTrackForm.Description,
+		EventId:              addTrackForm.EventId,
 		ParticipantsTeamsIds: []int64{},
 	}
 	if addTrackErr := t.Db.Create(&newTrack).Error; addTrackErr != nil {
 		return http.StatusBadRequest, addTrackErr
 	}
 
-	if findEventErr := t.Db.First(&event, addTrack.EventId).Error; findEventErr != nil {
+	if findEventErr := t.Db.First(&event, addTrackForm.EventId).Error; findEventErr != nil {
 		return http.StatusNotFound, findEventErr
 	}
 	event.TracksId = append(event.TracksId, newTrack.ID)

@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"server/pkg/app"
 	"net/http"
-	"server/internal/dto/request"
+	"server/internal/forms/request"
 	"server/internal/services"
+	"server/pkg/app"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,17 +19,17 @@ func NewPositionController(positionService services.PositionService) *PositionCo
 
 func (p *PositionController) AddPosition(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var addPosition request.AddPositionReq
+	jsonForm := request.AddPositionForm{}
 
-	bindErr := ctx.ShouldBindJSON(&addPosition)
+	bindErr := ctx.ShouldBindJSON(&jsonForm)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	addPosition.Author = ctx.GetString("username")
+	jsonForm.Author = ctx.GetString("username")
 
-	httpCode, serviceErr := p.positionService.AddPosition(addPosition)
+	httpCode, serviceErr := p.positionService.AddPosition(jsonForm)
 	if serviceErr != nil {
 		appGin.ErrorResponse(httpCode, serviceErr)
 		return
@@ -38,11 +38,11 @@ func (p *PositionController) AddPosition(ctx *gin.Context) {
 	appGin.SuccessResponse(http.StatusCreated, gin.H{})
 }
 
-func (p *PositionController) FetchAllPositions(ctx *gin.Context) {
+func (p *PositionController) GetPositions(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
 	idsString := ctx.Query("positionIds")
 
-	httpCode, err, positions := p.positionService.FetchAllPositions(idsString)
+	httpCode, positions, err := p.positionService.GetPositions(idsString)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return

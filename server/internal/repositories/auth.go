@@ -7,22 +7,23 @@ import (
 	"net/http"
 	"server/internal/authorizer"
 	"server/internal/database"
-	"server/internal/dto/request"
+	"server/internal/forms/request"
 	"server/internal/utils"
 	"strings"
 
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
 type AuthRepository interface {
-	SignUp(signUp request.SignUpRequest, avatarName string) (httpCode int, err error)
-	Login(login request.LoginRequest) (httpCode int, err error)
-	RefreshToken(refreshToken string) (tokens authorizer.TokensResponse, err error)
-	Logout(username string) (httpCode int, err error)
-	GetRecoveryQuestions() (httpCode int, questions []database.RecoveryQuestionModel, err error)
-	GetPersonalQuestion(getPersonalQuestionForm request.GetPersonalQuestionForm) (httpCode int, err error, question string)
-	ApproveRecovery(approveRecoveryForm request.ApproveRecoveryForm) (httpCode int, err error)
-	ChangePassword(recoveryPasswordForm request.RecoveryPasswordForm) (httpCode int, err error)
+	SignUp(signUpForm request.SignUpForm) (int, error)
+	Login(loginForm request.LoginForm) (int, error)
+	RefreshToken(refreshToken string) (*authorizer.TokensResponse, error)
+	Logout(username string) (int, error)
+	GetRecoveryQuestions() (int, []database.RecoveryQuestionModel, error)
+	GetPersonalQuestion(getPersonalQuestionForm request.GetPersonalQuestionForm) (int, error, string)
+	ApproveRecovery(approveRecoveryForm request.ApproveRecoveryForm) (int, error)
+	ChangePassword(recoveryPasswordForm request.RecoveryPasswordForm) (int, error)
 }
 
 type AuthRepositoryImpl struct {
@@ -40,9 +41,9 @@ func NewAuthRepositoryImpl(
 	}
 }
 
-func (a *AuthRepositoryImpl) ChangePassword(recoveryPasswordForm request.RecoveryPasswordForm) (httpCode int, err error) {
+func (a *AuthRepositoryImpl) ChangePassword(recoveryPasswordForm request.RecoveryPasswordForm) (int, error) {
 	userRecovery := database.UserModel{}
-	if err = a.Db.Where("username = ?", recoveryPasswordForm.Username).First(&userRecovery).Error; err != nil {
+	if err := a.Db.Where("username = ?", recoveryPasswordForm.Username).First(&userRecovery).Error; err != nil {
 		return http.StatusInternalServerError, fmt.Errorf("failed to recovery password: %v", err)
 	}
 
@@ -88,11 +89,11 @@ func (a *AuthRepositoryImpl) ApproveRecovery(
 
 func (a *AuthRepositoryImpl) GetPersonalQuestion(
 	getPersonalQuestionForm request.GetPersonalQuestionForm,
-) (httpCode int, err error, recoveryQuestion string) {
+) (int, error, string) {
 	userRecovery := database.UserModel{}
 	recovery := database.RecoveryQuestion{}
 
-	if err = a.Db.Where("username = ?", getPersonalQuestionForm.Username).First(&userRecovery).Error; err != nil {
+	if err := a.Db.Where("username = ?", getPersonalQuestionForm.Username).First(&userRecovery).Error; err != nil {
 		return http.StatusNotFound,
 			fmt.Errorf(
 				"user %s not found in system", getPersonalQuestionForm.Username,
@@ -116,37 +117,44 @@ func (a *AuthRepositoryImpl) GetPersonalQuestion(
 	return http.StatusOK, nil, recovery.Question
 }
 
-func (a *AuthRepositoryImpl) GetRecoveryQuestions() (httpCode int, questions []database.RecoveryQuestionModel, err error) {
-	if err = a.Db.Find(&questions).Error; err != nil {
+func (a *AuthRepositoryImpl) GetRecoveryQuestions() (int, []database.RecoveryQuestionModel, error) {
+	questions := make([]database.RecoveryQuestionModel, 0)
+	if err := a.Db.Find(&questions).Error; err != nil {
 		return http.StatusInternalServerError, nil, err
 	}
 	return http.StatusOK, questions, nil
 }
 
-func (a *AuthRepositoryImpl) SignUp(signUp request.SignUpRequest, avatarName string) (httpCode int, err error) {
-	var userExist database.UserModel
-	if err = a.Db.Where("username = ?", signUp.Username).First(&userExist).Error; err == nil {
+func (a *AuthRepositoryImpl) SignUp(signUpForm request.SignUpForm) (int, error) {
+	userExist := database.UserModel{}
+	if err := a.Db.Where("username = ?", signUpForm.Username).First(&userExist).Error; err == nil {
 		return http.StatusBadRequest, errors.New("user with this username already exists")
 	}
 
-	hashPassword, _ := utils.GenerateHash(signUp.Password)
+	hashPassword, _ := utils.GenerateHash(signUpForm.Password)
+
+	avatarObj := database.ImageObj{
+		Image: signUpForm.Avatar,
+		Hash:  signUpForm.Hash,
+	}
+	avatarJsonObj := utils.ToJSON(avatarObj)
 
 	a.Db.Create(&database.UserModel{
-		Username: signUp.Username,
+		Username: signUpForm.Username,
 		Password: hashPassword,
-		Avatar:   avatarName,
+		Avatar:   datatypes.JSON(avatarJsonObj),
 	})
 
 	return http.StatusCreated, nil
 }
 
-func (a *AuthRepositoryImpl) Login(login request.LoginRequest) (httpCode int, err error) {
-	var loginUser database.UserModel
-	if err = a.Db.Where("username = ?", login.Username).First(&loginUser).Error; err != nil {
+func (a *AuthRepositoryImpl) Login(loginForm request.LoginForm) (int, error) {
+	loginUser := database.UserModel{}
+	if err := a.Db.Where("username = ?", loginForm.Username).First(&loginUser).Error; err != nil {
 		return http.StatusNotFound, errors.New("User not found")
 	}
 
-	verifyPasswd := utils.CompareHash(loginUser.Password, login.Password)
+	verifyPasswd := utils.CompareHash(loginUser.Password, loginForm.Password)
 	if !verifyPasswd {
 		return http.StatusBadRequest, errors.New("Invalid password")
 	}
@@ -156,19 +164,22 @@ func (a *AuthRepositoryImpl) Login(login request.LoginRequest) (httpCode int, er
 	return http.StatusOK, nil
 }
 
-func (a *AuthRepositoryImpl) RefreshToken(refreshToken string) (tokens authorizer.TokensResponse, err error) {
+func (a *AuthRepositoryImpl) RefreshToken(refreshToken string) (*authorizer.TokensResponse, error) {
 	var tmpUser database.UserModel
 
-	err = a.Db.Where("refresh_token = ?", refreshToken).First(&tmpUser).Error
+	err := a.Db.Where("refresh_token = ?", refreshToken).First(&tmpUser).Error
 	if err != nil {
-		return tokens, err
+		return nil, err
 	}
 
 	payload := authorizer.Payload{
 		Username: tmpUser.Username,
 	}
 
-	tokens = a.jwtService.Authorizer.GenerateTokens(payload)
+	tokens, err := a.jwtService.Authorizer.GenerateTokens(payload)
+	if err != nil {
+		return nil, err
+	}
 
 	tmpUser.RefreshToken = tokens.RefreshToken
 	a.Db.Save(&tmpUser)

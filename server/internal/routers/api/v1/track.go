@@ -13,7 +13,7 @@ func NewTrackRouters(r *gin.Engine, jwtService *authorizer.Authorizer, trc *cont
 	trackController.Use(middleware.AuthMiddleware(jwtService))
 	{
 		trackController.POST("/add", trc.AddTrack)
-		trackController.GET("/track", trc.FetchOneTrack)
+		trackController.GET("/track", trc.GetTrack)
 		trackController.POST("/partTeam", trc.PartTeamInTrack)
 	}
 }

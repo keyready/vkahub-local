@@ -19,7 +19,7 @@ const (
 )
 
 type ReportRepository interface {
-	GenerateReport(eventId int64) (httpCode int, reportName string, err error)
+	GenerateReport(eventId int64) (int, string, error)
 }
 
 type ReportRepositoryImpl struct {
@@ -37,10 +37,10 @@ func NewReportRepositoryImpl(
 	}
 }
 
-func (r ReportRepositoryImpl) GenerateReport(eventId int64) (httpCode int, reportName string, err error) {
+func (r ReportRepositoryImpl) GenerateReport(eventID int64) (int, string, error) {
 	event := database.EventModel{}
 
-	r.DB.First(&event, eventId)
+	r.DB.First(&event, eventID)
 
 	eventSponsors := strings.Join(event.Sponsors, ", ")
 
