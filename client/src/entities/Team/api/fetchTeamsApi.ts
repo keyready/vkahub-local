@@ -31,6 +31,16 @@ const fetchTeamsApi = rtkApi.injectEndpoints({
                     url: `/api/team/teams${filtersString}`,
                 };
             },
+
+            // FIXME remove before production
+            transformResponse: (teams: Team[]) =>
+                teams.map((t) => ({
+                    ...t,
+                    image: {
+                        image: t.image as unknown as string,
+                        hash: 'U39jfh~C4T%2.8XmIoSM00In?vIo4TiI=|w_',
+                    },
+                })),
         }),
         getTeamMembers: build.query<User[], string>({
             query: (teamId) => ({

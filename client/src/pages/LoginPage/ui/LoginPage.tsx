@@ -71,12 +71,6 @@ const LoginPage = memo((props: LoginPageProps) => {
             />
 
             <VStack flexGrow maxW justify="center" gap="24px">
-                <HStack maxW justify="center" align="center">
-                    <Image
-                        width={512}
-                        src={isDark ? '/static/logo.webp' : '/static/logo-light.webp'}
-                    />
-                </HStack>
                 <LoginForm
                     onRecoveryClick={() => setIsRecoveryModalOpened(true)}
                     onRegisterClick={() => setIsRegisterModalOpened(true)}

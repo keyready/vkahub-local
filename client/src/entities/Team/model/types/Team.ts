@@ -1,9 +1,11 @@
+import { ImageObj } from '@/shared/ui/Image';
+
 export interface Team {
     id: string;
 
     title: string;
     description: string;
-    image: string;
+    image: ImageObj;
     newImage?: File;
 
     captain_id: string;

@@ -51,7 +51,7 @@ export const TeamsDisplaySelector = (props: TeamsDisplaySelectorProps) => {
     return (
         <HStack
             className={classNames(classes.TeamsDisplaySelector, {}, [className])}
-            justify="end"
+            justify="start"
             maxW
             gap="12px"
         >

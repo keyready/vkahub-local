@@ -36,7 +36,7 @@ export const PortfolioItem = ({
 
     const handleDownloadClick = useCallback(() => {
         const link = document.createElement('a');
-        link.href = `/minio${file.url}`;
+        link.href = `/minio/${file.url}`;
         link.download = file.name;
 
         document.body.appendChild(link);

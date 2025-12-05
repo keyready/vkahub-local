@@ -1,7 +1,7 @@
 import { Button, cn, Input } from '@nextui-org/react';
 import { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { RiAccountBoxLine, RiLockPasswordLine, RiMoonLine, RiSunLine } from '@remixicon/react';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -10,6 +10,7 @@ import { loginUser } from '../../model/services/authServices/loginUser';
 import { getUserAuthError, getUserIsLoading } from '../../model/selectors/UserSelectors';
 import { getUserDataService } from '../../model/services/profileServices/getUserData';
 import { UserActions } from '../../model/slice/UserSlice';
+import { registrationSchema } from '../../model/types/validationSchemas';
 
 import { classNames } from '@/shared/lib/classNames';
 import { VStack } from '@/shared/ui/Stack';
@@ -17,7 +18,6 @@ import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
 import { RoutePath } from '@/shared/config/routeConfig';
 import { TextButton } from '@/shared/ui/TextButton';
 import { getCurrentTheme, ThemeSwitcherActions } from '@/widgets/ThemeSwitcher';
-import { registrationSchema } from '@/entities/User/model/types/validationSchemas';
 
 interface LoginFormProps {
     className?: string;
@@ -30,6 +30,7 @@ export const LoginForm = (props: LoginFormProps) => {
 
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const isUserLoading = useSelector(getUserIsLoading);
     const userLoginError = useSelector(getUserAuthError);
@@ -67,10 +68,17 @@ export const LoginForm = (props: LoginFormProps) => {
             if (result.meta.requestStatus === 'fulfilled') {
                 await dispatch(getUserDataService());
                 dispatch(UserActions.clearAuthError());
-                navigate(RoutePath.feed);
+
+                let originLocation = '';
+                if (location.state?.from) {
+                    const { pathname, search } = location.state.from;
+                    originLocation = pathname + search;
+                }
+
+                navigate(originLocation || RoutePath.feed);
             }
         },
-        [dispatch, navigate],
+        [dispatch, location.state?.from, navigate],
     );
 
     const handleToggleTheme = useCallback(() => {
@@ -78,12 +86,18 @@ export const LoginForm = (props: LoginFormProps) => {
     }, [dispatch]);
 
     return (
-        <VStack className={classNames('', {}, [className])} maxW align="center" justify="center">
-            <form onSubmit={handleSubmit(handleFormSubmit)} className="w-full">
+        <VStack
+            className={classNames('relative', {}, [className])}
+            maxW
+            align="center"
+            justify="center"
+        >
+            <form onSubmit={handleSubmit(handleFormSubmit)} className="z-30 w-full">
                 <VStack maxW align="center" gap="12px">
-                    <h1 className="text-2xl text-main leading-none">
-                        Для продолжения работы <br /> <span className="font-bold">необходимо</span>{' '}
-                        авторизоваться
+                    <h1 className="mb-10 font-bold text-2xl text-main leading-none">
+                        {location?.state?.from
+                            ? 'Для просмотра контента авторизуйтесь'
+                            : 'Добро пожаловать!'}
                     </h1>
 
                     <Controller

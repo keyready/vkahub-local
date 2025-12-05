@@ -65,6 +65,7 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
 
     const [isEditorMode, setIsEditorMode] = useState<boolean>(false);
     const [avatar, setAvatar] = useState<File>();
+    const [avatarHash, setAvatarHash] = useState<string>('');
 
     const {
         control,
@@ -109,43 +110,33 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
         }
         if (userData?.firstname && !userRoles?.includes(UserRoles.PROFILE_CONFIRMED)) {
             return (
-                <VStack maxW>
-                    <p className="italic text-red-300">
-                        * Ваш профиль находится на верификации. После прохождения этой процедуры,
-                        Вам будут доступны все функции сервиса
-                    </p>
-                    {isEditorMode && (
-                        <p className="italic text-orange-300">
-                            * Если Вы внесете изменения, скорее всего, время ожидания верификации
-                            увеличится
-                        </p>
-                    )}
-                </VStack>
-            );
-        }
-
-        if (!userRoles.includes(UserRoles.MAIL_CONFIRMED)) {
-            return (
                 <p className="italic text-red-300">
-                    * Для доступа ко всем функциям приложения, Вам необходимо подтвердить почту. На
-                    нее было выслано письмо с интрукциями
+                    * Ваш профиль находится на верификации. После прохождения этой процедуры, Вам
+                    будут доступны все функции сервиса
                 </p>
             );
         }
 
         return null;
-    }, [isEditorMode, userData?.firstname, userData?.recoveryQuestion, userRoles]);
+    }, [userData?.firstname, userData?.recoveryQuestion, userRoles]);
 
     const handleChangeProfile = useCallback(
         async (profile: UserProfileFormValues) => {
             await toastDispatch(
-                dispatch(changeUserProfile({ ...profile, newAvatar: avatar, id: userData?.id })),
+                dispatch(
+                    changeUserProfile({
+                        ...profile,
+                        newAvatar: avatar,
+                        avatar: { image: '', hash: avatarHash },
+                        id: userData?.id,
+                    }),
+                ),
             );
 
             await dispatch(getUserDataService());
             setIsEditorMode(false);
         },
-        [avatar, dispatch, userData?.id],
+        [avatar, avatarHash, dispatch, userData?.id],
     );
 
     const handleChangeEditorMode = useCallback(() => {
@@ -227,8 +218,9 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                     {isEditorMode ? (
                         <ImageUpload
                             className="w-[200px] h-[200px]"
-                            initialImage={`/minio${userData?.avatar}`}
+                            initialImage={`/minio/${userData?.avatar}`}
                             onChange={setAvatar}
+                            onImageHashGenerated={setAvatarHash}
                         />
                     ) : (
                         <Image
@@ -236,7 +228,7 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                             width={200}
                             height={200}
                             classNames={{ wrapper: classes.profileAvatar }}
-                            src={`/minio${userData?.avatar}`}
+                            src={`/minio/${userData?.avatar}`}
                             alt="Аватар пользователя"
                         />
                     )}
