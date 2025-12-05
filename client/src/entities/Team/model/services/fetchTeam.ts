@@ -5,10 +5,6 @@ import { Team } from '../types/Team';
 
 import { ThunkConfig } from '@/app/providers/StoreProvider/config/StateSchema';
 
-interface ApiTeamResponse {
-    data: Team;
-}
-
 export const fetchTeam = createAsyncThunk<Team, string, ThunkConfig<string>>(
     'Team/fetchTeam',
     async (teamId, thunkAPI) => {
@@ -21,7 +17,14 @@ export const fetchTeam = createAsyncThunk<Team, string, ThunkConfig<string>>(
                 throw new Error();
             }
 
-            return response.data;
+            // FIXME replace with real data
+            return {
+                ...response.data,
+                image: {
+                    image: response.data.image as unknown as string,
+                    hash: 'U39jfh~C4T%2.8XmIoSM00In?vIo4TiI=|w_',
+                },
+            } as Team;
         } catch (e) {
             const axiosError = e as AxiosError;
             // @ts-ignore

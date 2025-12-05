@@ -1,31 +1,29 @@
 import { memo, useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import {
-    Accordion,
-    AccordionItem,
-    BreadcrumbItem,
-    Breadcrumbs,
-    Chip,
-    Image,
-} from '@nextui-org/react';
+import { Accordion, AccordionItem, BreadcrumbItem, Breadcrumbs, Chip } from '@nextui-org/react';
 
 import classes from './DetailedMemberPage.module.scss';
 
 import { classNames } from '@/shared/lib/classNames';
 import { Page } from '@/widgets/Page';
 import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
-import { getProfileData, getSelectedProfileData, getUserIsLoading } from '@/entities/User';
+import {
+    getProfileData,
+    getSelectedProfileData,
+    getUserData,
+    getUserIsLoading,
+    PortfolioItem,
+} from '@/entities/User';
 import { RoutePath } from '@/shared/config/routeConfig';
 import { HStack, VStack } from '@/shared/ui/Stack';
 import { Helmet } from '@/widgets/Helmet';
 import { MemberAchievementsTable } from '@/entities/Achievement';
 import { Skeleton } from '@/shared/ui/Skeleton';
 import { AppLink } from '@/shared/ui/AppLink';
+import { Image } from '@/shared/ui/Image';
 import { fetchTeam } from '@/entities/Team';
 import { AchievementsPreviewList } from '@/entities/ProfileAchievement';
-import { useWindowWidth } from '@/shared/lib/hooks/useWindowWidth';
-import { PortfolioItem } from '@/entities/User/ui/ProfileBlocks/PortfolioBlock/PortfolioItem';
 
 interface DetailedMemberPageProps {
     className?: string;
@@ -39,8 +37,7 @@ const DetailedMemberPage = memo((props: DetailedMemberPageProps) => {
     const dispatch = useAppDispatch();
     const isUserLoading = useSelector(getUserIsLoading);
     const member = useSelector(getSelectedProfileData);
-
-    const { isMobile } = useWindowWidth();
+    const isAuth = Boolean(useSelector(getUserData).id);
 
     const [userTeamTitle, setUserTeamTitle] = useState<string>('');
 
@@ -75,11 +72,9 @@ const DetailedMemberPage = memo((props: DetailedMemberPageProps) => {
         return (
             <Page className={classNames(classes.DetailedMemberPage, {}, [className])}>
                 <HStack className="mt-16" maxH justify="between" align="start" maxW gap="32px">
-                    {!isMobile && (
-                        <VStack align="start" justify="start">
-                            <Skeleton width={400} height={400} rounded={24} />
-                        </VStack>
-                    )}
+                    <VStack align="start" justify="start">
+                        <Skeleton width={400} height={400} rounded={24} />
+                    </VStack>
 
                     <VStack gap="24px" maxW>
                         <HStack gap="12px" maxW className="w-full" align="center">
@@ -163,19 +158,21 @@ const DetailedMemberPage = memo((props: DetailedMemberPageProps) => {
             </Breadcrumbs>
 
             <HStack justify="between" align="start" maxW gap="32px" className="h-full">
-                {!isMobile && (
-                    <VStack>
-                        <Image
-                            fallbackSrc="/static/fallbacks/user-fallback.webp"
-                            classNames={{ wrapper: classes.blurredBackgroundImage }}
-                            src={`/user-avatars/${member?.avatar}`}
-                            className="w-[400px] h-[400px]"
-                            alt={member?.username}
-                        />
+                <VStack gap="10px">
+                    <Image
+                        isSecured={!isAuth}
+                        secureText="Авторизуйтесь для просмотра"
+                        hash={member?.avatar?.hash}
+                        fallbackSrc="/static/fallbacks/user-fallback.webp"
+                        classNames={{ wrapper: classes.blurredBackgroundImage }}
+                        src={`/minio/${member?.avatar?.image}`}
+                        width={400}
+                        height={400}
+                        alt={member?.username}
+                    />
 
-                        <AchievementsPreviewList username={username} />
-                    </VStack>
-                )}
+                    <AchievementsPreviewList username={username} />
+                </VStack>
 
                 <VStack gap="24px" maxW>
                     <VStack gap="12px" maxW className="w-full" justify="between" align="center">
@@ -188,7 +185,6 @@ const DetailedMemberPage = memo((props: DetailedMemberPageProps) => {
                                 {new Date(member?.created_at || '').toLocaleDateString('ru-RU')}
                             </h2>
                         </HStack>
-                        {isMobile && <AchievementsPreviewList username={username} />}
                     </VStack>
 
                     <VStack gap="12px" maxW className="flex-grow h-full p-5 rounded-xl bg-card-bg">
@@ -196,11 +192,11 @@ const DetailedMemberPage = memo((props: DetailedMemberPageProps) => {
                             <VStack maxW>
                                 <p className="opacity-30 text-m">О себе</p>
                                 <p className="italic">{member?.description}</p>
+                                <hr className="w-full border-t-2 border-main-bg" />
                             </VStack>
                         )}
                         {member?.positions?.length ? (
                             <>
-                                <hr className="w-full border-t-2 border-main-bg" />
                                 <HStack maxW gap="12px" className="flex-wrap">
                                     <p>
                                         <span className="font-bold">{member?.firstname}</span>{' '}

@@ -1,23 +1,28 @@
 import { ChangeEvent, useCallback, useEffect, useState } from 'react';
+import { cn, Spinner } from '@nextui-org/react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import classes from './ImageUpload.module.scss';
 
 import { classNames, Mods } from '@/shared/lib/classNames';
 import { ImageCropper } from '@/shared/ui/ImageCropper';
+import { encodeImageToBlurhash } from '@/shared/ui/Image';
 
 interface ImageUploadProps {
     className?: string;
     onChange: (file: File) => void;
+    onImageHashGenerated?: (hash: string) => void;
     isLoading?: boolean;
     initialImage?: string;
 }
 
 export const ImageUpload = (props: ImageUploadProps) => {
-    const { className, isLoading, initialImage, onChange } = props;
+    const { className, isLoading, onImageHashGenerated, initialImage, onChange } = props;
 
     const [uploadedImageSrc, setUploadedImageSrc] = useState<string>();
     const [isDragStart, setIsDragStart] = useState<boolean>(false);
     const [croppedImage, setCroppedImage] = useState<string>('');
+    const [isHashGenerating, setIsHashGenerating] = useState<boolean>(false);
 
     useEffect(() => {
         if (initialImage) {
@@ -68,10 +73,15 @@ export const ImageUpload = (props: ImageUploadProps) => {
 
     const handleSetCroppedImage = useCallback(
         (image: File) => {
-            setCroppedImage(URL.createObjectURL(image));
+            const imageUrl = URL.createObjectURL(image);
+            setCroppedImage(imageUrl);
             onChange(image);
+            setIsHashGenerating(true);
+            encodeImageToBlurhash(imageUrl)
+                .then(onImageHashGenerated)
+                .finally(() => setIsHashGenerating(false));
         },
-        [onChange],
+        [onChange, onImageHashGenerated],
     );
 
     const mods: Mods = {
@@ -104,7 +114,30 @@ export const ImageUpload = (props: ImageUploadProps) => {
                     </p>
                 )}
                 {croppedImage && (
-                    <img className={classes.img} src={croppedImage} alt="Загруженная аватарка" />
+                    <AnimatePresence mode="wait">
+                        <div className="relative">
+                            <motion.p
+                                initial={{ y: -50, opacity: 0 }}
+                                exit={{ y: -50, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                className={cn(
+                                    'absolute bottom-3 right-1/2 translate-x-1/2',
+                                    'w-4/5 rounded-md py-1 px-2 bg-accent dark:text-black !text-white',
+                                    'text-center text-[70%] leading-[100%]',
+                                )}
+                            >
+                                Нажмите для изменения
+                            </motion.p>
+                            <img
+                                className={classes.img}
+                                src={croppedImage}
+                                alt="Загруженная аватарка"
+                            />
+                        </div>
+                    </AnimatePresence>
+                )}
+                {isHashGenerating && (
+                    <Spinner className="absolute top-1/2 right-1/2 -translate-y-1/2 translate-x-1/2" />
                 )}
             </label>
 

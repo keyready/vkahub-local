@@ -1,6 +1,6 @@
 import { RiCloseLine, RiFilterLine, RiFormatClear } from '@remixicon/react';
 import { Button, Input, Slider, Tooltip } from '@nextui-org/react';
-import { useCallback, useEffect, useState } from 'react';
+import { Dispatch, useCallback, useEffect, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import { useSelector } from 'react-redux';
 
@@ -15,13 +15,16 @@ import { HStack, VStack } from '@/shared/ui/Stack';
 import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
 import { AutoCompleteTags } from '@/shared/ui/AutoCompleteTags';
 import { usePositions } from '@/entities/Positions';
+import { DisplayVariant, TeamsDisplaySelector } from '@/entities/Team';
 
 interface TeamsFiltersBlockProps {
     className?: string;
+    selectedDisplay: DisplayVariant;
+    setSelectedDisplay: Dispatch<DisplayVariant>;
 }
 
 export const TeamsFiltersBlock = (props: TeamsFiltersBlockProps) => {
-    const { className } = props;
+    const { className, setSelectedDisplay, selectedDisplay } = props;
 
     const [isOpened, setIsOpened] = useState<boolean>(false);
 
@@ -90,39 +93,48 @@ export const TeamsFiltersBlock = (props: TeamsFiltersBlockProps) => {
 
             {isOpened && (
                 <form>
-                    <VStack gap="12px" maxW>
-                        <Input
-                            value={localFilters?.title}
-                            onChange={(event) =>
-                                setLocalFilters({
-                                    ...localFilters,
-                                    title: event.target.value,
-                                })
-                            }
-                            size="sm"
-                            label="Название команды"
-                        />
+                    <VStack gap="24px" maxW>
+                        <div className="mt-7 w-full">
+                            <TeamsDisplaySelector
+                                selectedDisplay={selectedDisplay}
+                                setSelectedDisplay={setSelectedDisplay}
+                            />
+                        </div>
 
-                        <AutoCompleteTags
-                            selectionMode="single"
-                            selectedItems={[
-                                {
-                                    value: localFilters.wanted,
-                                    label: localFilters.wanted,
-                                },
-                            ].filter((item) => item.value)}
-                            setSelectedItems={(wanted) =>
-                                setLocalFilters({
-                                    ...localFilters,
-                                    wanted: wanted.filter((item) => item.value)[0].label,
-                                })
-                            }
-                            items={positions}
-                            isLoading={isLoading}
-                            allowNew={false}
-                            placeholder="Выберите позицию"
-                            label=""
-                        />
+                        <div className="flex flex-col gap-3 w-full">
+                            <Input
+                                value={localFilters?.title}
+                                onChange={(event) =>
+                                    setLocalFilters({
+                                        ...localFilters,
+                                        title: event.target.value,
+                                    })
+                                }
+                                size="sm"
+                                label="Название команды"
+                            />
+
+                            <AutoCompleteTags
+                                selectionMode="single"
+                                selectedItems={[
+                                    {
+                                        value: localFilters.wanted,
+                                        label: localFilters.wanted,
+                                    },
+                                ].filter((item) => item.value)}
+                                setSelectedItems={(wanted) =>
+                                    setLocalFilters({
+                                        ...localFilters,
+                                        wanted: wanted.filter((item) => item.value)[0].label,
+                                    })
+                                }
+                                items={positions}
+                                isLoading={isLoading}
+                                allowNew={false}
+                                placeholder="Выберите позицию"
+                                label=""
+                            />
+                        </div>
 
                         <Slider
                             value={localFilters?.members || []}

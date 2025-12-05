@@ -1,4 +1,5 @@
 import { useSelector } from 'react-redux';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import { UserCard } from '../UserCard/UserCard';
 import { useUsers } from '../../api/fetchAllUsersApi';
@@ -51,9 +52,19 @@ export const UsersList = (props: UsersListProps) => {
 
     return (
         <VStack gap="8px" maxW className={classNames(classes.UsersList, {}, [className])}>
-            {users?.map((user) => (
-                <UserCard user={user} key={user.id} />
-            ))}
+            <AnimatePresence mode="wait">
+                {users?.map((user, index) => (
+                    <motion.div
+                        key={index}
+                        initial={{ x: 0, opacity: 0 }}
+                        exit={{ x: 0, opacity: 0 }}
+                        animate={{ x: 1, opacity: 1 }}
+                        className="w-full"
+                    >
+                        <UserCard user={user} key={user.id} />
+                    </motion.div>
+                ))}
+            </AnimatePresence>
         </VStack>
     );
 };

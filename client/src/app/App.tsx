@@ -39,7 +39,7 @@ export const App = () => {
             <div className="app">
                 <Suspense fallback="">
                     {isUpdateAvailable ? <ServiceUpdatedBanner /> : null}
-                    {userData?.id && <Navbar />}
+                    <Navbar />
                     <AppRouter />
                     <Toaster />
                 </Suspense>

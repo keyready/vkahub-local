@@ -39,7 +39,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
     }
 
     return (
-        <Page className={classNames(classes.WhatsNewPage, mods, [className])}>
+        <Page className={classNames('px-0', mods, [className])}>
             <Helmet
                 title="Обновления | Научное сообщество"
                 description="Обновления системы учета научной деятельности. Здесь вы найдете информацию об обновлении проекта."
@@ -57,10 +57,92 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                         </Button>
                     </Tooltip>
                 )}
-                <h1 className="text-2xl italic font-bold text-green-400">Вышло обновление!</h1>
+                <h1 className="px-20 pt-4 text-2xl italic font-bold text-green-400">
+                    Вышло обновление!
+                </h1>
             </HStack>
 
-            <VStack gap="36px" maxW align="start" className="overflow-y-auto relative">
+            <VStack gap="36px" maxW align="start" className="px-20 overflow-y-auto relative">
+                <HStack maxW align="start" className="grid grid-cols-5">
+                    <div className="col-span-1 sticky top-1">
+                        <h1 className="text-xl leading-tight">Версия 2.4.0 от 05.12.2025 г.</h1>
+                    </div>
+                    <VStack maxW gap="24px" className="col-span-4">
+                        <div>
+                            <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
+                                Новые функции
+                            </h3>
+                            <h4 className="text-justify text-l leading-snug">
+                                - Добавили предзагрузочные картинки на все основные сущности
+                                (пользователь, команда, событие). Теперь, пока изображение
+                                загружается с сервера, Вы будете видеть размытое очертание картинки
+                                вместо серого квадрата. Вроде мелочь, а вроде бы и не заметите
+                                никогда, потому что проект в локальной сети, и статика загружается
+                                почти моментально. Но пусть будет.
+                                <br />- Добавили еще больше клиентской валидации на пользовательские
+                                формы, чтобы Вам не скучно было.
+                                <br />- Немного упростили требования к паролю и логину, потому что
+                                было много пользователей с паролями{' '}
+                                <code className="italic">qwerty123</code> или даже просто{' '}
+                                <code className="italic">QWERTY</code>
+                            </h4>
+                            <br />
+                            <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
+                                Исправление ошибок
+                            </h3>
+                            <h4 className="text-justify text-l leading-snug">
+                                - Потихоньку вырезаем ненужный функционал (мобильную версию,
+                                например), подчищаем код, работаем над оптимизацией. Хоть Вы и не
+                                заметите
+                                <br />- Исправили некоторые ошибки типизации, о которых вы вообще
+                                ничего не знали и не узнали бы, если бы я не написал
+                            </h4>
+                        </div>
+                    </VStack>
+                </HStack>
+
+                <HStack maxW align="start" className="grid grid-cols-5">
+                    <div className="col-span-1 sticky top-1">
+                        <h1 className="text-xl leading-tight">Версия 2.3.0 от 02.12.2025 г.</h1>
+                    </div>
+                    <VStack maxW gap="24px" className="col-span-4">
+                        <div>
+                            <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
+                                Новые функции
+                            </h3>
+                            <h4 className="text-justify text-l leading-snug">
+                                - Вынесли все статические пользовательские файлы в облачное
+                                хранилище, чтобы не было проблем с утерей аватарок, картинок команд
+                                и т.д.
+                                <br />- Соответственно перенесли все данные с сервера в хранилище,
+                                так что теперь они надежно хранятся вне досягаемости админов
+                                <br />- P.s. если у Вас пропала аватарка или любая другая статика,
+                                которую Вы загружали, придется загрузить заново. Это, конечно,
+                                маловероятно, но все возможно
+                                <br />- Так же временно ослабили валидацию форм регистрации и
+                                авторизации, потому что у некоторых пользователей не получилось
+                                войти в аккаунт под "невалидными" кредами
+                                <br />
+                                <br />
+                                <span className="duration-200 opacity-30 hover:opacity-100">
+                                    - P.p.s. если кто-то читает этот ченжлог, напиши в отзывы
+                                    че-нибудь прикольное, а то я тут монолог веду...(
+                                </span>
+                            </h4>
+                        </div>
+                        <div>
+                            <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
+                                Исправление ошибок
+                            </h3>
+                            <h4 className="text-justify text-l leading-snug">
+                                - Нашли причину и исправили давнюю ошибку, которая могла быть
+                                причиной бесконечных рендеров страницы при некоторых условиях
+                                заполнения данных пользователя
+                            </h4>
+                        </div>
+                    </VStack>
+                </HStack>
+
                 <HStack maxW align="start" className="grid grid-cols-5">
                     <div className="col-span-1 sticky top-1">
                         <h1 className="text-xl leading-tight">Версия 2.2.1 от 29.11.2025 г.</h1>
@@ -70,7 +152,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Исправление ошибок
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Нашлись умники, которые писали в username очень странные символы,
                                 в т.ч. кириллицу и пробелы. Мы, конечно же, рассчитывали на
                                 вменяемую аудиторию, к которой нужно предъявлять минимум контроля.
@@ -93,7 +175,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Добавили два обязательных для заполнения поля: контрольные вопрос
                                 и ответ. Это очень нужно для возможности восстановить пароль, если
                                 вдруг (!) забыли
@@ -114,7 +196,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Добавили возможность редактирование аватарки профиля поользователя
                                 и команды (почему не сделали сразу?)
                             </h4>
@@ -123,7 +205,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Исправление ошибок
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Исправили ошибку, при которой могло не отображаться уведомление об
                                 отсутствии сертификатов на странице пользователя
                                 <br />- Исправили ошибку, при которой любой (-_-) вользователь мог
@@ -144,7 +226,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Добавили возможность загрузки сертификатов/грамот и пр. в профиль
                                 пользователя, чтобы все видели, какой вы крутой!
                                 <br />- Добавленные файлы может скачать любой пользователь, имеющий
@@ -163,7 +245,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 <b>Редизайн и локальная версия!</b>
                                 <br />- Приложение адаптировано для локального использования. Это
                                 внесло некоторые ключевые изменения в логику работы, пришлось
@@ -187,7 +269,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - <b>Мобильная версия!</b>
                                 <br />- Успевшие протестировать декстопное приложение пользователи
                                 очень просили мобильную версию. Что ж, возьмите-распишитесь.
@@ -207,7 +289,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Исправление ошибок
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Исправили некоторые UX моменты, список участников проекта должен
                                 стать оптимизированнее;
                                 <br />- В письме-оповещении о новом событии ссылка вела на
@@ -222,7 +304,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - В командных чатах теперь есть возможность выбора горячих клавиш
                                 для отправки сообщения (по умолчанию Ctrl + Enter);
                                 <br />- Список уведомлений стал выглядеть лучше. Содержание
@@ -247,7 +329,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Релиз первой публичной бета версии приложения!
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Платформа <b>VKAHUB</b> — сервис учета научной деятельности.
                                 Объединяйтесь в команды, участвуйте и побеждайте в соревнованиях,
                                 планируйте выступления в командном чате, получайте достижения и
@@ -259,7 +341,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - <b>Командный чат!</b> На вкладке "Команда" в Личном кабинете
                                 появилась ссылка на страницу командного чата. Обсуждайте предстоящие
                                 соревнования, делитесь файлами и эмоциями.
@@ -277,7 +359,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - <b>Блокировка пользователей!</b> Это случилось! Мы добавили
                                 автоматическую блокировку команд, которые не указали результаты
                                 прошедших соревнований. Чтобы избежать блокировки, у Вас будет 24
@@ -300,7 +382,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Теперь каждый участник коммьюнити может посмотреть достижения
                                 другого участника. Иконки достижений выводятся аккуратно под
                                 аватаром пользователя на странице профиля. Скорее смотрите, чего
@@ -319,7 +401,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - <b>Уведомления прямо здесь и сейчас!</b> Вас позвали в команду?
                                 Или, может быть, Вы капитан, и к вам в команду кто-то попросился? А
                                 может быть, Вы получили новое достижение? Теперь всегда можно
@@ -339,7 +421,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - <b>Переработанные достижения профиля!</b> Всегда очень интересно
                                 следить за своими достижениями. Мы решили дать Вам возможность
                                 зарабатывать достижения профиля, которые будут видны Вам на
@@ -353,7 +435,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 В будущих версиях
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - В перспективе выдавать награды за полученные достижения. Например,
                                 разбан команды для участия или особое выделение профиля или команды
                                 в общем списке.
@@ -371,7 +453,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - <b>Встречайте отзывы и предложения!</b> Нам очень важно Ваше
                                 мнение о нашем проекте, поэтому мы добавили раздел "Обратная связь".
                                 Его можно найти, нажав на свой аватар в правом верхнем углу экрана;
@@ -395,7 +477,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Изменили карточку просмотра своей команды, добавлили возможность
                                 редактировать название и описание команды;
                                 <br />- Добавили обязательное к заполнению поле "Место дислокации" в
@@ -417,7 +499,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Полный редизайн страниц профиля пользователя и команды. Везде
                                 добавили скелетоны на загрузку контента.
                             </h4>
@@ -426,7 +508,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Ошибки
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Нашли много ошибок, устаревшего кода и неиспользуемых функций
                                 приложения. Начинаем предрелизную зачистку проекта.
                             </h4>
@@ -443,7 +525,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - <b>Встречайте события!</b> Мы добавили три различных типа
                                 соревнований в наш сервис: хакатоны, CTF и прочие соревнования;
                                 <br />- У каждого соревнования теперь есть треки: вы можете
@@ -483,7 +565,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Изменили логику добавления в команду: теперь это именно
                                 приглашение, которое отображается в личном кабинете пользователя;
                                 <br />
@@ -509,7 +591,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Переработали систему фильтрации команд и пользователей. Она стала
                                 более оптимизированной и менее ресурсозатратной;
                                 <br />
@@ -529,7 +611,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Начали делать систему достижений профиля;
                                 <br />- Изменили права доступа на приглашение в команду;
                                 <br />- На эту страницу добавили кнопку, которая возвращает на экран
@@ -544,7 +626,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Исправление ошибок
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Обнаружена и исправлена ошибка: кнопка "Выйти" в меню была меньше
                                 блока, который для нее выделялся. Из-за этого не всегда получалось
                                 "попасть" по кнопке
@@ -562,7 +644,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Добавили изменение данных профиля (верификацию пользователя);{' '}
                                 <br />
                                 - Добавили функционал отправления приглашения в команду.
@@ -574,7 +656,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Исправление ошибок
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Обнаружена и исправлена ошибка: если авторизованный пользователь
                                 пытался попасть на страницу /login, это вызывало 500 ошибку; <br />-
                                 Исправили ошибку со временем жизни токена доступа и невозможность
@@ -593,7 +675,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Еще раз переработали меню; <br />
                                 - Добавили блоки "Навыки", "Личные данные", "Данные аккаунта" на
                                 страницу профиля;
@@ -615,7 +697,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Переработали меню, которое открывается по нажатии на аватарку
                                 профиля.
                             </h4>
@@ -625,7 +707,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Исправление ошибок
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Исправили баг, который добавили в прошлой версии
                             </h4>
                         </div>
@@ -641,7 +723,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Добавили подтверждения почты, нарисовали красивые письма, провели
                                 профилактические работы;
                                 <br />- Добавили один баг, чтобы было, над чем работать.
@@ -652,7 +734,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 В будущих версиях
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Добавим приглашения в команды, создание команд и далее по списку.
                             </h4>
                         </div>
@@ -668,7 +750,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Первый деплой клиента на сервер. Настроен прокси-сервер, подлючен
                                 домен и SSL-сертификат
                             </h4>
@@ -678,7 +760,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 В будущих версиях
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Добавим приглашения в команды, создание команд и далее по списку.
                             </h4>
                         </div>
@@ -694,7 +776,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Исправление ошибок
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Обнаружена и исправлена ошибка, касающаяся UX приложения при
                                 перезагрузке страницы
                             </h4>
@@ -711,7 +793,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Если Вы забыли пароль, теперь его можно восстановить. На экране
                                 авторизации стала доступна кнопка{' '}
                                 <span className="italic">"Я забыл пароль"</span>;
@@ -724,7 +806,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 В будущих версиях
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Добавим приглашения в команды, создание команд и далее по списку.
                             </h4>
                         </div>
@@ -740,7 +822,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Добавили страницу детального просмотра профиля пользователя.
                                 <br />
                             </h4>
@@ -750,7 +832,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 В будущих версиях
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Добавим приглашения в команды, создание команд и далее по списку.
                             </h4>
                         </div>
@@ -766,7 +848,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Добавили страницу пользователей с возможностью поиска по ФИО,
                                 присутствию в команде, направлению работы и используемому языку.{' '}
                                 <br />
@@ -777,7 +859,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 В будущих версиях
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Добавим детальную страницу профиля пользователя, приглашения в
                                 команды, создание команд и далее по списку.
                             </h4>
@@ -794,7 +876,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 Новые функции
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Реализованы базовые потребности человечества: авторизация и
                                 регистрация; <br />
                                 - Добавили страницу команд с возможностью поиска команд по названию,
@@ -810,7 +892,7 @@ const WhatsNewPage = memo((props: WhatsNewPageProps) => {
                             <h3 className="mb-1.5 text-l font-bold italic underline underline-offset-4">
                                 В будущих версиях
                             </h3>
-                            <h4 className="text-l leading-snug">
+                            <h4 className="text-justify text-l leading-snug">
                                 - Добавим список участников проекта, просмотры профиля, приглашения
                                 в команды, создание команд и далее по списку.
                             </h4>

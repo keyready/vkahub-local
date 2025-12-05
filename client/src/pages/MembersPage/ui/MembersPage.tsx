@@ -11,7 +11,6 @@ import { Helmet } from '@/widgets/Helmet';
 import { RoutePath } from '@/shared/config/routeConfig';
 import { DynamicModuleLoader } from '@/shared/lib/DynamicModuleLoader';
 import { TeamReducer } from '@/entities/Team';
-import { useWindowWidth } from '@/shared/lib/hooks/useWindowWidth';
 
 interface MembersPageProps {
     className?: string;
@@ -19,8 +18,6 @@ interface MembersPageProps {
 
 const MembersPage = memo((props: MembersPageProps) => {
     const { className } = props;
-
-    const { isMobile } = useWindowWidth();
 
     return (
         <DynamicModuleLoader reducers={{ team: TeamReducer }}>
@@ -42,7 +39,7 @@ const MembersPage = memo((props: MembersPageProps) => {
                 <h1 className="mt-2 mb-4 w-full text-center text-2xl font-bold">Участники</h1>
 
                 <HStack maxW align="start" gap="24px" className="overflow-y-auto relative">
-                    {!isMobile && <UsersFiltersBlock className="sticky top-0" />}
+                    <UsersFiltersBlock className="sticky top-0" />
                     <UsersList />
                 </HStack>
             </Page>

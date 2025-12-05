@@ -1,18 +1,20 @@
 import { memo, useCallback } from 'react';
 import { RiTeamLine } from '@remixicon/react';
 import { useNavigate } from 'react-router-dom';
-import { Image } from '@nextui-org/react';
+import { useSelector } from 'react-redux';
 
 import { Team } from '../../model/types/Team';
 import { DisplayVariant } from '../TeamsDisplaySelector/TeamsDisplaySelector';
 
 import classes from './TeamCard.module.scss';
 
+import { Image } from '@/shared/ui/Image';
 import { Skeleton } from '@/shared/ui/Skeleton';
 import { classNames, Mods } from '@/shared/lib/classNames';
 import { HStack, VStack } from '@/shared/ui/Stack';
 import { RoutePath } from '@/shared/config/routeConfig';
 import { useWindowWidth } from '@/shared/lib/hooks/useWindowWidth';
+import { getUserData } from '@/entities/User';
 
 interface TeamCardProps {
     className?: string;
@@ -25,6 +27,7 @@ export const TeamCard = memo((props: TeamCardProps) => {
     const { className, isLoading, team, displayVariant = 'compact' } = props;
 
     const { isMobile } = useWindowWidth();
+    const isAuth = Boolean(useSelector(getUserData).id);
 
     const mods: Mods = {
         [classes.grid]: displayVariant === 'compact',
@@ -75,10 +78,12 @@ export const TeamCard = memo((props: TeamCardProps) => {
             >
                 <div className="relative w-36 h-36 rounded-2xl">
                     <Image
+                        isSecured={!isAuth}
                         width="100%"
                         height="100%"
                         fallbackSrc="/static/fallbacks/team-fallback.webp"
-                        src={`/team-images/${team?.image}`}
+                        src={`/minio/${team?.image.image}`}
+                        hash={team?.image.hash}
                         classNames={{ wrapper: classes.compactTeamImg }}
                     />
                     <HStack maxW justify="end" className="p-2.5">
@@ -105,10 +110,12 @@ export const TeamCard = memo((props: TeamCardProps) => {
         >
             <HStack maxW gap="24px">
                 <Image
+                    isSecured={!isAuth}
                     width={isMobile ? 60 : 80}
                     height={isMobile ? 60 : 80}
                     fallbackSrc="/static/fallbacks/team-fallback.webp"
-                    src={`/team-images/${team?.image}`}
+                    src={`/minio/${team?.image.image}`}
+                    hash={team?.image.hash}
                     classNames={{ wrapper: classes.teamCardImg }}
                 />
                 <VStack maxW>

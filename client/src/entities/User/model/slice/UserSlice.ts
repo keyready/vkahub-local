@@ -3,7 +3,13 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { UserSchema } from '../types/UserSchema';
 import { signupUser } from '../services/authServices/signupUser';
 import { loginUser } from '../services/authServices/loginUser';
-import type { AuthErrorTypes, MembersFilters, RecoveryQuestion, User } from '../types/User';
+import type {
+    AuthErrorTypes,
+    MembersFilters,
+    RecoveryQuestion,
+    User,
+    UserSettings,
+} from '../types/User';
 import { getUserDataService } from '../services/profileServices/getUserData';
 import { getProfileData } from '../services/profileServices/getProfileData';
 import { sendRecoveryLink } from '../services/authServices/sendRecoveryLink';
@@ -15,11 +21,24 @@ import { addPortfolioFile } from '../services/profileServices/addPortfolioFile';
 import { deletePortfolioFile } from '../services/profileServices/deletePortfolioFile';
 import { getRecoveryQuestions } from '../services/authServices/getRecoveryQuestions';
 import { approveRecoveryAnswer } from '../services/authServices/approveRecoveryAnswer';
+import { loadUserSettings } from '../services/profileServices/loadUserSettings';
+import { saveUserSettings } from '../services/profileServices/saveUserSettings';
+import { GuidelinesValues } from '../lib/getGuidelinesValues';
 
-import { USER_ACCESS_TOKEN, USER_REFRESH_TOKEN } from '@/shared/const';
+import { createLocalStorageParser } from '@/shared/lib/loadLocalstorage';
+import { USER_ACCESS_TOKEN, USER_REFRESH_TOKEN, USER_SETTINGS } from '@/shared/const';
+
+const parseUserSettings = createLocalStorageParser<UserSettings>();
+
+const defaultSettings = parseUserSettings(USER_SETTINGS, ['theme', 'animation', 'guidelines'], {
+    theme: 'light',
+    animation: 'all',
+    guidelines: GuidelinesValues,
+});
 
 const initialState: UserSchema = {
     data: undefined,
+    settings: defaultSettings,
     recoveryQuestions: [],
     isLoading: false,
     error: undefined,
@@ -38,6 +57,10 @@ export const UserSlice = createSlice({
         },
         clearAuthError: (state) => {
             state.authError = undefined;
+        },
+        setSettings: (state, action: PayloadAction<UserSettings>) => {
+            localStorage.setItem(USER_SETTINGS, JSON.stringify(action.payload));
+            state.settings = action.payload;
         },
 
         setUserData: (state, action: PayloadAction<User>) => {
@@ -160,6 +183,31 @@ export const UserSlice = createSlice({
                 state.isLoading = false;
             })
             .addCase(addPortfolioFile.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+
+            .addCase(loadUserSettings.pending, (state) => {
+                state.error = undefined;
+                state.isLoading = true;
+            })
+            .addCase(loadUserSettings.fulfilled, (state, action: PayloadAction<UserSettings>) => {
+                state.isLoading = false;
+                state.settings = action.payload;
+            })
+            .addCase(loadUserSettings.rejected, (state, action) => {
+                state.isLoading = false;
+                state.error = action.payload;
+            })
+
+            .addCase(saveUserSettings.pending, (state) => {
+                state.error = undefined;
+                state.isLoading = true;
+            })
+            .addCase(saveUserSettings.fulfilled, (state) => {
+                state.isLoading = false;
+            })
+            .addCase(saveUserSettings.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
             })

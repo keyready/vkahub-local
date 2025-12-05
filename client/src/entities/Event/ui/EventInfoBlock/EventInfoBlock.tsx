@@ -1,4 +1,4 @@
-import { Button, Chip, Image } from '@nextui-org/react';
+import { Button, Chip } from '@nextui-org/react';
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -9,11 +9,11 @@ import classes from './EventInfoBlock.module.scss';
 import { HStack, VStack } from '@/shared/ui/Stack';
 import { DisplayTimer } from '@/shared/ui/DisplayTimer';
 import { Skeleton } from '@/shared/ui/Skeleton';
+import { Image } from '@/shared/ui/Image';
 import { TrackReducer, TracksList, useEventTracks } from '@/entities/Track';
 import { DynamicModuleLoader } from '@/shared/lib/DynamicModuleLoader';
 import { getTeamData, TeamReducer } from '@/entities/Team';
 import { getUserData } from '@/entities/User';
-import { useWindowWidth } from '@/shared/lib/hooks/useWindowWidth';
 
 type ButtonColors = 'default' | 'success' | 'warning' | 'primary' | 'secondary' | 'danger';
 
@@ -27,7 +27,6 @@ export const EventInfoBlock = (props: EventInfoBlockProps) => {
     const { className, event, isLoading } = props;
 
     const { data: tracks, isLoading: isTracksLoading } = useEventTracks(event?.id || -1);
-    const { isMobile } = useWindowWidth();
 
     const userTeamData = useSelector(getTeamData);
     const userData = useSelector(getUserData);
@@ -83,10 +82,16 @@ export const EventInfoBlock = (props: EventInfoBlockProps) => {
 
         return (
             <VStack>
-                <Chip radius="sm" className="text-italic text-accent bg-transparent">
+                <Chip
+                    radius="sm"
+                    className="max-w-none w-full text-center text-italic text-white dark:text-black bg-accent"
+                >
                     {startDate}
                 </Chip>
-                <Chip radius="sm" className="text-italic text-accent bg-transparent">
+                <Chip
+                    radius="sm"
+                    className="max-w-none w-full text-center text-italic text-white dark:text-black bg-accent"
+                >
                     {finishDate}
                 </Chip>
             </VStack>
@@ -97,14 +102,12 @@ export const EventInfoBlock = (props: EventInfoBlockProps) => {
         return (
             <VStack maxW gap="48px">
                 <HStack maxW align="start" gap="36px" className="mt-10">
-                    {!isMobile && (
-                        <Skeleton
-                            width="25vw"
-                            height="25vw"
-                            className={classes.imgSkeleton}
-                            rounded="24px"
-                        />
-                    )}
+                    <Skeleton
+                        width="25vw"
+                        height="25vw"
+                        className={classes.imgSkeleton}
+                        rounded="24px"
+                    />
                     <VStack maxW>
                         <HStack align="start" maxW justify="between">
                             <Skeleton width="33%" height={30} />
@@ -146,18 +149,17 @@ export const EventInfoBlock = (props: EventInfoBlockProps) => {
         <DynamicModuleLoader reducers={{ team: TeamReducer, track: TrackReducer }}>
             <VStack maxW gap="48px">
                 <HStack maxW align="start" gap="36px" className="mt-10">
-                    {!isMobile && (
-                        <Image
-                            width="25vw"
-                            height="25vw"
-                            classNames={{
-                                wrapper: classes.img,
-                            }}
-                            src={`/events-images/${event?.image}`}
-                            className="w-full h-full"
-                            fallbackSrc={`/static/events-types/${event?.type}-fallback.webp`}
-                        />
-                    )}
+                    <Image
+                        width="25vw"
+                        height="25vw"
+                        classNames={{
+                            wrapper: classes.img,
+                        }}
+                        src={`/minio/${event?.image.image}`}
+                        hash={event?.image.hash}
+                        className="w-full h-full"
+                        fallbackSrc={`/static/events-types/${event?.type}-fallback.webp`}
+                    />
                     <VStack maxW>
                         <HStack align="start" maxW justify="between">
                             <h1 className="md:leading-none leading-1 my-4 text-left font-bold text-xl md:text-2xl">

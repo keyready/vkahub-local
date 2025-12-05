@@ -1,3 +1,6 @@
+import { Theme } from '@/widgets/ThemeSwitcher';
+import { ImageObj } from '@/shared/ui/Image';
+
 export type AuthErrorTypes =
     | 'Username not found'
     | 'Invalid password'
@@ -46,14 +49,29 @@ export interface RecoveryQuestion {
     question: string;
 }
 
+export interface Guidelines {
+    value: string;
+    label: string;
+    level?: number;
+    enabled: boolean;
+}
+
+export interface UserSettings {
+    theme: Theme;
+    animation: 'all' | 'transitions';
+    guidelines: Guidelines[];
+}
+
 export interface ServerUser {
     id: string;
 
     mail: string;
     username: string;
     password: string;
-    avatar: string;
+
+    avatar: ImageObj;
     newAvatar?: File;
+
     roles: UserRoles[];
     portfolio?: PortfolioFile[];
 

@@ -31,3 +31,5 @@ export { ProfileInfoBlock } from './ui/ProfileBlocks/ProfileInfoBlock/ProfileInf
 export { AccountSettings } from './ui/ProfileBlocks/AccountSettings/AccountSettings';
 export { PortfolioBlock } from './ui/ProfileBlocks/PortfolioBlock/PortfolioBlock';
 export { SkillsBlock } from './ui/ProfileBlocks/SkillsBlock/SkillsBlock';
+export { UserSettingsTab } from './ui/ProfileBlocks/UserSettingsTab/UserSettingsTab';
+export { PortfolioItem } from './ui/ProfileBlocks/PortfolioBlock/PortfolioItem';

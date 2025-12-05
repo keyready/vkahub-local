@@ -26,38 +26,8 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    location /certificates {
-        alias /home/service/vkahub-local/server/static/certificates/;
-        try_files $uri $uri/ =404;
-    }
-
-    location /reports {
-        alias /home/service/vkahub-local/server/static/reports/;
-        try_files $uri $uri/ =404;
-    }
-
-    location /user-avatars {
-        alias /home/service/vkahub-local/server/static/user-avatars/;
-        try_files $uri $uri/ =404;
-    }
-
-    location /team-images {
-        alias /home/service/vkahub-local/server/static/team-images/;
-        try_files $uri $uri/ =404;
-    } 
-
-    location /bugs {
-        alias /home/service/vkahub-local/server/static/bugs/;
-        try_files $uri $uri/ =404;
-    } 
-
-    location /events {
-        alias /home/service/vkahub-local/server/static/events/;
-        try_files $uri $uri/ =404;
-    } 
-
-    location /attachments {
-        alias /home/raps/vkahub-local/server/static/attachments/;
-        try_files $uri $uri/ =404;
+    location /minio {
+        rewrite ^/minio/(.*) /$1 break;
+        proxy_pass http://localhost:9000;
     }
 }

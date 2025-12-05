@@ -1,15 +1,13 @@
-import { Image } from '@nextui-org/react';
-
 import { Team } from '../../model/types/Team';
 
 import classes from './TeamInfoBlock.module.scss';
 import { TeamMembersList } from './TeamMembersList/TeamMembersList';
 
+import { Image } from '@/shared/ui/Image';
 import { Skeleton } from '@/shared/ui/Skeleton';
 import { classNames } from '@/shared/lib/classNames';
 import { HStack, VStack } from '@/shared/ui/Stack';
 import { AchievementsTable } from '@/entities/Achievement';
-import { useWindowWidth } from '@/shared/lib/hooks/useWindowWidth';
 
 interface TeamInfoBlockProps {
     className?: string;
@@ -20,16 +18,12 @@ interface TeamInfoBlockProps {
 export const TeamInfoBlock = (props: TeamInfoBlockProps) => {
     const { className, isLoading, team } = props;
 
-    const { isMobile } = useWindowWidth();
-
     if (isLoading) {
         return (
             <HStack maxH justify="between" align="start" maxW gap="32px">
-                {!isMobile && (
-                    <VStack align="start" justify="start">
-                        <Skeleton width={400} height={400} rounded={24} />
-                    </VStack>
-                )}
+                <VStack align="start" justify="start">
+                    <Skeleton width={400} height={400} rounded={24} />
+                </VStack>
 
                 <VStack gap="24px" maxW>
                     <HStack gap="12px" maxW className="w-full" align="center">
@@ -80,17 +74,18 @@ export const TeamInfoBlock = (props: TeamInfoBlockProps) => {
             maxW
             className={classNames(classes.TeamInfoBlock, {}, [className])}
         >
-            {!isMobile && (
-                <HStack justify="center" align="start">
-                    <Image
-                        fallbackSrc="/static/fallbacks/team-fallback.webp"
-                        classNames={{ wrapper: classes.blurredBackgroundImage }}
-                        className="w-full h-full"
-                        src={`/team-images/${team?.image}`}
-                        alt={team?.title}
-                    />
-                </HStack>
-            )}
+            <HStack justify="center" align="start">
+                <Image
+                    fallbackSrc="/static/fallbacks/team-fallback.webp"
+                    classNames={{ wrapper: classes.blurredBackgroundImage }}
+                    className="w-full h-full"
+                    src={`/minio/${team?.image.image}`}
+                    hash={team?.image.hash}
+                    alt={team?.title}
+                    width={400}
+                    height={400}
+                />
+            </HStack>
 
             <VStack gap="24px" maxW align="start">
                 <h1 className="font-bold text-2xl w-full">{team.title}</h1>

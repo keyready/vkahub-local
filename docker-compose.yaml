@@ -34,14 +34,6 @@ services:
     networks:
       - vkahub-net
 
-  client-builder:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
-    container_name: vkahub-client-builder
-    volumes:
-      - ./client-files:/client/dist
-
   admin:
     image: dpage/pgadmin4:latest
     container_name: vkahub-admin
@@ -55,7 +47,7 @@ services:
       - vkahub-net
   
   redis:
-    image: redis:latest
+    image: redis:alpine3.22
     container_name: vkahub-redis
     env_file:
       - ./server/.env
@@ -68,17 +60,25 @@ services:
 
   cloud:
     container_name: cloud
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
     command: server --address ":9000" --console-address ":9001" /data
     networks:
       - vkahub-net
     ports:
-      - '9000:9000'
-      - '9001:9001'
+      - '127.0.0.1:9000:9000'
+      - '127.0.0.1:9001:9001'
     env_file:
       - ./server/.env
     volumes:
-     - minio_data:/data
+      - minio_data:/data
+
+  client-builder:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: vkahub-client-builder
+    volumes:
+      - ./client-files:/client/dist
 
 networks:
   vkahub-net:
