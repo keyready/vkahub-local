@@ -137,12 +137,12 @@ func (a *AuthRepositoryImpl) SignUp(signUpForm request.SignUpForm) (int, error) 
 		Image: signUpForm.Avatar,
 		Hash:  signUpForm.Hash,
 	}
-	avatarJsonObj := utils.ToJSON(avatarObj)
+	avatarJson := utils.ToJSON(avatarObj)
 
 	a.Db.Create(&database.UserModel{
 		Username: signUpForm.Username,
 		Password: hashPassword,
-		Avatar:   datatypes.JSON(avatarJsonObj),
+		Avatar:   datatypes.JSON(avatarJson),
 	})
 
 	return http.StatusCreated, nil
@@ -151,29 +151,27 @@ func (a *AuthRepositoryImpl) SignUp(signUpForm request.SignUpForm) (int, error) 
 func (a *AuthRepositoryImpl) Login(loginForm request.LoginForm) (int, error) {
 	loginUser := database.UserModel{}
 	if err := a.Db.Where("username = ?", loginForm.Username).First(&loginUser).Error; err != nil {
-		return http.StatusNotFound, errors.New("User not found")
+		return http.StatusNotFound, errors.New("user not found")
 	}
 
 	verifyPasswd := utils.CompareHash(loginUser.Password, loginForm.Password)
 	if !verifyPasswd {
-		return http.StatusBadRequest, errors.New("Invalid password")
+		return http.StatusBadRequest, errors.New("invalid password")
 	}
-
-	a.Db.Save(&loginUser)
 
 	return http.StatusOK, nil
 }
 
 func (a *AuthRepositoryImpl) RefreshToken(refreshToken string) (*authorizer.TokensResponse, error) {
-	var tmpUser database.UserModel
+	userModel := database.UserModel{}
 
-	err := a.Db.Where("refresh_token = ?", refreshToken).First(&tmpUser).Error
+	err := a.Db.Where("refresh_token = ?", refreshToken).First(&userModel).Error
 	if err != nil {
 		return nil, err
 	}
 
 	payload := authorizer.Payload{
-		Username: tmpUser.Username,
+		Username: userModel.Username,
 	}
 
 	tokens, err := a.jwtService.Authorizer.GenerateTokens(payload)
@@ -181,14 +179,13 @@ func (a *AuthRepositoryImpl) RefreshToken(refreshToken string) (*authorizer.Toke
 		return nil, err
 	}
 
-	tmpUser.RefreshToken = tokens.RefreshToken
-	a.Db.Save(&tmpUser)
+	userModel.RefreshToken = tokens.RefreshToken
+	a.Db.Save(&userModel)
 
 	return tokens, nil
 }
 
 func (a *AuthRepositoryImpl) Logout(username string) (httpCode int, err error) {
-
 	var logoutUser database.UserModel
 	err = a.Db.Where("username = ?", username).First(&logoutUser).Error
 	if err != nil {

@@ -140,7 +140,6 @@ func (tc *TeamController) DeleteMember(ctx *gin.Context) {
 
 func (tc *TeamController) RegisterTeam(gCtx *gin.Context) {
 	appGin := app.Gin{Ctx: gCtx}
-
 	formData := request.RegisterTeamForm{}
 
 	if bindErr := gCtx.ShouldBind(&formData); bindErr != nil {

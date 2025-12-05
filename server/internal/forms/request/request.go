@@ -7,7 +7,7 @@ import (
 type SignUpForm struct {
 	Username string `form:"username"`
 	Password string `form:"password"`
-	Hash     string `json:"hash"`
+	Hash     string `form:"hash"`
 	Avatar   string
 }
 

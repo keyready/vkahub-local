@@ -8,7 +8,10 @@ import (
 
 func UserModelToMember(userModel database.UserModel) (*response.Member, error) {
 	avatarObj := database.ImageObj{}
-	utils.FromJSON(userModel.Avatar, &avatarObj)
+
+	if decodeErr := utils.FromJSON(userModel.Avatar, &avatarObj); decodeErr != nil {
+		return nil, decodeErr
+	}
 
 	member := &response.Member{
 		ID:        userModel.ID,
