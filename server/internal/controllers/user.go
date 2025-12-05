@@ -155,6 +155,13 @@ func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
 	}
 
 	multipartForm, err := gCtx.MultipartForm()
+	if err != nil {
+		appGin.ErrorResponse(
+			http.StatusBadRequest,
+			err,
+		)
+		return
+	}
 
 	ctx := gCtx.Request.Context()
 	certificateNames := make([]string, 0)
@@ -230,7 +237,7 @@ func (uc *UserController) FetchAllMessages(ctx *gin.Context) {
 			break
 		}
 
-		_, messages, err := uc.userService.GetMessages(form)
+		_, messages, _ := uc.userService.GetMessages(form)
 
 		if lastLengthHistory != len(messages) {
 			if err = conn.WriteJSON(messages); err != nil {
@@ -329,12 +336,12 @@ func (uc *UserController) SendNotifications(ctx *gin.Context) {
 		switch httpCode {
 		case http.StatusNotFound:
 			if err = conn.WriteJSON(notifications); err != nil {
-				break
+				return
 			}
 		case http.StatusOK:
 			if totalNotifications != len(notifications) {
 				if err = conn.WriteJSON(notifications); err != nil {
-					break
+					return
 				}
 			}
 			totalNotifications = len(notifications)

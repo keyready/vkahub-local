@@ -5,10 +5,10 @@ import (
 )
 
 type SignUpForm struct {
-	Username string `form:"username"`
-	Password string `form:"password"`
-	Hash     string `form:"hash"`
-	Avatar   string
+	Username   string `form:"username"`
+	Password   string `form:"password"`
+	AvatarHash string `form:"hash"`
+	Avatar     string
 }
 
 type LoginForm struct {
@@ -62,7 +62,7 @@ type RegisterTeamForm struct {
 	Description string `form:"description" binding:"required"`
 	CaptainID   int64  `form:"captain_id" binding:"required"`
 	Image       string
-	Hash        string `form:"hash" binding:"required"`
+	AvatarHash  string `form:"hash" binding:"required"`
 }
 
 type GetTeamsByParamsForm struct {

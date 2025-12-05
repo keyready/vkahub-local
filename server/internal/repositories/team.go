@@ -339,7 +339,7 @@ func (t *TeamRepositoryImpl) RegisterTeam(registerTeamForm request.RegisterTeamF
 
 	imageObj := database.ImageObj{
 		Image: registerTeamForm.Image,
-		Hash:  registerTeamForm.Hash,
+		Hash:  registerTeamForm.AvatarHash,
 	}
 	imageJsonObj := utils.ToJSON(imageObj)
 

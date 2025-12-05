@@ -135,7 +135,7 @@ func (a *AuthRepositoryImpl) SignUp(signUpForm request.SignUpForm) (int, error) 
 
 	avatarObj := database.ImageObj{
 		Image: signUpForm.Avatar,
-		Hash:  signUpForm.Hash,
+		Hash:  signUpForm.AvatarHash,
 	}
 	avatarJson := utils.ToJSON(avatarObj)
 
