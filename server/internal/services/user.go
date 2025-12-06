@@ -21,7 +21,7 @@ type UserService interface {
 	GetActualInfo() response.ActualInfo
 	GetMessages(getMessagesForm request.GetMessagesForm) (int, []response.Message, error)
 	AddPortfolio(addPortfolioForm request.AddPortfolioForm) (int, error)
-	DeletePortfolio(certificateName, ownerName string) (int, error)
+	DeletePortfolio(ctx context.Context, certificateName, ownerName string) (int, error)
 	GetBannedReason(ownerID int64) (int, *database.BanModel, error)
 	SetSettings(ctx context.Context, saveSettingsForm request.SetSettingsForm) error
 	GetSettings(ctx context.Context, username string) (string, error)
@@ -55,8 +55,8 @@ func (u UserServiceImpl) GetBannedReason(ownerID int64) (int, *database.BanModel
 	return httpCode, banned, err
 }
 
-func (u UserServiceImpl) DeletePortfolio(certificateName, ownerName string) (httpCode int, err error) {
-	httpCode, err = u.UserRepository.DeletePortfolio(certificateName, ownerName)
+func (u UserServiceImpl) DeletePortfolio(ctx context.Context, certificateName, ownerName string) (httpCode int, err error) {
+	httpCode, err = u.UserRepository.DeletePortfolio(ctx, certificateName, ownerName)
 	return httpCode, err
 }
 

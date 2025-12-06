@@ -127,7 +127,7 @@ type TeamModel struct {
 	CaptainId       int64          `gorm:"unique; not null" json:"captain_id"`
 	Image           datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"image"`
 	MembersId       pq.Int64Array  `gorm:"type:integer[]" json:"members"`
-	WantedPositions pq.StringArray `gorm:"type:varchar[]" json:"wantedPositions"`
+	WantedPositions pq.StringArray `gorm:"type:varchar[];default:'{}'" json:"wantedPositions"`
 	EventLocation   string         `gorm:"default:'г. Санкт-Петербург'" json:"eventLocation"`
 	TeamChatId      int64          `json:"teamChatId"`
 }

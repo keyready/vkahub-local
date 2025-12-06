@@ -126,8 +126,9 @@ func (uc *UserController) DeletePortfolio(gCtx *gin.Context) {
 	}
 
 	ownerName := appGin.Ctx.GetString("username")
+	ctx := gCtx.Request.Context()
 
-	httpCode, err := uc.userService.DeletePortfolio(jsonForm.CertificateName, ownerName)
+	httpCode, err := uc.userService.DeletePortfolio(ctx, jsonForm.CertificateName, ownerName)
 	if err != nil {
 		appGin.ErrorResponse(
 			httpCode,

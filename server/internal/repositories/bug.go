@@ -26,29 +26,33 @@ func NewBugRepositoryImpl(db *gorm.DB) BugRepository {
 }
 
 func (b BugRepositoryImpl) UpdateBug(updBugForm request.UpdateBugForm) (int, error) {
-	updBug := database.BugModel{}
-	b.DB.Where("id = ?", updBugForm.BugID).First(&updBug)
-
-	updatedAt, _ := time.Parse(time.RFC3339, time.Now().String())
-
-	updBug.Status = updBugForm.StatusName
-	updBug.UpdatedAt = updatedAt
-	b.DB.Save(&updBug)
+	err := b.DB.
+		Where("id = ?", updBugForm.BugID).
+		Update(
+			"status",
+			updBugForm.StatusName,
+		).Error
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("failed to upd status bug: %v", err)
+	}
 
 	ownerAchievement := database.UserModel{}
 	bugAchievement := database.PersonalAchievementModel{}
 	b.DB.Where("username = ?", updBugForm.Author).First(&ownerAchievement)
 	b.DB.Where("key = ?", "bug").First(&bugAchievement)
-
 	if !slices.Contains(bugAchievement.OwnerIds, ownerAchievement.ID) {
 		bugAchievement.OwnerIds = append(bugAchievement.OwnerIds, ownerAchievement.ID)
 		b.DB.Save(&bugAchievement)
-	 	author := database.UserModel{}
+		author := database.UserModel{}
 		b.DB.Where("username = ?", updBugForm.Author).First(&author)
 		b.DB.Create(&database.NotificationModel{
 			OwnerId: author.ID,
 			Message: fmt.Sprintf(
-				"Поздравляем, %s! Ваш репорт на первый найденный баг был принят и исправлен! Вы получили новое достижение: %s \n Спасибо, что помогаете нам в поддержании сервиса!",
+				`
+					Поздравляем, %s! Ваш репорт на первый найденный баг был принят и исправлен! 
+					Вы получили новое достижение: %s \n 
+					Спасибо, что помогаете нам в поддержании сервиса!
+				`,
 				ownerAchievement.Username,
 				bugAchievement.Title,
 			),
@@ -58,7 +62,11 @@ func (b BugRepositoryImpl) UpdateBug(updBugForm request.UpdateBugForm) (int, err
 	b.DB.Create(&database.NotificationModel{
 		OwnerId: ownerAchievement.ID,
 		Message: fmt.Sprintf(
-			"Поздравляем, %s! Ваш репорт на найденный баг был принят и исправлен! \n Спасибо, что помогаете нам в поддержании сервиса!",
+			`
+				Поздравляем, %s! 
+				Ваш репорт на найденный баг был принят и исправлен! \n 
+				Спасибо, что помогаете нам в поддержании сервиса!
+			`,
 			ownerAchievement.Username,
 		),
 	})

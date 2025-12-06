@@ -11,7 +11,6 @@ import (
 	"server/internal/utils"
 	"strings"
 
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -137,12 +136,12 @@ func (a *AuthRepositoryImpl) SignUp(signUpForm request.SignUpForm) (int, error) 
 		Image: signUpForm.Avatar,
 		Hash:  signUpForm.AvatarHash,
 	}
-	avatarJson := utils.ToJSON(avatarObj)
+	avatarJSON, _ := utils.ToJSON(avatarObj)
 
 	a.Db.Create(&database.UserModel{
 		Username: signUpForm.Username,
 		Password: hashPassword,
-		Avatar:   datatypes.JSON(avatarJson),
+		Avatar:   avatarJSON,
 	})
 
 	return http.StatusCreated, nil

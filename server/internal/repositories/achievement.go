@@ -54,12 +54,13 @@ func (a *AchievementRepositoryImpl) GetAchievementsTeam(getAchivsForm request.Ge
 
 		for _, achievement := range teamAch {
 			var event database.EventModel
-			a.Db.Where("id = ?", achievement.EventID).First(&event)
-			res := response.Achievement{}
-			res.Result = achievement.Result
-			res.EventName = event.Title
-			res.TeamTitle = userTeam.Title
-			achievements = append(achievements, res)
+			a.Db.Where(&event, achievement.EventID)
+			achievement := response.Achievement{
+				TeamTitle: event.Title,
+				EventName: event.Title,
+				Result:    achievement.Result,
+			}
+			achievements = append(achievements, achievement)
 		}
 	}
 
@@ -90,7 +91,13 @@ func (a *AchievementRepositoryImpl) AddAchievement(addAchivForm request.AddAchie
 			Result:  addAchivForm.Result,
 		})
 		a.Db.Create(&database.NotificationModel{
-			Message: fmt.Sprintf("Поздравляем, %s! Ваш результат - %s, в соревновании - %s", user.Username, addAchivForm.Result, event.Title),
+			Message: fmt.Sprintf(`
+				Поздравляем, %s! Ваш результат - %s в соревновании - %s
+			`,
+				user.Username,
+				addAchivForm.Result,
+				event.Title,
+			),
 			OwnerId: user.ID,
 		})
 	}

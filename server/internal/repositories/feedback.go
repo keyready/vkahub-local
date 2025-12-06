@@ -38,7 +38,9 @@ func (f FeedbackRepositoryImpl) AddFeedback(addFeedbackForm request.AddFeedbackF
 
 	f.DB.Create(&database.NotificationModel{
 		OwnerId: owner.ID,
-		Message: fmt.Sprintf("Ваш фидбек отправлен! Спасибо что помогаете сделать наш сервис лучше!"),
+		Message: `
+			Ваш фидбек отправлен! Спасибо что помогаете сделать наш сервис лучше!
+		`,
 	})
 
 	var achievement database.PersonalAchievementModel
@@ -51,7 +53,11 @@ func (f FeedbackRepositoryImpl) AddFeedback(addFeedbackForm request.AddFeedbackF
 		f.DB.Save(&achievement)
 		f.DB.Create(&database.NotificationModel{
 			OwnerId: ownerAchievement.ID,
-			Message: fmt.Sprintf("Ваш первый фидбек отправлен! \n Вы получили достижение: %s", achievement.Title),
+			Message: fmt.Sprintf(`
+				Ваш первый фидбек отправлен! \n 
+				Вы получили достижение: %s`,
+				achievement.Title,
+			),
 		})
 	}
 

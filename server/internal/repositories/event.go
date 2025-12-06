@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -37,7 +36,7 @@ func (e *EventRepositoryImpl) RegisterEvent(registerEventForm request.RegisterEv
 		Image: registerEventForm.Image,
 		Hash:  registerEventForm.Hash,
 	}
-	jsonDataObj := utils.ToJSON(imageObj)
+	imageJSON, _ := utils.ToJSON(imageObj)
 
 	newEvent := database.EventModel{
 		Type:             registerEventForm.Type,
@@ -46,7 +45,7 @@ func (e *EventRepositoryImpl) RegisterEvent(registerEventForm request.RegisterEv
 		ShortDescription: registerEventForm.ShortDescription,
 		StartDate:        registerEventForm.StartDate,
 		FinishDate:       registerEventForm.FinishDate,
-		Image:            datatypes.JSON(jsonDataObj),
+		Image:            imageJSON,
 		RegisterUntil:    registerEventForm.RegisterUntil,
 		Sponsors:         sponsors,
 	}
@@ -68,7 +67,12 @@ func (e *EventRepositoryImpl) RegisterEvent(registerEventForm request.RegisterEv
 			e.Db.Create(&database.NotificationModel{
 				OwnerId: user.ID,
 				Message: fmt.Sprintf(
-					"Уважаемый %s! Анонсировано новое событие %s. \n Даты проведения: с %s по %s \n Успейте пройти регистрацию и принять участие!",
+					`
+						Уважаемый %s! 
+						Анонсировано новое событие %s. \n 
+						Даты проведения: с %s по %s \n 
+						Успейте пройти регистрацию и принять участие!
+					`,
 					user.Username,
 					registerEventForm.Title,
 					registerEventForm.StartDate.Format("2006-01-02"),
@@ -77,6 +81,7 @@ func (e *EventRepositoryImpl) RegisterEvent(registerEventForm request.RegisterEv
 			})
 		}
 	}()
+
 	return http.StatusOK, nil
 }
 

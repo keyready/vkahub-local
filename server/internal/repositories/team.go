@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -60,10 +59,12 @@ func (t *TeamRepositoryImpl) EditTeam(editTeamForm request.EditTeamInfoForm) (in
 
 	if editTeamForm.Image != "" {
 		imageObj := database.ImageObj{}
-		utils.FromJSON(updateTeam.Image, &imageObj)
+
+		_ = utils.FromJSON(updateTeam.Image, &imageObj)
 		imageObj.Image = editTeamForm.Image
-		jsonDataObj := utils.ToJSON(imageObj)
-		updateTeam.Image = datatypes.JSON(jsonDataObj)
+
+		imageJSON, _ := utils.ToJSON(imageObj)
+		updateTeam.Image = imageJSON
 
 		if err := t.Db.Save(&updateTeam).Error; err != nil {
 			return http.StatusInternalServerError, fmt.Errorf("failed to upd team image: %v", err)
@@ -72,7 +73,12 @@ func (t *TeamRepositoryImpl) EditTeam(editTeamForm request.EditTeamInfoForm) (in
 
 	t.Db.Create(&database.NotificationModel{
 		OwnerId: updateTeam.CaptainId,
-		Message: fmt.Sprintf("Данные о вашей команде %s обновлены", updateTeam.Title),
+		Message: fmt.Sprintf(
+			`
+				Данные о вашей команде %s обновлены
+			`,
+			updateTeam.Title,
+		),
 	})
 
 	return http.StatusOK, nil
@@ -341,15 +347,14 @@ func (t *TeamRepositoryImpl) RegisterTeam(registerTeamForm request.RegisterTeamF
 		Image: registerTeamForm.Image,
 		Hash:  registerTeamForm.AvatarHash,
 	}
-	imageJsonObj := utils.ToJSON(imageObj)
+	imageJSON, _ := utils.ToJSON(imageObj)
 
 	newTeam := &database.TeamModel{
-		Title:           registerTeamForm.Title,
-		Description:     registerTeamForm.Description,
-		CaptainId:       registerTeamForm.CaptainID,
-		MembersId:       pq.Int64Array{registerTeamForm.CaptainID},
-		WantedPositions: pq.StringArray{},
-		Image:           datatypes.JSON(imageJsonObj),
+		Title:       registerTeamForm.Title,
+		Description: registerTeamForm.Description,
+		CaptainId:   registerTeamForm.CaptainID,
+		MembersId:   pq.Int64Array{registerTeamForm.CaptainID},
+		Image:       imageJSON,
 	}
 	err := t.Db.Create(&newTeam).Error
 

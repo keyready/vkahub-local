@@ -33,7 +33,7 @@ type UserRepository interface {
 	GetActualInfo() response.ActualInfo
 	GetMessages(getMessagesForm request.GetMessagesForm) (int, []response.Message, error)
 	AddPortfolio(addPortfolioForm request.AddPortfolioForm) (int, error)
-	DeletePortfolio(certificateName, ownerName string) (int, error)
+	DeletePortfolio(ctx context.Context, certificateName, ownerName string) (int, error)
 	GetBannedReason(ownerID int64) (int, *database.BanModel, error)
 	SetSettings(ctx context.Context, saveSettingsForm request.SetSettingsForm) error
 	GetSettings(ctx context.Context, username string) (string, error)
@@ -49,16 +49,24 @@ func NewUserRepositoryImpl(Db *gorm.DB, cloud *cloud.Cloud) UserRepository {
 }
 
 func (u *UserRepositoryImpl) GetSettings(ctx context.Context, username string) (string, error) {
-	userSettings := database.UserModel{}
-	u.Db.Where("username = ?", username).First(&userSettings)
-	return userSettings.Settings, nil
+	settings := ""
+	err := u.Db.Model(&database.UserModel{}).
+		Select("settings").
+		Where("username = ?", username).
+		Scan(&settings).Error
+	if err != nil {
+		return "", fmt.Errorf("failed to select user-settings: %v", err)
+	}
+	return settings, nil
 }
 
 func (u *UserRepositoryImpl) SetSettings(ctx context.Context, saveSettingsForm request.SetSettingsForm) error {
-	userSettings := database.UserModel{}
-	u.Db.Where("username = ?", saveSettingsForm.Username).First(&userSettings)
-	userSettings.Settings = saveSettingsForm.Settings
-	u.Db.Save(&userSettings)
+	err := u.Db.Model(&database.UserModel{}).
+		Where("username = ?", saveSettingsForm.Username).
+		Update("settings", saveSettingsForm.Settings).Error
+	if err != nil {
+		return fmt.Errorf("failed to update user-settings: %v", err)
+	}
 	return nil
 }
 
@@ -66,56 +74,77 @@ func (u *UserRepositoryImpl) GetBannedReason(ownerID int64) (int, *database.BanM
 	banned := database.BanModel{}
 	err := u.Db.Where("owner_id = ?", ownerID).First(&banned).Error
 	if err != nil {
-		return http.StatusNotFound, nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return http.StatusNotFound, nil, fmt.Errorf("current user %d is not banned", ownerID)
+		}
+		return http.StatusInternalServerError, nil, fmt.Errorf("failed to select ban for user %d: %v", ownerID, err)
 	}
 	return http.StatusOK, &banned, nil
 }
 
-func (u *UserRepositoryImpl) DeletePortfolio(certificateName, ownerName string) (httpCode int, err error) {
+func (u *UserRepositoryImpl) DeletePortfolio(ctx context.Context, certificateName, ownerName string) (int, error) {
 	owner := database.UserModel{}
-	u.Db.Where("username = ?", ownerName).First(&owner)
+	err := u.Db.Where("username = ?", ownerName).First(&owner).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return http.StatusNotFound, fmt.Errorf("user %s not found", ownerName)
+		}
+		return http.StatusInternalServerError, fmt.Errorf("failed to select owner %s: %v", ownerName, err)
+	}
 
-	var portfolio []database.PortfolioFile
+	// TODO jsonPortfolio := make(map[string]interface{})
+	// err := u.Db.Model(&database.UserModel{}).
+	// 	Select("portfolio -> 'jsonStrPortfolio' as jsonStrPortfolio").
+	// 	Where("username = ?", ownerName).
+	// 	Scan(&jsonStrPortfolio).Error
+
+	portfolio := make([]database.PortfolioFile, len(owner.Portfolio))
 	if len(owner.Portfolio) > 0 {
-		if err := json.Unmarshal(owner.Portfolio, &portfolio); err != nil {
-			portfolio = make([]database.PortfolioFile, 0)
-		}
+		_ = utils.FromJSON(owner.Portfolio, &portfolio)
+	} else {
+		return http.StatusNotFound, fmt.Errorf("owner %s has not portfolio", ownerName)
 	}
 
-	updPortfolio := make([]database.PortfolioFile, 0)
-	for index, cert := range portfolio {
-		if strings.Compare(cert.Url, certificateName) == 0 {
-			removeErr := u.cloud.Cloud.RemoveFile(context.Background(), cert.Url[strings.Index(cert.Url, "/")+1:])
-			if removeErr != nil {
-				return http.StatusInternalServerError, fmt.Errorf("failed to remove portfolio: %v", err)
-			}
-			updPortfolio = append(portfolio[:index], portfolio[index+1:]...)
-		}
+	removeIndex := slices.IndexFunc(portfolio, func(p database.PortfolioFile) bool {
+		return p.Url == certificateName
+	})
+	if removeIndex == -1 {
+		return http.StatusNotFound, fmt.Errorf("certificate %s already delete", certificateName)
 	}
 
-	jsonDataPortfolio, _ := json.Marshal(updPortfolio)
-	dbTypePortfolio := datatypes.JSON(jsonDataPortfolio)
+	removeCert := portfolio[removeIndex]
+	updPortfolio := slices.Delete(portfolio, removeIndex, removeIndex+1)
 
-	owner.Portfolio = dbTypePortfolio
+	err = u.cloud.Cloud.RemoveFile(ctx, strings.SplitN(removeCert.Url, "/", 2)[1])
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("failed to remove certificate: %v", err)
+	}
 
-	u.Db.Save(&owner)
+	jsonPortfolio, err := utils.ToJSON(updPortfolio)
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("failed to convert portfolio: %v", err)
+	}
+
+	owner.Portfolio = jsonPortfolio
+	if err = u.Db.Save(&owner).Error; err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("failed to save owner portfolio: %v", err)
+	}
 
 	return http.StatusOK, nil
 }
 
-func (u *UserRepositoryImpl) AddPortfolio(addPortfolio request.AddPortfolioForm) (httpCode int, err error) {
-	var owner database.UserModel
-	u.Db.Where("username = ?", addPortfolio.Owner).First(&owner)
+func (u *UserRepositoryImpl) AddPortfolio(addPortfolioForm request.AddPortfolioForm) (int, error) {
+	owner := database.UserModel{}
+	_ = u.Db.Where("username = ?", addPortfolioForm.Owner).First(&owner)
 
-	var portfolio []database.PortfolioFile
+	portfolio := make([]database.PortfolioFile, len(owner.Portfolio))
 	if len(owner.Portfolio) > 0 {
 		if err := json.Unmarshal(owner.Portfolio, &portfolio); err != nil {
 			portfolio = []database.PortfolioFile{}
 		}
 	}
 
-	for _, certName := range addPortfolio.Certificates {
-
+	for _, certName := range addPortfolioForm.Certificates {
 		fileType := ""
 		if filepath.Ext(certName) == ".pdf" {
 			fileType = "pdf"
@@ -124,8 +153,8 @@ func (u *UserRepositoryImpl) AddPortfolio(addPortfolio request.AddPortfolioForm)
 		}
 
 		portfolioFile := database.PortfolioFile{
-			EventName: addPortfolio.EventName,
-			Place:     addPortfolio.Place,
+			EventName: addPortfolioForm.EventName,
+			Place:     addPortfolioForm.Place,
 			Url:       certName,
 			Type:      fileType,
 		}
@@ -297,9 +326,9 @@ func (u *UserRepositoryImpl) EditProfile(editProfileForm request.EditProfileInfo
 			Image: editProfileForm.Avatar,
 			Hash:  editProfileForm.AvatarHash,
 		}
-		jsonData := utils.ToJSON(avatarObj)
+		avatarJSON, _ := utils.ToJSON(avatarObj)
 
-		currentUser.Avatar = datatypes.JSON(jsonData)
+		currentUser.Avatar = avatarJSON
 	}
 
 	if currentUser.Recovery != nil {
@@ -311,13 +340,13 @@ func (u *UserRepositoryImpl) EditProfile(editProfileForm request.EditProfileInfo
 			),
 		)
 
-		recovery := database.RecoveryQuestion{
+		recoveryObj := database.RecoveryQuestion{
 			Question: editProfileForm.Question,
 			Answer:   hashAnwser,
 		}
 
-		jsonData := utils.ToJSON(recovery)
-		currentUser.Recovery = datatypes.JSON(jsonData)
+		recoveryJSON, _ := utils.ToJSON(recoveryObj)
+		currentUser.Recovery = recoveryJSON
 	}
 
 	u.Db.Save(&currentUser)
