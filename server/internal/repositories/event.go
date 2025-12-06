@@ -61,11 +61,17 @@ func (e *EventRepositoryImpl) RegisterEvent(registerEventForm request.RegisterEv
 	go func() {
 		for _, user := range users {
 			e.Db.Create(&database.NotificationModel{
-				OwnerId: user.ID,
-				Message: fmt.Sprintf("Анонсированно новое событие %s", registerEventForm.Title),
+				OwnerID: user.ID,
+				Message: fmt.Sprintf(
+					`
+						Анонсированно новое событие -  %s
+						Спешите и регистрируйтесь!
+					`,
+					registerEventForm.Title,
+				),
 			})
 			e.Db.Create(&database.NotificationModel{
-				OwnerId: user.ID,
+				OwnerID: user.ID,
 				Message: fmt.Sprintf(
 					`
 						Уважаемый %s! 
@@ -102,7 +108,7 @@ func (e *EventRepositoryImpl) GetTracksEvent(eventID int64) (int, []database.Tra
 
 	e.Db.Where("id = ?", eventID).First(&event)
 
-	for _, id := range event.TracksId {
+	for _, id := range event.TrackIDs {
 		track := database.TrackModel{}
 		e.Db.Where("id = ?", id).First(&track)
 		eventTracks = append(eventTracks, track)
@@ -124,10 +130,10 @@ func (e *EventRepositoryImpl) GetEvents(getEventsForms request.GetEventsForm) (i
 			user database.UserModel
 		)
 		e.Db.Where("username = ?", getEventsForms.Username).First(&user)
-		e.Db.First(&team, user.TeamId)
+		e.Db.First(&team, user.TeamID)
 		currentTime := time.Now().Format(time.RFC3339)
 		e.Db.Where("finish_date < ?", currentTime).
-			Where("? = ANY(participants_teams_ids)", user.TeamId).
+			Where("? = ANY(participants_teams_ids)", user.TeamID).
 			Find(&eventModels)
 
 		oldEvents := make([]database.EventModel, 0)

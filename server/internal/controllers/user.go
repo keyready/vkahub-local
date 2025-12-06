@@ -215,7 +215,7 @@ func (uc *UserController) FetchAllMessages(ctx *gin.Context) {
 	teamId, _ := strconv.ParseInt(ctx.Param("teamId"), 10, 64)
 
 	form := request.GetMessagesForm{
-		TeamId: teamId,
+		TeamID: teamId,
 		Member: ctx.GetString("username"),
 	}
 

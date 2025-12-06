@@ -37,7 +37,7 @@ func (f FeedbackRepositoryImpl) AddFeedback(addFeedbackForm request.AddFeedbackF
 	f.DB.Create(&newFeed)
 
 	f.DB.Create(&database.NotificationModel{
-		OwnerId: owner.ID,
+		OwnerID: owner.ID,
 		Message: `
 			Ваш фидбек отправлен! Спасибо что помогаете сделать наш сервис лучше!
 		`,
@@ -48,14 +48,16 @@ func (f FeedbackRepositoryImpl) AddFeedback(addFeedbackForm request.AddFeedbackF
 	f.DB.Where("key = ?", "feedback").First(&achievement)
 	f.DB.Where("username = ?", addFeedbackForm.Author).First(&ownerAchievement)
 
-	if !slices.Contains(achievement.OwnerIds, ownerAchievement.ID) {
-		achievement.OwnerIds = append(achievement.OwnerIds, ownerAchievement.ID)
+	if !slices.Contains(achievement.OwnerIDs, ownerAchievement.ID) {
+		achievement.OwnerIDs = append(achievement.OwnerIDs, ownerAchievement.ID)
 		f.DB.Save(&achievement)
 		f.DB.Create(&database.NotificationModel{
-			OwnerId: ownerAchievement.ID,
-			Message: fmt.Sprintf(`
-				Ваш первый фидбек отправлен! \n 
-				Вы получили достижение: %s`,
+			OwnerID: ownerAchievement.ID,
+			Message: fmt.Sprintf(
+				`
+					Ваш первый фидбек отправлен! \n 
+					Вы получили достижение: %s
+				`,
 				achievement.Title,
 			),
 		})

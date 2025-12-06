@@ -18,10 +18,10 @@ func TeamModelToTeamResponse(teamModel database.TeamModel) (*response.Team, erro
 		Title:           teamModel.Title,
 		Description:     teamModel.Description,
 		Image:           imageObj,
-		CaptainId:       teamModel.CaptainId,
+		CaptainID:       teamModel.CaptainID,
 		WantedPositions: teamModel.WantedPositions,
 		EventLocation:   teamModel.EventLocation,
-		MembersId:       teamModel.MembersId,
+		MembersID:       teamModel.MemberIDs,
 	}
 
 	return teamRespose, nil

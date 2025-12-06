@@ -44,7 +44,7 @@ func (tc TeamChatRepositoryImpl) CreateMessage(createMessageForm request.WriteMe
 	createdAt, _ := time.Parse(time.RFC3339, time.Now().String())
 
 	newMessage := database.ChatMessageModel{
-		TeamChatId: teamChatId,
+		TeamChatID: teamChatId,
 		Author:     createMessageForm.Author,
 		Message:    createMessageForm.Message,
 		Attachment: createMessageForm.AttachmentNames,
@@ -81,7 +81,7 @@ func (tc TeamChatRepositoryImpl) DeleteMessage(delMsgForm request.DeleteMessageF
 func (tc TeamChatRepositoryImpl) UpdateMessage(updMsgForm request.UpdateMessageForm) (int, error) {
 	err := tc.DB.
 		Model(&database.ChatMessageModel{}).
-		Where("id = ? AND author = ?", updMsgForm.MessageId, updMsgForm.Author).
+		Where("id = ? AND author = ?", updMsgForm.MessageID, updMsgForm.Author).
 		Updates(database.ChatMessageModel{Message: updMsgForm.NewBody}).
 		Error
 	if err != nil {

@@ -15,7 +15,7 @@ type PositionServiceImpl struct {
 	posRep repositories.PositionRepository
 }
 
-func NewPosServiceImpl(posRep repositories.PositionRepository) PositionService {
+func NewPositionServiceImpl(posRep repositories.PositionRepository) PositionService {
 	return &PositionServiceImpl{posRep: posRep}
 }
 

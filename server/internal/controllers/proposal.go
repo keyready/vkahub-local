@@ -39,7 +39,7 @@ func (pc *ProposalController) ApproveProposal(ctx *gin.Context) {
 
 	form := request.ApproveProposalForm{
 		Username:   ctx.GetString("username"),
-		ProposalId: propId,
+		ProposalID: propId,
 	}
 
 	httpCode, err := pc.proposalService.ApproveProposal(form)

@@ -40,13 +40,13 @@ func (b BugRepositoryImpl) UpdateBug(updBugForm request.UpdateBugForm) (int, err
 	bugAchievement := database.PersonalAchievementModel{}
 	b.DB.Where("username = ?", updBugForm.Author).First(&ownerAchievement)
 	b.DB.Where("key = ?", "bug").First(&bugAchievement)
-	if !slices.Contains(bugAchievement.OwnerIds, ownerAchievement.ID) {
-		bugAchievement.OwnerIds = append(bugAchievement.OwnerIds, ownerAchievement.ID)
+	if !slices.Contains(bugAchievement.OwnerIDs, ownerAchievement.ID) {
+		bugAchievement.OwnerIDs = append(bugAchievement.OwnerIDs, ownerAchievement.ID)
 		b.DB.Save(&bugAchievement)
 		author := database.UserModel{}
 		b.DB.Where("username = ?", updBugForm.Author).First(&author)
 		b.DB.Create(&database.NotificationModel{
-			OwnerId: author.ID,
+			OwnerID: author.ID,
 			Message: fmt.Sprintf(
 				`
 					Поздравляем, %s! Ваш репорт на первый найденный баг был принят и исправлен! 
@@ -60,7 +60,7 @@ func (b BugRepositoryImpl) UpdateBug(updBugForm request.UpdateBugForm) (int, err
 	}
 
 	b.DB.Create(&database.NotificationModel{
-		OwnerId: ownerAchievement.ID,
+		OwnerID: ownerAchievement.ID,
 		Message: fmt.Sprintf(
 			`
 				Поздравляем, %s! 
@@ -94,10 +94,16 @@ func (b BugRepositoryImpl) RegisterBug(regBugFrom request.RegisterBugForm) (int,
 	b.DB.Create(&newBug)
 
 	b.DB.Create(&database.NotificationModel{
-		OwnerId: author.ID,
+		OwnerID: author.ID,
 		Message: fmt.Sprintf(
-			"Уважаемый %s! \n Ваш баг прошел предварительную проверку и был предоставлен разработчикам на рассмотрение.\n Следите за обновлениями!",
-			author.Username),
+			`
+				Уважаемый %s! \n 
+				Ваш баг прошел предварительную проверку и был предоставлен разработчикам на рассмотрение. \n 
+				Спасибо, что помогаете сделать сервис лучше! \n
+				Следите за обновлениями!
+			`,
+			author.Username,
+		),
 	})
 
 	return http.StatusOK, nil

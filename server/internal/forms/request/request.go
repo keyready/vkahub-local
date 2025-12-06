@@ -25,7 +25,7 @@ type GetMembersByParamsForm struct {
 }
 
 type EditProfileInfoForm struct {
-	ID int64 `form:"id"`
+	UserID int64 `form:"id"`
 
 	Firstname  string `form:"firstname"`
 	Middlename string `form:"middlename"`
@@ -72,26 +72,26 @@ type GetTeamsByParamsForm struct {
 }
 
 type AddMembersInTeamForm struct {
-	MembersId []int64 `json:"membersId"`
-	TeamId    int64   `json:"teamId"`
+	MemberIDs []int64 `json:"membersId"`
+	TeamID    int64   `json:"teamId"`
 }
 
 type DeleteMemberForm struct {
-	MemberId int64 `json:"memberId"`
-	TeamId   int64 `json:"teamId"`
+	MemberID int64 `json:"memberId"`
+	TeamID   int64 `json:"teamId"`
 }
 
 type TransferCaptainRightsForm struct {
 	OriginalCaptainId int64 `json:"originalCaptainId"`
-	MemberId          int64 `json:"memberId"`
-	TeamId            int64 `json:"teamId"`
+	MemberID          int64 `json:"memberId"`
+	TeamID            int64 `json:"teamId"`
 	Owner             string
 }
 
 type CreateProposalForm struct {
 	Type    string  `json:"type"` //прошение или приглашение
-	TeamId  int64   `json:"teamId"`
-	UsersId []int64 `json:"usersId"` //invite - массив тех,кого пригласили, request - тот, кто просится
+	TeamID  int64   `json:"teamId"`
+	UserIDs []int64 `json:"usersId"` //invite - массив тех,кого пригласили, request - тот, кто просится
 	Message string  `json:"message"`
 }
 
@@ -101,20 +101,20 @@ type GetProposalForm struct {
 }
 
 type ApproveProposalForm struct {
-	ProposalId int64
+	ProposalID int64
 	Username   string
 }
 
 type PartInTeamForm struct {
-	MemberId int64  `json:"memberId"`
-	TeamId   int64  `json:"teamId"`
+	MemberID int64  `json:"memberId"`
+	TeamID   int64  `json:"teamId"`
 	Message  string `json:"message"`
 }
 
 type AddTrackForm struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	EventId     int64  `json:"eventId"`
+	EventID     int64  `json:"eventId"`
 }
 
 type PartTeamInTrackForm struct {
@@ -124,8 +124,8 @@ type PartTeamInTrackForm struct {
 }
 
 type GetTrackForm struct {
-	TrackId int64 `json:"trackId"`
-	EventId int64 `json:"eventId"`
+	TrackID int64 `json:"trackId"`
+	EventID int64 `json:"eventId"`
 }
 
 type RegisterEventForm struct {
@@ -142,8 +142,8 @@ type RegisterEventForm struct {
 }
 
 type AddAchievementForm struct {
-	TeamId  int64  `json:"teamId"`
-	EventId int64  `json:"eventId"`
+	TeamID  int64  `json:"teamId"`
+	EventID int64  `json:"eventId"`
 	Result  string `json:"result"`
 }
 
@@ -160,7 +160,7 @@ type DeletePortfolioForm struct {
 
 type GetAchievementsForm struct {
 	Owner   string `json:"owner"`
-	ValueId int64  `json:"valueId"`
+	ValueID int64  `json:"valueId"`
 }
 
 type AddSkillForm struct {
@@ -210,20 +210,20 @@ type DeleteMessageForm struct {
 
 type UpdateMessageForm struct {
 	Author    string
-	MessageId int64  `json:"messageId"`
+	MessageID int64  `json:"messageId"`
 	NewBody   string `json:"message"`
 }
 
 type GetMessagesForm struct {
 	Member string
-	TeamId int64
+	TeamID int64
 }
 
 type WriteMessageForm struct {
 	Message         string `form:"message"`
 	AttachmentNames []string
 	Author          string
-	TeamChatId      int64
+	TeamChatID      int64
 }
 
 type GetEventsForm struct {

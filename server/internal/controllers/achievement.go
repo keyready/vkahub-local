@@ -27,11 +27,11 @@ func (ac *AchievementController) GetAchievementsTeam(gCtx *gin.Context) {
 	case userId == "":
 		formData.Owner = "team"
 		valueID, _ := strconv.Atoi(teamId)
-		formData.ValueId = int64(valueID)
+		formData.ValueID = int64(valueID)
 	default:
 		formData.Owner = "user"
 		valueID, _ := strconv.Atoi(userId)
-		formData.ValueId = int64(valueID)
+		formData.ValueID = int64(valueID)
 	}
 
 	httpCode, err, achievements := ac.aService.GetAchievementsTeam(formData)
