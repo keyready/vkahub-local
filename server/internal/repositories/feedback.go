@@ -6,7 +6,6 @@ import (
 	"server/internal/database"
 	"server/internal/forms/request"
 	"slices"
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -25,34 +24,29 @@ func NewFeedbackImpl(db *gorm.DB) FeedbackRepository {
 }
 
 func (f FeedbackRepositoryImpl) AddFeedback(addFeedbackForm request.AddFeedbackForm) (int, error) {
-	owner := database.UserModel{}
-	f.DB.Where("username = ?", addFeedbackForm.Author).First(&owner)
 
-	createdAt, _ := time.Parse(time.RFC3339, time.Now().String())
 	newFeed := database.FeedbackModel{
-		Message:   addFeedbackForm.Message,
-		Author:    addFeedbackForm.Author,
-		CreatedAt: createdAt,
+		Message: addFeedbackForm.Message,
+		Author:  addFeedbackForm.Author.Username,
 	}
 	f.DB.Create(&newFeed)
 
 	f.DB.Create(&database.NotificationModel{
-		OwnerID: owner.ID,
+		OwnerID: addFeedbackForm.Author.ID,
 		Message: `
-			Ваш фидбек отправлен! Спасибо что помогаете сделать наш сервис лучше!
+			Ваш фидбек отправлен! Спасибо что помогаете сделать сервис лучше!
 		`,
 	})
 
-	var achievement database.PersonalAchievementModel
-	var ownerAchievement database.UserModel
+	achievement := database.PersonalAchievementModel{}
 	f.DB.Where("key = ?", "feedback").First(&achievement)
-	f.DB.Where("username = ?", addFeedbackForm.Author).First(&ownerAchievement)
 
-	if !slices.Contains(achievement.OwnerIDs, ownerAchievement.ID) {
-		achievement.OwnerIDs = append(achievement.OwnerIDs, ownerAchievement.ID)
+	if !slices.Contains(achievement.OwnerIDs, addFeedbackForm.Author.ID) {
+		achievement.OwnerIDs = append(achievement.OwnerIDs, addFeedbackForm.Author.ID)
 		f.DB.Save(&achievement)
+
 		f.DB.Create(&database.NotificationModel{
-			OwnerID: ownerAchievement.ID,
+			OwnerID: addFeedbackForm.Author.ID,
 			Message: fmt.Sprintf(
 				`
 					Ваш первый фидбек отправлен! \n 

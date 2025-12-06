@@ -67,15 +67,18 @@ func (a *AchievementRepositoryImpl) GetAchievementsTeam(getAchivsForm request.Ge
 	return http.StatusOK, achievements, nil
 }
 
-func (a *AchievementRepositoryImpl) AddAchievement(addAchivForm request.AddAchievementForm) (httpCode int, err error) {
-	newA := database.AchievementModel{
+func (a *AchievementRepositoryImpl) AddAchievement(addAchivForm request.AddAchievementForm) (int, error) {
+	newAchiv := database.AchievementModel{
 		Type:    "team",
 		TeamID:  addAchivForm.TeamID,
 		EventID: addAchivForm.EventID,
 		Result:  addAchivForm.Result,
 	}
-	a.Db.Create(&newA)
-
+	err := a.Db.Create(&newAchiv).Error
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("falied to create new achiv: %v", err)
+	}
+	
 	var team database.TeamModel
 	a.Db.Where("id = ?", addAchivForm.TeamID).First(&team)
 

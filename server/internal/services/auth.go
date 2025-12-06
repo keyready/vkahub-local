@@ -9,7 +9,7 @@ import (
 
 type AuthService interface {
 	SignUp(singUpForm request.SignUpForm) (int, error)
-	Login(loginForm request.LoginForm) (int, error)
+	SignIn(signInForm request.SignInForm) (int, *authorizer.TokensResponse, error)
 	RefreshToken(refreshToken string) (*authorizer.TokensResponse, error)
 	Logout(username string) (int, error)
 	GetRecoveryQuestions() (int, []database.RecoveryQuestionModel, error)
@@ -39,7 +39,7 @@ func (a AuthServiceImpl) ApproveRecovery(approveRecovery request.ApproveRecovery
 }
 
 func (a AuthServiceImpl) GetPersonalQuestion(getPersonalQuestionFormForm request.GetPersonalQuestionForm) (int, string, error) {
-	httpCode, err, question := a.AuthRepository.GetPersonalQuestion(getPersonalQuestionFormForm)
+	httpCode, question, err := a.AuthRepository.GetPersonalQuestion(getPersonalQuestionFormForm)
 	return httpCode, question, err
 }
 
@@ -53,9 +53,9 @@ func (a AuthServiceImpl) SignUp(signUpForm request.SignUpForm) (int, error) {
 	return httpCode, err
 }
 
-func (a AuthServiceImpl) Login(loginForm request.LoginForm) (int, error) {
-	httpCode, err := a.AuthRepository.Login(loginForm)
-	return httpCode, err
+func (a AuthServiceImpl) SignIn(signInForm request.SignInForm) (int, *authorizer.TokensResponse, error) {
+	httpCode, tokens, err := a.AuthRepository.SignIn(signInForm)
+	return httpCode, tokens, err
 }
 
 func (a AuthServiceImpl) RefreshToken(refreshToken string) (*authorizer.TokensResponse, error) {

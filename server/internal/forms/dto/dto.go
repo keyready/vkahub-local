@@ -10,3 +10,8 @@ const (
 	REPORTS_STORAGE          = "/app/static/reports"
 	TEMPLATE_REPORT_FILENAME = "report_template.docx"
 )
+
+type AuthorMetaData struct {
+	ID       int64
+	Username string
+}

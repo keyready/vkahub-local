@@ -44,6 +44,7 @@ func AuthMiddleware(jwtService *authorizer.Authorizer) gin.HandlerFunc {
 		}
 
 		gCtx.Set("username", claims.Payload.Username)
+		gCtx.Set("userID", claims.Payload.ID)
 
 		gCtx.Next()
 	}

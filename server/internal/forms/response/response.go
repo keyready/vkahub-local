@@ -10,7 +10,7 @@ import (
 type Proposal struct {
 	ID        int64  `json:"id"`
 	Type      string `json:"type"`
-	TeamId    int64  `json:"teamId"`
+	TeamID    int64  `json:"teamId"`
 	TeamTitle string `json:"teamTitle"`
 	OwnerID   int64  `json:"ownerId"`
 	OwnerName string `json:"memberName"`

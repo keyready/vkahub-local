@@ -29,7 +29,7 @@ func (p *PositionRepositoryImpl) AddPosition(addPositionForm request.AddPosition
 	if err := p.DB.Create(
 		&database.PositionModel{
 			Name:   addPositionForm.Name,
-			Author: addPositionForm.Author,
+			Author: addPositionForm.Author.Username,
 		}).Error; err != nil {
 		return http.StatusInternalServerError, err
 	}

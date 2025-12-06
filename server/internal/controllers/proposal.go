@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"server/internal/forms/dto"
 	"server/internal/forms/request"
 	"server/internal/services"
 	"server/pkg/app"
@@ -74,8 +75,11 @@ func (pc *ProposalController) GetPersonalProposals(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
 
 	form := request.GetProposalForm{
-		Type:     ctx.Query("type"),
-		Observer: ctx.GetString("username"),
+		Type: ctx.Query("type"),
+		Observer: dto.AuthorMetaData{
+			Username: ctx.GetString("username"),
+			ID:       ctx.GetInt64("userID"),
+		},
 	}
 
 	httpCode, proposals, err := pc.proposalService.GetPersonalProposals(form)

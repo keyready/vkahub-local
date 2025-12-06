@@ -40,7 +40,7 @@ func (r ReportRepositoryImpl) GenerateReport(eventID int64) (int, string, error)
 	eventSponsors := strings.Join(event.Sponsors, ", ")
 
 	eventDate := fmt.Sprintf(
-		"с %d по %d %s %d г.",
+		`с %d по %d %s %d г.`,
 		event.StartDate.Day(),
 		event.FinishDate.Day(),
 		event.StartDate.Month().String(),

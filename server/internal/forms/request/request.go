@@ -1,6 +1,7 @@
 package request
 
 import (
+	"server/internal/forms/dto"
 	"time"
 )
 
@@ -11,7 +12,7 @@ type SignUpForm struct {
 	Avatar     string
 }
 
-type LoginForm struct {
+type SignInForm struct {
 	Username string `binding:"required" json:"username"`
 	Password string `binding:"required" json:"password"`
 }
@@ -85,7 +86,7 @@ type TransferCaptainRightsForm struct {
 	OriginalCaptainId int64 `json:"originalCaptainId"`
 	MemberID          int64 `json:"memberId"`
 	TeamID            int64 `json:"teamId"`
-	Owner             string
+	Owner             dto.AuthorMetaData
 }
 
 type CreateProposalForm struct {
@@ -97,7 +98,7 @@ type CreateProposalForm struct {
 
 type GetProposalForm struct {
 	Type     string `json:"type"`
-	Observer string
+	Observer dto.AuthorMetaData
 }
 
 type ApproveProposalForm struct {
@@ -151,7 +152,7 @@ type AddPortfolioForm struct {
 	EventName    string `form:"eventName"`
 	Place        string `form:"place"`
 	Certificates []string
-	Owner        string
+	Owner        dto.AuthorMetaData
 }
 
 type DeletePortfolioForm struct {
@@ -165,12 +166,12 @@ type GetAchievementsForm struct {
 
 type AddSkillForm struct {
 	Name   string `json:"name"`
-	Author string
+	Author dto.AuthorMetaData
 }
 
 type AddPositionForm struct {
 	Name   string `json:"name"`
-	Author string
+	Author dto.AuthorMetaData
 }
 
 type RegisterBugForm struct {
@@ -180,18 +181,18 @@ type RegisterBugForm struct {
 	Additional  string `form:"additional"`
 	Status      string `form:"status"`
 	MediaNames  []string
-	Author      string
+	Author      dto.AuthorMetaData
 }
 
 type UpdateBugForm struct {
-	BugID      int64  `json:"bugId"`
-	StatusName string `json:"status"`
-	Author     string
+	BugID  int64  `json:"bugId"`
+	Status string `json:"status"`
+	Author dto.AuthorMetaData
 }
 
 type AddFeedbackForm struct {
 	Message string `json:"message"`
-	Author  string
+	Author  dto.AuthorMetaData
 }
 
 type GetNotificationsForm struct {
@@ -204,12 +205,12 @@ type UpdateNotificationForm struct {
 }
 
 type DeleteMessageForm struct {
-	Author     string
-	MessagesId int64 `json:"messagesId"`
+	Author    dto.AuthorMetaData
+	MessageID int64 `json:"messagesId"`
 }
 
-type UpdateMessageForm struct {
-	Author    string
+type EditMessageForm struct {
+	Author    dto.AuthorMetaData
 	MessageID int64  `json:"messageId"`
 	NewBody   string `json:"message"`
 }
@@ -222,7 +223,7 @@ type GetMessagesForm struct {
 type WriteMessageForm struct {
 	Message         string `form:"message"`
 	AttachmentNames []string
-	Author          string
+	Author          dto.AuthorMetaData
 	TeamChatID      int64
 }
 

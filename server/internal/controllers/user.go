@@ -192,7 +192,7 @@ func (uc *UserController) AddPortfolio(gCtx *gin.Context) {
 		certificateNames = append(certificateNames, readFileResult.FullFilePath)
 	}
 
-	formData.Owner = appGin.Ctx.GetString("username")
+	formData.Owner.Username = appGin.Ctx.GetString("username")
 	formData.Certificates = certificateNames
 
 	httpCode, err := uc.userService.AddPortfolio(formData)

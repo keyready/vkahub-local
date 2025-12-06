@@ -108,7 +108,7 @@ func (tc *TeamController) TransferCaptainRights(ctx *gin.Context) {
 		return
 	}
 
-	jsonForm.Owner = ctx.GetString("username")
+	jsonForm.Owner.Username = ctx.GetString("username")
 
 	httpCode, serviceErr := tc.teamService.TransferCaptainRights(jsonForm)
 	if serviceErr != nil {

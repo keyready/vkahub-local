@@ -226,10 +226,12 @@ func (u *UserRepositoryImpl) GetActualInfo() response.ActualInfo {
 }
 
 func (u *UserRepositoryImpl) UpdateNotificationStatus(updateNotificationForm request.UpdateNotificationForm) (int, error) {
-	var updateNtf database.NotificationModel
-	u.Db.Where("id = ?", updateNotificationForm.NotificationID).First(&updateNtf)
-	updateNtf.Status = "read"
-	u.Db.Save(&updateNtf)
+	err := u.Db.Model(&database.NotificationModel{}).
+		Where("id = ?", updateNotificationForm.NotificationID).
+		Update("status", "read").Error
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("failed to update status notification: %v", err)
+	}
 	return http.StatusOK, nil
 }
 

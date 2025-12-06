@@ -101,11 +101,9 @@ func (p *ProposalRepositoryImpl) GetPersonalProposals(getProposalsForm request.G
 
 	switch getProposalsForm.Type {
 	case "invite":
-		userModel := database.UserModel{}
 		proposalModels := make([]database.ProposalModel, 0)
 
-		p.DB.Where("username = ?", getProposalsForm.Observer).First(&userModel)
-		p.DB.Where("owner_id = ?", userModel.ID).Find(&proposalModels)
+		p.DB.Where("owner_id = ?", getProposalsForm.Observer.ID).Find(&proposalModels)
 
 		for _, proposal := range proposalModels {
 			var team database.TeamModel
@@ -120,20 +118,18 @@ func (p *ProposalRepositoryImpl) GetPersonalProposals(getProposalsForm request.G
 			prop.CreatedAt = proposal.CreatedAt.String()
 			prop.OwnerID = team.CaptainID
 			prop.OwnerName = captain.Lastname + " " + string(captain.Firstname[0]) + "."
-			prop.TeamId = team.ID
+			prop.TeamID = team.ID
 			prop.TeamTitle = team.Title
 
 			proposals = append(proposals, prop)
 		}
 
 	case "request":
-		captain := database.UserModel{}
 		proposalModels := make([]database.ProposalModel, 0)
 		team := database.TeamModel{}
 		owner := database.UserModel{}
 
-		p.DB.Where("username = ?", getProposalsForm.Observer).First(&captain)
-		p.DB.Where("captain_id = ?", captain.ID).Find(&team)
+		p.DB.Where("captain_id = ?", getProposalsForm.Observer.ID).Find(&team)
 		p.DB.Where("team_id = ?", team.ID).Find(&proposalModels)
 
 		for _, proposal := range proposalModels {
@@ -145,9 +141,10 @@ func (p *ProposalRepositoryImpl) GetPersonalProposals(getProposalsForm request.G
 			prop.Message = proposal.Message
 			prop.CreatedAt = proposal.CreatedAt.String()
 			prop.OwnerID = proposal.OwnerID
-			prop.OwnerName = owner.Lastname + " " + string(owner.Firstname[0]) + "."
-			prop.TeamId = team.ID
+			prop.OwnerName = fmt.Sprintf("%s %s.", owner.Lastname, string([]rune(owner.Firstname)[0]))
+			prop.TeamID = team.ID
 			prop.TeamTitle = team.Title
+
 			proposals = append(proposals, prop)
 		}
 	}

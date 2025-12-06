@@ -29,7 +29,7 @@ func (s SkillRepositoryImpl) AddSkill(addSkillForm request.AddSkillForm) (int, e
 	if err := s.Db.Create(
 		&database.SkillModel{
 			Name:   addSkillForm.Name,
-			Author: addSkillForm.Author,
+			Author: addSkillForm.Author.Username,
 		}).Error; err != nil {
 		return http.StatusInternalServerError, err
 	}

@@ -7,7 +7,7 @@ import (
 
 type TeamChatService interface {
 	DeleteMessage(delMsgForm request.DeleteMessageForm) (int, []string, error)
-	UpdateMessage(updMsgForm request.UpdateMessageForm) (int, error)
+	EditMessage(editMsgForm request.EditMessageForm) (int, error)
 	CreateMessage(createMessageForm request.WriteMessageForm) (int, error)
 }
 
@@ -29,7 +29,7 @@ func (teamChatS TeamChatServiceImpl) DeleteMessage(delMsgForm request.DeleteMess
 	return httpCode, attachmentMessages, err
 }
 
-func (teamChatS TeamChatServiceImpl) UpdateMessage(updMsgForm request.UpdateMessageForm) (int, error) {
-	httpCode, err := teamChatS.teamChatRepository.UpdateMessage(updMsgForm)
+func (teamChatS TeamChatServiceImpl) EditMessage(editMsgForm request.EditMessageForm) (int, error) {
+	httpCode, err := teamChatS.teamChatRepository.EditMessage(editMsgForm)
 	return httpCode, err
 }

@@ -31,7 +31,10 @@ func (bc *BugController) RegisterBug(gCtx *gin.Context) {
 	appGin := app.Gin{Ctx: gCtx}
 	formData := request.RegisterBugForm{}
 
-	formData.Author = gCtx.GetString("username")
+	formData.Author = dto.AuthorMetaData{
+		Username: gCtx.GetString("username"),
+		ID:       gCtx.GetInt64("userID"),
+	}
 
 	if bindErr := gCtx.ShouldBind(&formData); bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
@@ -90,9 +93,9 @@ func (bc *BugController) RegisterBug(gCtx *gin.Context) {
 
 func (bc *BugController) GetBugs(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	t := ctx.Query("status")
+	statusBug := ctx.Query("status")
 
-	httpCode, bugs, err := bc.bugService.GetBugs(t)
+	httpCode, bugs, err := bc.bugService.GetBugs(statusBug)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return
@@ -111,7 +114,10 @@ func (bc *BugController) UpdateBug(ctx *gin.Context) {
 		return
 	}
 
-	updateBugReq.Author = ctx.GetString("username")
+	updateBugReq.Author = dto.AuthorMetaData{
+		Username: ctx.GetString("username"),
+		ID:       ctx.GetInt64("userID"),
+	}
 
 	httpCode, err := bc.bugService.UpdateBug(updateBugReq)
 	if err != nil {
