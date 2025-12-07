@@ -10,24 +10,24 @@ import (
 type Proposal struct {
 	ID        int64  `json:"id"`
 	Type      string `json:"type"`
-	TeamId    int64  `json:"teamId"`
+	TeamID    int64  `json:"teamId"`
 	TeamTitle string `json:"teamTitle"`
-	OwnerId   int64  `json:"ownerId"`
+	OwnerID   int64  `json:"ownerId"`
 	OwnerName string `json:"memberName"`
 	Message   string `json:"message"`
 	CreatedAt string `json:"createdAt"`
 }
 
 type Achievement struct {
-	Id int64 `json:"id"`
+	ID int64 `json:"id"`
 
-	TeamId int64 `json:"teamId"`
+	TeamID int64 `json:"teamId"`
 
 	TeamTitle string `json:"teamTitle"`
 	EventName string `json:"eventName"`
 	EventType string `json:"eventType"`
-	EventId   int64  `json:"eventId"`
-	TrackId   int64  `json:"trackId"`
+	EventID   int64  `json:"eventId"`
+	TrackID   int64  `json:"trackId"`
 
 	Result string `json:"result"`
 }
@@ -51,14 +51,13 @@ type ActualInfo struct {
 type MessageAvatar struct {
 	Username string `json:"username"`
 	Avatar   string `json:"avatar"`
-	Hash     string `json:"hash"`
 }
 
 type Message struct {
 	ID          int64         `json:"id"`
 	Author      MessageAvatar `json:"author"`
 	Message     string        `json:"message"`
-	TeamChatId  int64         `json:"teamChatId"`
+	TeamChatID  int64         `json:"teamChatId"`
 	Attachments []string      `json:"attachments"`
 	CreatedAt   time.Time     `json:"createdAt"`
 	UpdatedAt   time.Time     `json:"updatedAt"`
@@ -68,7 +67,7 @@ type Message struct {
 type Member struct {
 	ID        int64             `json:"id"`
 	Username  string            `json:"username"`
-	TeamId    int64             `json:"teamId"`
+	TeamID    int64             `json:"teamId"`
 	Firstname string            `json:"firstname"`
 	Lastname  string            `json:"lastname"`
 	Avatar    database.ImageObj `json:"avatar"`
@@ -79,7 +78,7 @@ type Member struct {
 type ProfileData struct {
 	ID          int64                    `json:"id"`
 	Username    string                   `json:"username"`
-	TeamId      int64                    `json:"teamId"`
+	TeamID      int64                    `json:"teamId"`
 	Firstname   string                   `json:"firstname"`
 	Lastname    string                   `json:"lastname"`
 	Description string                   `json:"description"`
@@ -96,21 +95,21 @@ type Team struct {
 	Title           string            `json:"title"`
 	Description     string            `json:"description"`
 	Image           database.ImageObj `json:"image"`
-	CaptainId       int64             `json:"captain_id"`
+	CaptainID       int64             `json:"captain_id"`
 	WantedPositions pq.StringArray    `json:"wantedPositions"`
 	EventLocation   string            `json:"eventLocation"`
-	MembersId       pq.Int64Array     `json:"members"`
+	MembersID       pq.Int64Array     `json:"members"`
 }
 
 type Event struct {
-	ID                   int64             `json:"id"`
-	Type                 string            `json:"type"`
-	Title                string            `json:"title"`
-	ShortDescription     string            `json:"shortDescription"`
-	Description          string            `json:"description"`
-	Image                database.ImageObj `json:"image"`
-	ParticipantsTeamsIds pq.Int64Array     `json:"participantsTeamsIds"`
-	TracksId             pq.Int64Array     `json:"trackId"`
+	ID                  int64             `json:"id"`
+	Type                string            `json:"type"`
+	Title               string            `json:"title"`
+	ShortDescription    string            `json:"shortDescription"`
+	Description         string            `json:"description"`
+	Image               database.ImageObj `json:"image"`
+	ParticipantsTeamIDs pq.Int64Array     `json:"participantsTeamsIds"`
+	TrackIDs            pq.Int64Array     `json:"trackIDs"`
 
 	StartDate     time.Time `json:"startDate"`
 	FinishDate    time.Time `json:"finishDate"`
@@ -132,7 +131,7 @@ type UserData struct {
 	Rank             string                   `json:"rank"`
 	Roles            pq.StringArray           `json:"roles"`
 	Skills           pq.StringArray           `json:"skills"`
-	TeamId           int64                    `json:"teamId"`
+	TeamID           int64                    `json:"teamId"`
 	Username         string                   `json:"username"`
 	Portfolio        []database.PortfolioFile `json:"portfolio"`
 	Settings         string                   `json:"settings"`

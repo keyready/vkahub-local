@@ -14,18 +14,18 @@ func EventModelToEventResponse(eventModel database.EventModel) (*response.Event,
 	}
 
 	eventResponse := &response.Event{
-		ID:                   eventModel.ID,
-		Type:                 eventModel.Type,
-		Title:                eventModel.Title,
-		ShortDescription:     eventModel.ShortDescription,
-		Description:          eventModel.Description,
-		Image:                imageObj,
-		ParticipantsTeamsIds: eventModel.ParticipantsTeamsIds,
-		TracksId:             eventModel.TracksId,
-		StartDate:            eventModel.StartDate,
-		FinishDate:           eventModel.FinishDate,
-		RegisterUntil:        eventModel.RegisterUntil,
-		Sponsors:             eventModel.Sponsors,
+		ID:                  eventModel.ID,
+		Type:                eventModel.Type,
+		Title:               eventModel.Title,
+		ShortDescription:    eventModel.ShortDescription,
+		Description:         eventModel.Description,
+		Image:               imageObj,
+		ParticipantsTeamIDs: eventModel.ParticipantsTeamIDs,
+		TrackIDs:            eventModel.TrackIDs,
+		StartDate:           eventModel.StartDate,
+		FinishDate:          eventModel.FinishDate,
+		RegisterUntil:       eventModel.RegisterUntil,
+		Sponsors:            eventModel.Sponsors,
 	}
 
 	return eventResponse, nil

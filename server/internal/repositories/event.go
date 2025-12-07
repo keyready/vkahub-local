@@ -30,8 +30,6 @@ func NewEventRepositoryImpl(Db *gorm.DB) EventRepository {
 }
 
 func (e *EventRepositoryImpl) RegisterEvent(registerEventForm request.RegisterEventForm) (int, error) {
-	sponsors := strings.Split(registerEventForm.Sponsors, ",")
-
 	imageObj := database.ImageObj{
 		Image: registerEventForm.Image,
 		Hash:  registerEventForm.Hash,
@@ -47,7 +45,7 @@ func (e *EventRepositoryImpl) RegisterEvent(registerEventForm request.RegisterEv
 		FinishDate:       registerEventForm.FinishDate,
 		Image:            imageJSON,
 		RegisterUntil:    registerEventForm.RegisterUntil,
-		Sponsors:         sponsors,
+		Sponsors:         strings.Split(registerEventForm.Sponsors, ","),
 	}
 
 	dbErr := e.Db.Create(&newEvent).Error
@@ -58,29 +56,35 @@ func (e *EventRepositoryImpl) RegisterEvent(registerEventForm request.RegisterEv
 	users := make([]database.UserModel, 0)
 	e.Db.Where("is_profile_confirmed = ?", true).Find(&users)
 
-	go func() {
-		for _, user := range users {
-			e.Db.Create(&database.NotificationModel{
-				OwnerId: user.ID,
-				Message: fmt.Sprintf("Анонсированно новое событие %s", registerEventForm.Title),
-			})
-			e.Db.Create(&database.NotificationModel{
-				OwnerId: user.ID,
-				Message: fmt.Sprintf(
-					`
-						Уважаемый %s! 
-						Анонсировано новое событие %s. \n 
-						Даты проведения: с %s по %s \n 
-						Успейте пройти регистрацию и принять участие!
-					`,
-					user.Username,
-					registerEventForm.Title,
-					registerEventForm.StartDate.Format("2006-01-02"),
-					registerEventForm.FinishDate.Format("2006-01-02"),
-				),
-			})
-		}
-	}()
+	// TODO - НУЖЕН БРОКЕР СООБЩЕНИЙ go func() {
+	// 	for _, user := range users {
+	// 		e.Db.Create(&database.NotificationModel{
+	// 			OwnerID: user.ID,
+	// 			Message: fmt.Sprintf(
+	// 				`
+	// 					Анонсированно новое событие -  %s
+	// 					Спешите и регистрируйтесь!
+	// 				`,
+	// 				registerEventForm.Title,
+	// 			),
+	// 		})
+	// 		e.Db.Create(&database.NotificationModel{
+	// 			OwnerID: user.ID,
+	// 			Message: fmt.Sprintf(
+	// 				`
+	// 					Уважаемый %s!
+	// 					Анонсировано новое событие %s. \n
+	// 					Даты проведения: с %s по %s \n
+	// 					Успейте пройти регистрацию и принять участие!
+	// 				`,
+	// 				user.Username,
+	// 				registerEventForm.Title,
+	// 				registerEventForm.StartDate.Format("2006-01-02"),
+	// 				registerEventForm.FinishDate.Format("2006-01-02"),
+	// 			),
+	// 		})
+	// 	}
+	// }()
 
 	return http.StatusOK, nil
 }
@@ -97,15 +101,11 @@ func (e *EventRepositoryImpl) GetEvent(eventID int64) (int, *response.Event, err
 }
 
 func (e *EventRepositoryImpl) GetTracksEvent(eventID int64) (int, []database.TrackModel, error) {
-	event := database.EventModel{}
 	eventTracks := make([]database.TrackModel, 0)
-
-	e.Db.Where("id = ?", eventID).First(&event)
-
-	for _, id := range event.TracksId {
-		track := database.TrackModel{}
-		e.Db.Where("id = ?", id).First(&track)
-		eventTracks = append(eventTracks, track)
+	err := e.Db.Where("event_id = ?", eventID).
+		Find(&eventTracks).Error
+	if err != nil {
+		return http.StatusInsufficientStorage, nil, fmt.Errorf("failed to select event tracks: %v", err)
 	}
 
 	return http.StatusOK, eventTracks, nil
@@ -124,10 +124,10 @@ func (e *EventRepositoryImpl) GetEvents(getEventsForms request.GetEventsForm) (i
 			user database.UserModel
 		)
 		e.Db.Where("username = ?", getEventsForms.Username).First(&user)
-		e.Db.First(&team, user.TeamId)
+		e.Db.First(&team, user.TeamID)
 		currentTime := time.Now().Format(time.RFC3339)
 		e.Db.Where("finish_date < ?", currentTime).
-			Where("? = ANY(participants_teams_ids)", user.TeamId).
+			Where("? = ANY(participants_teams_ids)", user.TeamID).
 			Find(&eventModels)
 
 		oldEvents := make([]database.EventModel, 0)

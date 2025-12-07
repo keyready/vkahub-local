@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"server/internal/database"
 	"server/internal/forms/request"
@@ -24,31 +26,42 @@ func NewPositionRepImpl(DB *gorm.DB) PositionRepository {
 }
 
 func (p *PositionRepositoryImpl) AddPosition(addPositionForm request.AddPositionForm) (int, error) {
-	if addDdErr := p.DB.Create(
+	if err := p.DB.Create(
 		&database.PositionModel{
 			Name:   addPositionForm.Name,
-			Author: addPositionForm.Author,
-		}).Error; addDdErr != nil {
-		return http.StatusBadRequest, addDdErr
+			Author: addPositionForm.Author.Username,
+		}).Error; err != nil {
+		return http.StatusInternalServerError, err
 	}
 
-	return http.StatusOK, nil
+	return http.StatusCreated, nil
 }
 
-func (p *PositionRepositoryImpl) GetPositions(positionIDs string) (int, []database.PositionModel, error) {
+func (p *PositionRepositoryImpl) GetPositions(positionsString string) (int, []database.PositionModel, error) {
 	positions := make([]database.PositionModel, 0)
 
-	if positionIDs != "" {
-		positionIdsSlice := strings.Split(positionIDs, ",")
-		var positionIds []int64
-		for _, positionIdStr := range positionIdsSlice {
-			positionId, _ := strconv.ParseInt(positionIdStr, 10, 64)
-			positionIds = append(positionIds, positionId)
+	if positionsString != "" {
+		positionsSplit := strings.Split(positionsString, ",")
+
+		positionIDs := make([]int64, len(positionsSplit))
+		for _, positionID := range positionsSplit {
+			positionIDInt, _ := strconv.ParseInt(positionID, 10, 64)
+			positionIDs = append(positionIDs, positionIDInt)
 		}
 
-		p.DB.Where("id IN (?)", positionIds).Find(&positions)
-	} else {
-		p.DB.Find(&positions)
+		err := p.DB.Where("id IN ?", positionIDs).Find(&positions).Error
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return http.StatusNotFound, nil, fmt.Errorf("skills not found: %v", err)
+			}
+		}
+	}
+
+	err := p.DB.Find(&positions).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return http.StatusNotFound, nil, fmt.Errorf("skills not found: %v", err)
+		}
 	}
 
 	return http.StatusOK, positions, nil

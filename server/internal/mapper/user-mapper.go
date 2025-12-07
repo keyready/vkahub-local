@@ -16,7 +16,7 @@ func UserModelToMember(userModel database.UserModel) (*response.Member, error) {
 	member := &response.Member{
 		ID:        userModel.ID,
 		Username:  userModel.Username,
-		TeamId:    userModel.TeamId,
+		TeamID:    userModel.TeamID,
 		Firstname: userModel.Firstname,
 		Lastname:  userModel.Lastname,
 		Avatar:    avatarObj,
@@ -57,7 +57,7 @@ func UserModelToUserData(userModel database.UserModel) (*response.UserData, erro
 		Rank:             userModel.Rank,
 		Roles:            userModel.Roles,
 		Skills:           userModel.Skills,
-		TeamId:           userModel.TeamId,
+		TeamID:           userModel.TeamID,
 		Username:         userModel.Username,
 		Portfolio:        portfolio,
 		RecoveryQuestion: recovery.Question,
@@ -81,7 +81,7 @@ func UserModelToUserProfile(userModel database.UserModel) (*response.ProfileData
 	profileData := &response.ProfileData{
 		ID:          userModel.ID,
 		Username:    userModel.Username,
-		TeamId:      userModel.TeamId,
+		TeamID:      userModel.TeamID,
 		Firstname:   userModel.Firstname,
 		Lastname:    userModel.Lastname,
 		Description: userModel.Description,

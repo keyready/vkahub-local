@@ -66,7 +66,7 @@ func (teamChatC *TeamChatController) CreateMessage(gCtx *gin.Context) {
 		formData.AttachmentNames = append(formData.AttachmentNames, readFileResult.FullFilePath)
 	}
 
-	formData.Author = gCtx.GetString("username")
+	formData.Author.Username = gCtx.GetString("username")
 	httpCode, err := teamChatC.teamChatService.CreateMessage(formData)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
@@ -85,7 +85,7 @@ func (teamChatC *TeamChatController) DeleteMessage(ctx *gin.Context) {
 		return
 	}
 
-	jsonForm.Author = appGin.Ctx.GetString("username")
+	jsonForm.Author.Username = appGin.Ctx.GetString("username")
 
 	httpCode, _, err := teamChatC.teamChatService.DeleteMessage(jsonForm)
 	if err != nil {
@@ -96,9 +96,9 @@ func (teamChatC *TeamChatController) DeleteMessage(ctx *gin.Context) {
 	appGin.SuccessResponse(httpCode, gin.H{})
 }
 
-func (teamChatC *TeamChatController) UpdateMessage(ctx *gin.Context) {
+func (teamChatC *TeamChatController) EditMessage(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	jsonForm := request.UpdateMessageForm{}
+	jsonForm := request.EditMessageForm{}
 
 	bindErr := ctx.ShouldBindJSON(&jsonForm)
 	if bindErr != nil {
@@ -106,9 +106,9 @@ func (teamChatC *TeamChatController) UpdateMessage(ctx *gin.Context) {
 		return
 	}
 
-	jsonForm.Author = appGin.Ctx.GetString("username")
+	jsonForm.Author.Username = appGin.Ctx.GetString("username")
 
-	httpCode, err := teamChatC.teamChatService.UpdateMessage(jsonForm)
+	httpCode, err := teamChatC.teamChatService.EditMessage(jsonForm)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return

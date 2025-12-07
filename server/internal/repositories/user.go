@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -17,7 +16,6 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -99,11 +97,7 @@ func (u *UserRepositoryImpl) DeletePortfolio(ctx context.Context, certificateNam
 	// 	Scan(&jsonStrPortfolio).Error
 
 	portfolio := make([]database.PortfolioFile, len(owner.Portfolio))
-	if len(owner.Portfolio) > 0 {
-		_ = utils.FromJSON(owner.Portfolio, &portfolio)
-	} else {
-		return http.StatusNotFound, fmt.Errorf("owner %s has not portfolio", ownerName)
-	}
+	_ = utils.FromJSON(owner.Portfolio, portfolio)
 
 	removeIndex := slices.IndexFunc(portfolio, func(p database.PortfolioFile) bool {
 		return p.Url == certificateName
@@ -137,37 +131,32 @@ func (u *UserRepositoryImpl) AddPortfolio(addPortfolioForm request.AddPortfolioF
 	owner := database.UserModel{}
 	_ = u.Db.Where("username = ?", addPortfolioForm.Owner).First(&owner)
 
-	portfolio := make([]database.PortfolioFile, len(owner.Portfolio))
-	if len(owner.Portfolio) > 0 {
-		if err := json.Unmarshal(owner.Portfolio, &portfolio); err != nil {
-			portfolio = []database.PortfolioFile{}
-		}
-	}
+	portfolio := make([]database.PortfolioFile, 0)
+	_ = utils.FromJSON(owner.Portfolio, portfolio)
 
 	for _, certName := range addPortfolioForm.Certificates {
-		fileType := ""
+		fileType := "img"
 		if filepath.Ext(certName) == ".pdf" {
 			fileType = "pdf"
-		} else {
-			fileType = "img"
 		}
 
-		portfolioFile := database.PortfolioFile{
-			EventName: addPortfolioForm.EventName,
-			Place:     addPortfolioForm.Place,
-			Url:       certName,
-			Type:      fileType,
-		}
-
-		portfolio = append(portfolio, portfolioFile)
+		portfolio = append(
+			portfolio,
+			database.PortfolioFile{
+				EventName: addPortfolioForm.EventName,
+				Place:     addPortfolioForm.Place,
+				Url:       certName,
+				Type:      fileType,
+			},
+		)
 	}
 
-	jsonDataPortfolio, _ := json.Marshal(portfolio)
-	dbTypePortfolio := datatypes.JSON(jsonDataPortfolio)
+	portfolioJSON, _ := utils.ToJSON(portfolio)
+	owner.Portfolio = portfolioJSON
 
-	owner.Portfolio = dbTypePortfolio
-
-	u.Db.Save(&owner)
+	if err := u.Db.Save(&owner).Error; err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("failed to upd portfolio: %v", err)
+	}
 
 	return http.StatusCreated, nil
 }
@@ -177,10 +166,10 @@ func (u *UserRepositoryImpl) GetMessages(getMessagesForm request.GetMessagesForm
 	messageModels := make([]database.ChatMessageModel, 0)
 	messages := make([]response.Message, 0)
 
-	if getMessagesForm.TeamId < 0 {
-		return http.StatusInternalServerError, nil, errors.New("нет такой команды")
+	err := u.Db.Where("team_id = ?", getMessagesForm.TeamID).First(&teamChat)
+	if err != nil {
+		return http.StatusNotFound, nil, fmt.Errorf("team %d not found", getMessagesForm.TeamID)
 	}
-	u.Db.Where("team_id = ?", getMessagesForm.TeamId).First(&teamChat)
 	u.Db.Where("team_chat_id = ?", teamChat.ID).Find(&messageModels)
 
 	for _, msg := range messageModels {
@@ -196,14 +185,14 @@ func (u *UserRepositoryImpl) GetMessages(getMessagesForm request.GetMessagesForm
 			Author: response.MessageAvatar{
 				Username: msg.Author,
 				Avatar:   avatarObj.Image,
-				Hash:     avatarObj.Hash,
 			},
 			Attachments: msg.Attachment,
-			TeamChatId:  msg.TeamChatId,
+			TeamChatID:  msg.TeamChatID,
 			CreatedAt:   msg.CreatedAt,
 			UpdatedAt:   msg.UpdatedAt,
 			DeletedAt:   msg.DeletedAt,
 		}
+
 		messages = append(messages, respMsg)
 	}
 
@@ -237,10 +226,12 @@ func (u *UserRepositoryImpl) GetActualInfo() response.ActualInfo {
 }
 
 func (u *UserRepositoryImpl) UpdateNotificationStatus(updateNotificationForm request.UpdateNotificationForm) (int, error) {
-	var updateNtf database.NotificationModel
-	u.Db.Where("id = ?", updateNotificationForm.NotificationID).First(&updateNtf)
-	updateNtf.Status = "read"
-	u.Db.Save(&updateNtf)
+	err := u.Db.Model(&database.NotificationModel{}).
+		Where("id = ?", updateNotificationForm.NotificationID).
+		Update("status", "read").Error
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("failed to update status notification: %v", err)
+	}
 	return http.StatusOK, nil
 }
 
@@ -273,8 +264,8 @@ func (u *UserRepositoryImpl) GetPersonalAchievements(username, personalUsername 
 	u.Db.Find(&allMembers)
 
 	for _, achievement := range personalAchievementModels {
-		if slices.Contains(achievement.OwnerIds, owner.ID) {
-			rarity := float64(len(achievement.OwnerIds)) / float64(len(allMembers))
+		if slices.Contains(achievement.OwnerIDs, owner.ID) {
+			rarity := float64(len(achievement.OwnerIDs)) / float64(len(allMembers))
 			resp := response.PersonalAchievement{
 				ID:          achievement.ID,
 				Title:       achievement.Title,
@@ -292,10 +283,10 @@ func (u *UserRepositoryImpl) GetPersonalAchievements(username, personalUsername 
 func (u *UserRepositoryImpl) EditProfile(editProfileForm request.EditProfileInfoForm) (int, error) {
 	var userExist database.UserModel
 
-	u.Db.Where("id = ?", editProfileForm.ID).First(&userExist)
+	u.Db.Where("id = ?", editProfileForm.UserID).First(&userExist)
 
 	var currentUser database.UserModel
-	if findUserErr := u.Db.First(&currentUser, editProfileForm.ID).Error; findUserErr != nil {
+	if findUserErr := u.Db.First(&currentUser, editProfileForm.UserID).Error; findUserErr != nil {
 		return http.StatusNotFound, findUserErr
 	}
 

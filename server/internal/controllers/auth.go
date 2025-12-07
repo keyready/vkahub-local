@@ -122,31 +122,18 @@ func (ac *AuthController) SignUp(gCtx *gin.Context) {
 	gCtx.JSON(http.StatusCreated, gin.H{})
 }
 
-func (ac *AuthController) Login(ctx *gin.Context) {
+func (ac *AuthController) SignIn(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	jsonForm := request.LoginForm{}
+	jsonForm := request.SignInForm{}
 
 	if bindErr := ctx.ShouldBindJSON(&jsonForm); bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	httpCode, serviceErr := ac.authService.Login(jsonForm)
-	if serviceErr != nil {
-		appGin.ErrorResponse(httpCode, serviceErr)
-		return
-	}
-
-	payload := authorizer.Payload{
-		Username: jsonForm.Username,
-	}
-
-	tokens, err := ac.jwtService.Authorizer.GenerateTokens(payload)
+	httpCode, tokens, err := ac.authService.SignIn(jsonForm)
 	if err != nil {
-		appGin.ErrorResponse(
-			http.StatusInternalServerError,
-			err,
-		)
+		appGin.ErrorResponse(httpCode, err)
 		return
 	}
 

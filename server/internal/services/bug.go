@@ -9,7 +9,7 @@ import (
 
 type BugService interface {
 	RegisterBug(regBugFrom request.RegisterBugForm) (int, error)
-	GetBugs(typeBug string) (int, []database.BugModel, error)
+	GetBugs(statuBug string) (int, []database.BugModel, error)
 	UpdateBug(updBugForm request.UpdateBugForm) (int, error)
 }
 
@@ -38,7 +38,7 @@ func (b BugServiceImpl) RegisterBug(regBugFrom request.RegisterBugForm) (int, er
 	return httpCode, err
 }
 
-func (b BugServiceImpl) GetBugs(typeBug string) (int, []database.BugModel, error) {
-	httpCode, bugs, err := b.bugRepository.GetBugs(typeBug)
+func (b BugServiceImpl) GetBugs(statusBug string) (int, []database.BugModel, error) {
+	httpCode, bugs, err := b.bugRepository.GetBugs(statusBug)
 	return httpCode, bugs, err
 }

@@ -29,15 +29,15 @@ func (a *AchievementRepositoryImpl) GetAchievementsTeam(getAchivsForm request.Ge
 
 	switch getAchivsForm.Owner {
 	case "team":
-		a.Db.Where("team_id = ? AND type = 'team'", getAchivsForm.ValueId).Find(&achievementModels)
+		a.Db.Where("team_id = ? AND type = 'team'", getAchivsForm.ValueID).Find(&achievementModels)
 
 		for _, achievement := range achievementModels {
 			var event database.EventModel
 			a.Db.Where("id = ?", achievement.EventID).First(&event)
 			achiv := response.Achievement{
-				Id:        achievement.ID,
-				TeamId:    getAchivsForm.ValueId,
-				EventId:   event.ID,
+				ID:        achievement.ID,
+				TeamID:    getAchivsForm.ValueID,
+				EventID:   event.ID,
 				EventName: event.Title,
 				EventType: event.Type,
 				Result:    achievement.Result,
@@ -46,11 +46,11 @@ func (a *AchievementRepositoryImpl) GetAchievementsTeam(getAchivsForm request.Ge
 		}
 	case "user":
 		var user database.UserModel
-		a.Db.First(&user, getAchivsForm.ValueId)
+		a.Db.First(&user, getAchivsForm.ValueID)
 		var userTeam database.TeamModel
-		a.Db.First(&userTeam, user.TeamId)
+		a.Db.First(&userTeam, user.TeamID)
 		var teamAch []database.AchievementModel
-		a.Db.Where("team_id = ? AND type = 'user'", user.TeamId).Find(&teamAch)
+		a.Db.Where("team_id = ? AND type = 'user'", user.TeamID).Find(&teamAch)
 
 		for _, achievement := range teamAch {
 			var event database.EventModel
@@ -67,27 +67,30 @@ func (a *AchievementRepositoryImpl) GetAchievementsTeam(getAchivsForm request.Ge
 	return http.StatusOK, achievements, nil
 }
 
-func (a *AchievementRepositoryImpl) AddAchievement(addAchivForm request.AddAchievementForm) (httpCode int, err error) {
-	newA := database.AchievementModel{
+func (a *AchievementRepositoryImpl) AddAchievement(addAchivForm request.AddAchievementForm) (int, error) {
+	newAchiv := database.AchievementModel{
 		Type:    "team",
-		TeamID:  addAchivForm.TeamId,
-		EventID: addAchivForm.EventId,
+		TeamID:  addAchivForm.TeamID,
+		EventID: addAchivForm.EventID,
 		Result:  addAchivForm.Result,
 	}
-	a.Db.Create(&newA)
-
+	err := a.Db.Create(&newAchiv).Error
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("falied to create new achiv: %v", err)
+	}
+	
 	var team database.TeamModel
-	a.Db.Where("id = ?", addAchivForm.TeamId).First(&team)
+	a.Db.Where("id = ?", addAchivForm.TeamID).First(&team)
 
-	for _, userId := range team.MembersId {
+	for _, userId := range team.MemberIDs {
 		var user database.UserModel
 		var event database.EventModel
-		a.Db.Where("id = ?", addAchivForm.EventId).First(&event)
+		a.Db.Where("id = ?", addAchivForm.EventID).First(&event)
 		a.Db.Where("id = ?", userId).First(&user)
 		a.Db.Create(&database.AchievementModel{
 			Type:    "user",
 			TeamID:  userId,
-			EventID: addAchivForm.EventId,
+			EventID: addAchivForm.EventID,
 			Result:  addAchivForm.Result,
 		})
 		a.Db.Create(&database.NotificationModel{
@@ -98,7 +101,7 @@ func (a *AchievementRepositoryImpl) AddAchievement(addAchivForm request.AddAchie
 				addAchivForm.Result,
 				event.Title,
 			),
-			OwnerId: user.ID,
+			OwnerID: user.ID,
 		})
 	}
 

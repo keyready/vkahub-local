@@ -27,7 +27,7 @@ func (p *PositionController) AddPosition(ctx *gin.Context) {
 		return
 	}
 
-	jsonForm.Author = ctx.GetString("username")
+	jsonForm.Author.Username = ctx.GetString("username")
 
 	httpCode, serviceErr := p.positionService.AddPosition(jsonForm)
 	if serviceErr != nil {

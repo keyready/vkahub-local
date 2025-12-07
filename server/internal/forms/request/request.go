@@ -1,6 +1,7 @@
 package request
 
 import (
+	"server/internal/forms/dto"
 	"time"
 )
 
@@ -11,7 +12,7 @@ type SignUpForm struct {
 	Avatar     string
 }
 
-type LoginForm struct {
+type SignInForm struct {
 	Username string `binding:"required" json:"username"`
 	Password string `binding:"required" json:"password"`
 }
@@ -25,7 +26,7 @@ type GetMembersByParamsForm struct {
 }
 
 type EditProfileInfoForm struct {
-	ID int64 `form:"id"`
+	UserID int64 `form:"id"`
 
 	Firstname  string `form:"firstname"`
 	Middlename string `form:"middlename"`
@@ -72,49 +73,49 @@ type GetTeamsByParamsForm struct {
 }
 
 type AddMembersInTeamForm struct {
-	MembersId []int64 `json:"membersId"`
-	TeamId    int64   `json:"teamId"`
+	MemberIDs []int64 `json:"membersId"`
+	TeamID    int64   `json:"teamId"`
 }
 
 type DeleteMemberForm struct {
-	MemberId int64 `json:"memberId"`
-	TeamId   int64 `json:"teamId"`
+	MemberID int64 `json:"memberId"`
+	TeamID   int64 `json:"teamId"`
 }
 
 type TransferCaptainRightsForm struct {
 	OriginalCaptainId int64 `json:"originalCaptainId"`
-	MemberId          int64 `json:"memberId"`
-	TeamId            int64 `json:"teamId"`
-	Owner             string
+	MemberID          int64 `json:"memberId"`
+	TeamID            int64 `json:"teamId"`
+	Owner             dto.AuthorMetaData
 }
 
 type CreateProposalForm struct {
 	Type    string  `json:"type"` //прошение или приглашение
-	TeamId  int64   `json:"teamId"`
-	UsersId []int64 `json:"usersId"` //invite - массив тех,кого пригласили, request - тот, кто просится
+	TeamID  int64   `json:"teamId"`
+	UserIDs []int64 `json:"usersId"` //invite - массив тех,кого пригласили, request - тот, кто просится
 	Message string  `json:"message"`
 }
 
 type GetProposalForm struct {
 	Type     string `json:"type"`
-	Observer string
+	Observer dto.AuthorMetaData
 }
 
 type ApproveProposalForm struct {
-	ProposalId int64
+	ProposalID int64
 	Username   string
 }
 
 type PartInTeamForm struct {
-	MemberId int64  `json:"memberId"`
-	TeamId   int64  `json:"teamId"`
+	MemberID int64  `json:"memberId"`
+	TeamID   int64  `json:"teamId"`
 	Message  string `json:"message"`
 }
 
 type AddTrackForm struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	EventId     int64  `json:"eventId"`
+	EventID     int64  `json:"eventId"`
 }
 
 type PartTeamInTrackForm struct {
@@ -124,8 +125,8 @@ type PartTeamInTrackForm struct {
 }
 
 type GetTrackForm struct {
-	TrackId int64 `json:"trackId"`
-	EventId int64 `json:"eventId"`
+	TrackID int64 `json:"trackId"`
+	EventID int64 `json:"eventId"`
 }
 
 type RegisterEventForm struct {
@@ -142,8 +143,8 @@ type RegisterEventForm struct {
 }
 
 type AddAchievementForm struct {
-	TeamId  int64  `json:"teamId"`
-	EventId int64  `json:"eventId"`
+	TeamID  int64  `json:"teamId"`
+	EventID int64  `json:"eventId"`
 	Result  string `json:"result"`
 }
 
@@ -151,7 +152,7 @@ type AddPortfolioForm struct {
 	EventName    string `form:"eventName"`
 	Place        string `form:"place"`
 	Certificates []string
-	Owner        string
+	Owner        dto.AuthorMetaData
 }
 
 type DeletePortfolioForm struct {
@@ -160,17 +161,17 @@ type DeletePortfolioForm struct {
 
 type GetAchievementsForm struct {
 	Owner   string `json:"owner"`
-	ValueId int64  `json:"valueId"`
+	ValueID int64  `json:"valueId"`
 }
 
 type AddSkillForm struct {
 	Name   string `json:"name"`
-	Author string
+	Author dto.AuthorMetaData
 }
 
 type AddPositionForm struct {
 	Name   string `json:"name"`
-	Author string
+	Author dto.AuthorMetaData
 }
 
 type RegisterBugForm struct {
@@ -180,18 +181,18 @@ type RegisterBugForm struct {
 	Additional  string `form:"additional"`
 	Status      string `form:"status"`
 	MediaNames  []string
-	Author      string
+	Author      dto.AuthorMetaData
 }
 
 type UpdateBugForm struct {
-	BugID      int64  `json:"bugId"`
-	StatusName string `json:"status"`
-	Author     string
+	BugID  int64  `json:"bugId"`
+	Status string `json:"status"`
+	Author dto.AuthorMetaData
 }
 
 type AddFeedbackForm struct {
 	Message string `json:"message"`
-	Author  string
+	Author  dto.AuthorMetaData
 }
 
 type GetNotificationsForm struct {
@@ -204,26 +205,26 @@ type UpdateNotificationForm struct {
 }
 
 type DeleteMessageForm struct {
-	Author     string
-	MessagesId int64 `json:"messagesId"`
+	Author    dto.AuthorMetaData
+	MessageID int64 `json:"messagesId"`
 }
 
-type UpdateMessageForm struct {
-	Author    string
-	MessageId int64  `json:"messageId"`
+type EditMessageForm struct {
+	Author    dto.AuthorMetaData
+	MessageID int64  `json:"messageId"`
 	NewBody   string `json:"message"`
 }
 
 type GetMessagesForm struct {
 	Member string
-	TeamId int64
+	TeamID int64
 }
 
 type WriteMessageForm struct {
 	Message         string `form:"message"`
 	AttachmentNames []string
-	Author          string
-	TeamChatId      int64
+	Author          dto.AuthorMetaData
+	TeamChatID      int64
 }
 
 type GetEventsForm struct {

@@ -72,7 +72,7 @@ func InitRouter(
 	v1.NewTrackRouters(r, jwtService, trackCtrl)
 
 	achievementRepo := repositories.NewAchievementRepositoryImpl(db)
-	achievementService := services.NewAcServiceImpl(achievementRepo)
+	achievementService := services.NewAchievementServiceImpl(achievementRepo)
 	achievementCtrl := controllers.NewAchievementController(achievementService)
 	v1.NewAchievementRoutes(r, jwtService, achievementCtrl)
 
@@ -82,7 +82,7 @@ func InitRouter(
 	v1.NewSkillRoutes(r, jwtService, skillCtrl)
 
 	positionRepo := repositories.NewPositionRepImpl(db)
-	positionService := services.NewPosServiceImpl(positionRepo)
+	positionService := services.NewPositionServiceImpl(positionRepo)
 	positionCtrl := controllers.NewPositionController(positionService)
 	v1.NewPositionsRoutes(r, jwtService, positionCtrl)
 

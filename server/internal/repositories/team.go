@@ -72,7 +72,7 @@ func (t *TeamRepositoryImpl) EditTeam(editTeamForm request.EditTeamInfoForm) (in
 	}
 
 	t.Db.Create(&database.NotificationModel{
-		OwnerId: updateTeam.CaptainId,
+		OwnerID: updateTeam.CaptainID,
 		Message: fmt.Sprintf(
 			`
 				Данные о вашей команде %s обновлены
@@ -88,8 +88,8 @@ func (t *TeamRepositoryImpl) PartInTeam(partInTeamForm request.PartInTeamForm) (
 	createdAt, _ := time.Parse(time.RFC3339, time.Now().String())
 	prop := database.ProposalModel{
 		Type:      "request",
-		TeamID:    partInTeamForm.TeamId,
-		OwnerId:   partInTeamForm.MemberId,
+		TeamID:    partInTeamForm.TeamID,
+		OwnerID:   partInTeamForm.MemberID,
 		CreatedAt: createdAt,
 		Message:   partInTeamForm.Message,
 	}
@@ -104,56 +104,76 @@ func (t *TeamRepositoryImpl) LeaveTeam(username string) (int, error) {
 	var leaveTeam database.TeamModel
 
 	t.Db.Where("username = ?", username).First(&leaveUser)
-	t.Db.Where("id = ?", leaveUser.TeamId).First(&leaveTeam)
+	t.Db.Where("id = ?", leaveUser.TeamID).First(&leaveTeam)
 
-	if leaveTeam.CaptainId == leaveUser.ID {
+	if leaveTeam.CaptainID == leaveUser.ID {
 		var captain database.UserModel
 		t.Db.Where("id = ?", leaveUser.ID).First(&captain)
 
-		captain.TeamId = 0
+		captain.TeamID = 0
 		t.Db.Save(&captain)
 
-		leaveTeam.CaptainId = 0
-		for index, memberId := range leaveTeam.MembersId {
+		leaveTeam.CaptainID = 0
+		for index, memberId := range leaveTeam.MemberIDs {
 			if memberId == leaveUser.ID {
-				leaveTeam.MembersId = append(leaveTeam.MembersId[:index], leaveTeam.MembersId[index+1:]...)
-				if len(leaveTeam.MembersId) == 0 {
+				leaveTeam.MemberIDs = append(leaveTeam.MemberIDs[:index], leaveTeam.MemberIDs[index+1:]...)
+				if len(leaveTeam.MemberIDs) == 0 {
 					t.Db.Delete(&leaveTeam)
 				}
 				t.Db.Create(&database.NotificationModel{
-					OwnerId: memberId,
-					Message: fmt.Sprintf("Вашу команду покинул участник %s", leaveUser.Username),
+					OwnerID: memberId,
+					Message: fmt.Sprintf(
+						`
+							Вашу команду покинул участник %s
+						`,
+						leaveUser.Username,
+					),
 				})
 				t.Db.Create(&database.NotificationModel{
-					OwnerId: captain.ID,
-					Message: fmt.Sprintf("Вы покинули команду %s", leaveTeam.Title),
+					OwnerID: captain.ID,
+					Message: fmt.Sprintf(
+						`
+							Вы покинули команду %s
+						`,
+						leaveTeam.Title,
+					),
 				})
 			}
 		}
 
 		var teamChat database.TeamModel
-		t.Db.Where("team_id = ?", captain.TeamId).First(&teamChat)
-		for index, memberId := range teamChat.MembersId {
+		t.Db.Where("team_id = ?", captain.TeamID).First(&teamChat)
+		for index, memberId := range teamChat.MemberIDs {
 			if memberId == leaveUser.ID {
-				teamChat.MembersId = append(teamChat.MembersId[:index], teamChat.MembersId[:index+1]...)
-				if len(teamChat.MembersId) == 0 {
+				teamChat.MemberIDs = append(teamChat.MemberIDs[:index], teamChat.MemberIDs[:index+1]...)
+				if len(teamChat.MemberIDs) == 0 {
 					t.Db.Delete(&teamChat)
 				}
 				//TODO - при выходе почистить сообщение капитана
 				t.Db.Save(&teamChat)
 				t.Db.Create(&database.NotificationModel{
-					OwnerId: captain.ID,
-					Message: fmt.Sprintf("Вы были исключены из командного чата %s", teamChat.Title),
+					OwnerID: captain.ID,
+					Message: fmt.Sprintf(
+						`
+							Вы были исключены из командного чата %s
+						`,
+						teamChat.Title,
+					),
 				})
 				t.Db.Create(&database.NotificationModel{
-					OwnerId: memberId,
-					Message: fmt.Sprintf("Вашу командый чат покинул капитан %s", captain.Username),
+					OwnerID: memberId,
+					Message: fmt.Sprintf(
+						`
+							Вашу командый чат покинул капитан %s
+						`,
+						captain.Username,
+					),
 				})
 			}
 		}
 
 		var members []database.UserModel
-		t.Db.Where("id IN ?", leaveTeam.MembersId).Find(&members)
+		t.Db.Where("id IN ?", leaveTeam.MemberIDs).Find(&members)
 		var longestUser database.UserModel
 		for _, member := range members {
 			longestUser = members[0]
@@ -161,46 +181,64 @@ func (t *TeamRepositoryImpl) LeaveTeam(username string) (int, error) {
 				longestUser = member
 			}
 		}
-		leaveTeam.CaptainId = longestUser.ID
+		leaveTeam.CaptainID = longestUser.ID
 		t.Db.Save(&leaveTeam)
 		t.Db.Create(&database.NotificationModel{
-			OwnerId: longestUser.ID,
+			OwnerID: longestUser.ID,
 			Message: fmt.Sprintf(
-				"Теперь вы,%s - капитан команды %s",
+				`
+					Теперь вы, %s - капитан команды %s
+				`,
 				longestUser.Username,
 				leaveTeam.Title,
 			),
 		})
 		for _, member := range members {
 			t.Db.Create(&database.NotificationModel{
-				OwnerId: member.ID,
-				Message: fmt.Sprintf("Теперь в вашей команде %s новый капитан - %s", leaveTeam.Title, longestUser.Username),
+				OwnerID: member.ID,
+				Message: fmt.Sprintf(
+					`
+						Теперь в вашей команде %s новый капитан - %s
+					`,
+					leaveTeam.Title,
+					longestUser.Username,
+				),
 			})
 		}
 	} else {
-		for index, value := range leaveTeam.MembersId {
+		for index, value := range leaveTeam.MemberIDs {
 			if value == leaveUser.ID {
-				leaveTeam.MembersId = append(leaveTeam.MembersId[:index], leaveTeam.MembersId[index+1:]...)
-				if len(leaveTeam.MembersId) == 0 {
+				leaveTeam.MemberIDs = append(leaveTeam.MemberIDs[:index], leaveTeam.MemberIDs[index+1:]...)
+				if len(leaveTeam.MemberIDs) == 0 {
 					t.Db.Delete(&leaveTeam)
 				}
-				leaveUser.TeamId = 0
+				leaveUser.TeamID = 0
 				t.Db.Save(&leaveUser)
 				t.Db.Save(&leaveTeam)
 				t.Db.Create(&database.NotificationModel{
-					OwnerId: leaveUser.ID,
-					Message: fmt.Sprintf("%s, вы покинули команду %s", leaveUser.Username, leaveTeam.Title),
+					OwnerID: leaveUser.ID,
+					Message: fmt.Sprintf(
+						`
+							Вы покинули команду %s
+						`,
+						leaveTeam.Title,
+					),
 				})
 				var teamChat database.TeamChatModel
 				t.Db.Where("team_id = ?", leaveTeam.ID).First(&teamChat)
 				//TODO - при выходе почистить все сообщения
-				teamChat.MembersId = append(teamChat.MembersId[:index], teamChat.MembersId[index+1:]...)
-				if len(teamChat.MembersId) == 0 {
+				teamChat.MemberIDs = append(teamChat.MemberIDs[:index], teamChat.MemberIDs[index+1:]...)
+				if len(teamChat.MemberIDs) == 0 {
 					t.Db.Delete(&teamChat)
 				}
 				t.Db.Create(&database.NotificationModel{
-					OwnerId: leaveUser.ID,
-					Message: fmt.Sprintf("%s, вы покинули чат команды %s", leaveUser.Username, leaveTeam.Title),
+					OwnerID: leaveUser.ID,
+					Message: fmt.Sprintf(
+						`
+							Вы покинули чат команды %s
+						`,
+						leaveTeam.Title,
+					),
 				})
 			}
 		}
@@ -213,31 +251,38 @@ func (t *TeamRepositoryImpl) TransferCaptainRights(transfRightsForm request.Tran
 	var captain database.UserModel
 	var team database.TeamModel
 
-	t.Db.Where("id = ?", transfRightsForm.TeamId).First(&team)
+	t.Db.Where("id = ?", transfRightsForm.TeamID).First(&team)
 	t.Db.Where("username = ?", transfRightsForm.Owner).First(&captain)
-	if captain.ID == team.CaptainId {
-		t.Db.Where("id = ?", transfRightsForm.MemberId).First(&newCap)
+	if captain.ID == team.CaptainID {
+		t.Db.Where("id = ?", transfRightsForm.MemberID).First(&newCap)
 
-		team.CaptainId = newCap.ID
+		team.CaptainID = newCap.ID
 		t.Db.Save(&team)
 
 		var persAchievements database.PersonalAchievementModel
 		t.Db.Where("key = ?", "receiver").First(&persAchievements)
-		if !slices.Contains(persAchievements.OwnerIds, newCap.ID) {
-			persAchievements.OwnerIds = append(persAchievements.OwnerIds, captain.ID)
+		if !slices.Contains(persAchievements.OwnerIDs, newCap.ID) {
+			persAchievements.OwnerIDs = append(persAchievements.OwnerIDs, captain.ID)
 			t.Db.Save(&persAchievements)
 			t.Db.Create(&database.NotificationModel{
-				OwnerId: newCap.ID,
+				OwnerID: newCap.ID,
 				Message: fmt.Sprintf(
-					"Поздравляю! Вы теперь теперь капитан команды - %s \n Вами получено достижение: %s",
+					`
+						Поздравляем! Вы теперь теперь капитан команды - %s \n 
+						Вами получено достижение: %s
+					`,
 					team.Title,
-					persAchievements.Title),
+					persAchievements.Title,
+				),
 			})
 		}
 		t.Db.Create(&database.NotificationModel{
-			OwnerId: captain.ID,
+			OwnerID: captain.ID,
 			Message: fmt.Sprintf(
-				"Поздравляю! Вы теперь теперь капитан команды - %s \n %s передал вам право управления",
+				`
+					Поздравляем! Вы теперь теперь капитан команды - %s \n 
+					%s передал вам право управления
+				`,
 				team.Title,
 				captain.Username,
 			),
@@ -250,38 +295,44 @@ func (t *TeamRepositoryImpl) TransferCaptainRights(transfRightsForm request.Tran
 func (t *TeamRepositoryImpl) DeleteMember(delMemberForm request.DeleteMemberForm) (int, error) {
 	var currentTeam database.TeamModel
 
-	t.Db.First(&currentTeam, delMemberForm.TeamId)
+	t.Db.First(&currentTeam, delMemberForm.TeamID)
 
-	for _, memberId := range currentTeam.MembersId {
-		if memberId == delMemberForm.MemberId {
+	for _, memberId := range currentTeam.MemberIDs {
+		if memberId == delMemberForm.MemberID {
 
-			updateErr := t.Db.Exec("UPDATE user_database SET team_id = 0 WHERE id = ?", delMemberForm.MemberId).Error
+			updateErr := t.Db.Exec("UPDATE user_database SET team_id = 0 WHERE id = ?", delMemberForm.MemberID).Error
 			if updateErr != nil {
 				return http.StatusInternalServerError, updateErr
 			}
 
 			removeArrayErr := t.Db.Exec("UPDATE team_database SET members_id = ARRAY_REMOVE(members_id,?) WHERE id = ?",
-				delMemberForm.MemberId,
-				delMemberForm.TeamId,
+				delMemberForm.MemberID,
+				delMemberForm.TeamID,
 			).Error
 			if removeArrayErr != nil {
 				return http.StatusInternalServerError, removeArrayErr
 			}
 
 			removeArrayErr = t.Db.Exec("UPDATE team_chat_database SET members_id = ARRAY_REMOVE(members_id,?) WHERE team_id = ?",
-				delMemberForm.MemberId,
-				delMemberForm.TeamId,
+				delMemberForm.MemberID,
+				delMemberForm.TeamID,
 			).Error
 			if removeArrayErr != nil {
 				return http.StatusInternalServerError, removeArrayErr
 			}
 
 			t.Db.Create(&database.NotificationModel{
-				OwnerId: memberId,
-				Message: fmt.Sprintf("Вы были удалены из команды %s и ее командного чата", currentTeam.Title),
+				OwnerID: memberId,
+				Message: fmt.Sprintf(
+					`
+						Вас удалили из команды %s.
+					`,
+					currentTeam.Title,
+				),
 			})
 		}
 	}
+
 	return http.StatusOK, nil
 }
 
@@ -289,22 +340,22 @@ func (t *TeamRepositoryImpl) AddMembersInTeam(addMemberInTeamForm request.AddMem
 	var currentTeam database.TeamModel
 	var users []database.UserModel
 
-	err := t.Db.Where("id = ?", addMemberInTeamForm.TeamId).First(&currentTeam).Error
+	err := t.Db.Where("id = ?", addMemberInTeamForm.TeamID).First(&currentTeam).Error
 	if err != nil {
 		return http.StatusNotFound, err
 	}
 
-	err = t.Db.Where("id IN ?", addMemberInTeamForm.MembersId).Find(&users).Error
+	err = t.Db.Where("id IN ?", addMemberInTeamForm.MemberIDs).Find(&users).Error
 	if err != nil {
 		return http.StatusNotFound, err
 	}
 
 	for _, user := range users {
-		user.TeamId = currentTeam.ID
+		user.TeamID = currentTeam.ID
 		memberSince, _ := time.Parse(time.RFC3339, time.Now().String())
 		user.MemberSince = memberSince
 		t.Db.Save(&user)
-		currentTeam.MembersId = append(currentTeam.MembersId, user.ID)
+		currentTeam.MemberIDs = append(currentTeam.MemberIDs, user.ID)
 	}
 
 	t.Db.Save(&currentTeam)
@@ -324,7 +375,7 @@ func (t *TeamRepositoryImpl) GetTeamMembers(teamID int64) (int, []*response.Memb
 	}
 
 	t.Db.Model(&database.UserModel{}).
-		Where("id = ANY(?)", team.MembersId).
+		Where("id = ANY(?)", team.MemberIDs).
 		Find(&memberModels)
 
 	for _, memberModel := range memberModels {
@@ -352,8 +403,8 @@ func (t *TeamRepositoryImpl) RegisterTeam(registerTeamForm request.RegisterTeamF
 	newTeam := &database.TeamModel{
 		Title:       registerTeamForm.Title,
 		Description: registerTeamForm.Description,
-		CaptainId:   registerTeamForm.CaptainID,
-		MembersId:   pq.Int64Array{registerTeamForm.CaptainID},
+		CaptainID:   registerTeamForm.CaptainID,
+		MemberIDs:   pq.Int64Array{registerTeamForm.CaptainID},
 		Image:       imageJSON,
 	}
 	err := t.Db.Create(&newTeam).Error
@@ -365,35 +416,47 @@ func (t *TeamRepositoryImpl) RegisterTeam(registerTeamForm request.RegisterTeamF
 	memberSince, _ := time.Parse(time.RFC3339, time.Now().String())
 	t.Db.Where("id = ?", registerTeamForm.CaptainID).
 		Updates(&database.UserModel{
-			TeamId:      newTeam.ID,
+			TeamID:      newTeam.ID,
 			MemberSince: memberSince,
 		})
 
 	t.Db.Create(&database.NotificationModel{
-		OwnerId: registerTeamForm.CaptainID,
-		Message: fmt.Sprintf("Поздравляем, вы создали команду %s", newTeam.Title),
+		OwnerID: registerTeamForm.CaptainID,
+		Message: fmt.Sprintf(
+			`
+				Поздравляем, вы создали команду %s
+			`,
+			newTeam.Title,
+		),
 	})
 
 	var persAchievement database.PersonalAchievementModel
 	t.Db.Where("key = ?", "member").First(&persAchievement)
-	if !slices.Contains(persAchievement.OwnerIds, registerTeamForm.CaptainID) {
-		persAchievement.OwnerIds = append(persAchievement.OwnerIds, registerTeamForm.CaptainID)
+	if !slices.Contains(persAchievement.OwnerIDs, registerTeamForm.CaptainID) {
+		persAchievement.OwnerIDs = append(persAchievement.OwnerIDs, registerTeamForm.CaptainID)
 		t.Db.Save(&persAchievement)
 		t.Db.Create(&database.NotificationModel{
-			OwnerId: registerTeamForm.CaptainID,
-			Message: fmt.Sprintf("Вы получили достижение: %s", persAchievement.Title),
+			OwnerID: registerTeamForm.CaptainID,
+			Message: fmt.Sprintf(
+				`
+					Вы получили достижение: %s
+				`,
+				persAchievement.Title,
+			),
 		})
 	}
 
 	t.Db.Create(&database.TeamChatModel{
-		TeamId:    newTeam.ID,
+		TeamID:    newTeam.ID,
 		Title:     fmt.Sprintf("%s_chat", registerTeamForm.Title),
-		MembersId: pq.Int64Array{registerTeamForm.CaptainID},
+		MemberIDs: pq.Int64Array{registerTeamForm.CaptainID},
 	})
 	t.Db.Create(&database.NotificationModel{
-		OwnerId: registerTeamForm.CaptainID,
+		OwnerID: registerTeamForm.CaptainID,
 		Message: fmt.Sprintf(
-			"Теперь у вашей команды %s есть собственный командный чат %s_chat",
+			`
+				Теперь у вашей команды %s есть собственный командный чат %s_chat
+			`,
 			registerTeamForm.Title,
 			registerTeamForm.Title,
 		),

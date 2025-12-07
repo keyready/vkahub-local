@@ -27,7 +27,7 @@ func (f *FeedbackController) AddFeedback(ctx *gin.Context) {
 		return
 	}
 
-	jsonForm.Author = ctx.GetString("username")
+	jsonForm.Author.Username = ctx.GetString("username")
 
 	httpCode, err := f.feedService.AddFeedback(jsonForm)
 	if err != nil {

@@ -15,7 +15,7 @@ type AchievementServiceImpl struct {
 	AcRepository repositories.AchievementRepository
 }
 
-func NewAcServiceImpl(aRepository repositories.AchievementRepository) AchievementService {
+func NewAchievementServiceImpl(aRepository repositories.AchievementRepository) AchievementService {
 	return &AchievementServiceImpl{AcRepository: aRepository}
 }
 

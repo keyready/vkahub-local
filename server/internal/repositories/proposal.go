@@ -37,39 +37,59 @@ func (p *ProposalRepositoryImpl) ApproveProposal(approveProposalForm request.App
 	var newMember database.UserModel
 	var newTeam database.TeamModel
 
-	p.DB.Where("id = ?", approveProposalForm.ProposalId).First(&proposal)
+	p.DB.Where("id = ?", approveProposalForm.ProposalID).First(&proposal)
 	p.DB.Where("id = ?", proposal.TeamID).First(&newTeam)
-	p.DB.Where("id = ?", proposal.OwnerId).First(&newMember)
+	p.DB.Where("id = ?", proposal.OwnerID).First(&newMember)
 
-	newMember.TeamId = newTeam.ID
+	newMember.TeamID = newTeam.ID
 
 	memberSince, _ := time.Parse(time.RFC3339, time.Now().String())
 	newMember.MemberSince = memberSince
 
 	p.DB.Save(&newMember)
 
-	newTeam.MembersId = append(newTeam.MembersId, proposal.OwnerId)
+	newTeam.MemberIDs = append(newTeam.MemberIDs, proposal.OwnerID)
 	p.DB.Save(&newTeam)
 
 	p.DB.Create(&database.NotificationModel{
-		OwnerId: newMember.ID,
-		Message: fmt.Sprintf("%s, поздравляем Вас! \n Вы стали членом команды %s. Желаем успехов и побед в новом коллективе!", newMember.Username, newTeam.Title),
+		OwnerID: newMember.ID,
+		Message: fmt.Sprintf(
+			`
+				%s, поздравляем Вас! \n 
+				Вы стали членом команды %s. 
+				Желаем успехов и побед в новом коллективе!
+			`,
+			newMember.Username,
+			newTeam.Title,
+		),
 	})
 
 	p.DB.Delete(&proposal)
 
 	var persAchievement database.PersonalAchievementModel
 	p.DB.Where("key = ?", "member").First(&persAchievement)
-	if !slices.Contains(persAchievement.OwnerIds, newMember.ID) {
-		persAchievement.OwnerIds = append(persAchievement.OwnerIds, newMember.ID)
+	if !slices.Contains(persAchievement.OwnerIDs, newMember.ID) {
+		persAchievement.OwnerIDs = append(persAchievement.OwnerIDs, newMember.ID)
 		p.DB.Save(&persAchievement)
 		p.DB.Create(&database.NotificationModel{
-			OwnerId: newMember.ID,
-			Message: fmt.Sprintf("%s,у вас новое достижение: %s", newMember.Username, persAchievement.Title),
+			OwnerID: newMember.ID,
+			Message: fmt.Sprintf(
+				`
+					%s, поздравляем! \n
+					У вас новое достижение: %s
+				`,
+				newMember.Username,
+				persAchievement.Title,
+			),
 		})
 		p.DB.Create(&database.NotificationModel{
-			OwnerId: newTeam.CaptainId,
-			Message: fmt.Sprintf("Ваше приглашение в команду принято участником %s", newMember.Username),
+			OwnerID: newTeam.CaptainID,
+			Message: fmt.Sprintf(
+				`
+					Ваше приглашение в команду принято участником %s
+				`,
+				newMember.Username,
+			),
 		})
 	}
 
@@ -81,53 +101,50 @@ func (p *ProposalRepositoryImpl) GetPersonalProposals(getProposalsForm request.G
 
 	switch getProposalsForm.Type {
 	case "invite":
-		userModel := database.UserModel{}
 		proposalModels := make([]database.ProposalModel, 0)
 
-		p.DB.Where("username = ?", getProposalsForm.Observer).First(&userModel)
-		p.DB.Where("owner_id = ?", userModel.ID).Find(&proposalModels)
+		p.DB.Where("owner_id = ?", getProposalsForm.Observer.ID).Find(&proposalModels)
 
 		for _, proposal := range proposalModels {
 			var team database.TeamModel
 			var captain database.UserModel
 			p.DB.Where("id = ?", proposal.TeamID).First(&team)
-			p.DB.Where("id = ?", team.CaptainId).First(&captain)
+			p.DB.Where("id = ?", team.CaptainID).First(&captain)
 
 			prop := response.Proposal{}
 			prop.ID = proposal.ID
 			prop.Type = proposal.Type
 			prop.Message = proposal.Message
 			prop.CreatedAt = proposal.CreatedAt.String()
-			prop.OwnerId = team.CaptainId
+			prop.OwnerID = team.CaptainID
 			prop.OwnerName = captain.Lastname + " " + string(captain.Firstname[0]) + "."
-			prop.TeamId = team.ID
+			prop.TeamID = team.ID
 			prop.TeamTitle = team.Title
 
 			proposals = append(proposals, prop)
 		}
 
 	case "request":
-		captain := database.UserModel{}
 		proposalModels := make([]database.ProposalModel, 0)
 		team := database.TeamModel{}
 		owner := database.UserModel{}
 
-		p.DB.Where("username = ?", getProposalsForm.Observer).First(&captain)
-		p.DB.Where("captain_id = ?", captain.ID).Find(&team)
+		p.DB.Where("captain_id = ?", getProposalsForm.Observer.ID).Find(&team)
 		p.DB.Where("team_id = ?", team.ID).Find(&proposalModels)
 
 		for _, proposal := range proposalModels {
-			p.DB.Where("id = ?", proposal.OwnerId).First(&owner)
+			p.DB.Where("id = ?", proposal.OwnerID).First(&owner)
 
 			prop := response.Proposal{}
 			prop.ID = proposal.ID
 			prop.Type = proposal.Type
 			prop.Message = proposal.Message
 			prop.CreatedAt = proposal.CreatedAt.String()
-			prop.OwnerId = proposal.OwnerId
-			prop.OwnerName = owner.Lastname + " " + string(owner.Firstname[0]) + "."
-			prop.TeamId = team.ID
+			prop.OwnerID = proposal.OwnerID
+			prop.OwnerName = fmt.Sprintf("%s %s.", owner.Lastname, string([]rune(owner.Firstname)[0]))
+			prop.TeamID = team.ID
 			prop.TeamTitle = team.Title
+
 			proposals = append(proposals, prop)
 		}
 	}
@@ -138,24 +155,31 @@ func (p *ProposalRepositoryImpl) GetPersonalProposals(getProposalsForm request.G
 func (p *ProposalRepositoryImpl) CreateProposal(createPropForm request.CreateProposalForm) (int, error) {
 	switch createPropForm.Type {
 	case "invite":
-		for _, id := range createPropForm.UsersId {
+		for _, userID := range createPropForm.UserIDs {
 			var user database.UserModel
 			var captain database.UserModel
 			var team database.TeamModel
 			newProposal := database.ProposalModel{
 				Type:    createPropForm.Type,
-				TeamID:  createPropForm.TeamId,
+				TeamID:  createPropForm.TeamID,
 				Message: createPropForm.Message,
-				OwnerId: id,
+				OwnerID: userID,
 			}
 			p.DB.Create(&newProposal)
-			p.DB.Where("id = ?", id).First(&user)
-			p.DB.Where("id = ?", createPropForm.TeamId).First(&team)
-			p.DB.Where("id = ?", team.CaptainId).First(&captain)
+			p.DB.Where("id = ?", userID).First(&user)
+			p.DB.Where("id = ?", createPropForm.TeamID).First(&team)
+			p.DB.Where("id = ?", team.CaptainID).First(&captain)
 
 			invitedNotification := &database.NotificationModel{
-				OwnerId: user.ID,
-				Message: fmt.Sprintf("%s, вас пригласили в команду %s", user.Username, team.Title),
+				OwnerID: user.ID,
+				Message: fmt.Sprintf(
+					`
+						%s, внимание! \n 
+						Вас пригласили в команду %s
+					`,
+					user.Username,
+					team.Title,
+				),
 			}
 			p.DB.Create(&invitedNotification)
 		}
@@ -163,20 +187,26 @@ func (p *ProposalRepositoryImpl) CreateProposal(createPropForm request.CreatePro
 	case "request":
 		var team database.TeamModel
 		var user database.UserModel
-		p.DB.Where("id = ", createPropForm.TeamId).Find(&team)
-		p.DB.Where("id = ", createPropForm.UsersId[0]).First(&user)
+		p.DB.Where("id = ", createPropForm.TeamID).Find(&team)
+		p.DB.Where("id = ", createPropForm.UserIDs[0]).First(&user)
 		createdAt, _ := time.Parse(time.Now().String(), time.RFC3339)
 		newProposal := database.ProposalModel{
 			Type:      createPropForm.Type,
-			TeamID:    createPropForm.TeamId,
+			TeamID:    createPropForm.TeamID,
 			Message:   createPropForm.Message,
-			OwnerId:   createPropForm.UsersId[0],
+			OwnerID:   createPropForm.UserIDs[0],
 			CreatedAt: createdAt,
 		}
 		p.DB.Create(&newProposal)
 		p.DB.Create(&database.NotificationModel{
-			OwnerId: team.CaptainId,
-			Message: fmt.Sprintf("В вашу команду желает вступить %s: %s", user.Username, createPropForm.Message),
+			OwnerID: team.CaptainID,
+			Message: fmt.Sprintf(
+				`
+					В вашу команду желает вступить %s. \n
+					Сообщение: %s
+				`,
+				user.Username, createPropForm.Message,
+			),
 		})
 	}
 

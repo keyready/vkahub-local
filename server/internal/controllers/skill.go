@@ -26,7 +26,7 @@ func (s *SkillController) AddSkill(ctx *gin.Context) {
 		return
 	}
 
-	jsonForm.Author = ctx.GetString("username")
+	jsonForm.Author.Username = ctx.GetString("username")
 
 	httpCode, serviceErr := s.skillService.AddSkill(jsonForm)
 	if serviceErr != nil {

@@ -16,7 +16,7 @@ func NewAuthRouters(
 	authRouters := r.Group("/api/auth")
 	{
 		authRouters.POST("/sign-up", ac.SignUp)
-		authRouters.POST("/login", ac.Login)
+		authRouters.POST("/login", ac.SignIn)
 		authRouters.GET("/logout", middleware.AuthMiddleware(jwtService), ac.Logout)
 		authRouters.POST("/refresh_token", ac.RefreshToken)
 

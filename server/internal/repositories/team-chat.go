@@ -5,7 +5,6 @@ import (
 	"server/internal/database"
 	"server/internal/forms/request"
 	"strconv"
-	"time"
 
 	"github.com/lib/pq"
 	"gorm.io/gorm"
@@ -13,7 +12,7 @@ import (
 
 type TeamChatRepository interface {
 	DeleteMessage(delMsgForm request.DeleteMessageForm) (int, []string, error)
-	UpdateMessage(updMsgForm request.UpdateMessageForm) (int, error)
+	EditMessage(editMsgForm request.EditMessageForm) (int, error)
 	CreateMessage(createMessageForm request.WriteMessageForm) (int, error)
 }
 
@@ -41,14 +40,12 @@ func (tc TeamChatRepositoryImpl) CreateMessage(createMessageForm request.WriteMe
 	}
 
 	teamChatId, _ := strconv.ParseInt(teamChatIdString, 10, 64)
-	createdAt, _ := time.Parse(time.RFC3339, time.Now().String())
 
 	newMessage := database.ChatMessageModel{
-		TeamChatId: teamChatId,
-		Author:     createMessageForm.Author,
+		TeamChatID: teamChatId,
+		Author:     createMessageForm.Author.Username,
 		Message:    createMessageForm.Message,
 		Attachment: createMessageForm.AttachmentNames,
-		CreatedAt:  createdAt,
 	}
 	_ = tc.DB.Create(&newMessage).Error
 
@@ -68,8 +65,7 @@ func (tc TeamChatRepositoryImpl) CreateMessage(createMessageForm request.WriteMe
 func (tc TeamChatRepositoryImpl) DeleteMessage(delMsgForm request.DeleteMessageForm) (int, []string, error) {
 	messages := make([]database.ChatMessageModel, 0)
 	err := tc.DB.
-		Where("author = ?", delMsgForm.Author).
-		Where("id = ANY(?)", delMsgForm.MessagesId).
+		Where("id = ? AND author = ?", delMsgForm.MessageID, delMsgForm.Author).
 		Delete(messages).
 		Error
 	if err != nil {
@@ -78,11 +74,11 @@ func (tc TeamChatRepositoryImpl) DeleteMessage(delMsgForm request.DeleteMessageF
 	return http.StatusOK, nil, nil
 }
 
-func (tc TeamChatRepositoryImpl) UpdateMessage(updMsgForm request.UpdateMessageForm) (int, error) {
+func (tc TeamChatRepositoryImpl) EditMessage(editMsgForm request.EditMessageForm) (int, error) {
 	err := tc.DB.
 		Model(&database.ChatMessageModel{}).
-		Where("id = ? AND author = ?", updMsgForm.MessageId, updMsgForm.Author).
-		Updates(database.ChatMessageModel{Message: updMsgForm.NewBody}).
+		Where("id = ? AND author = ?", editMsgForm.MessageID, editMsgForm.Author.Username).
+		Update("message", editMsgForm.NewBody).
 		Error
 	if err != nil {
 		return http.StatusInternalServerError, err

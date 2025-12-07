@@ -13,7 +13,7 @@ func NewTeamChatRoutes(r *gin.Engine, jwtService *authorizer.Authorizer, teamCha
 	teamChatRoutes.Use(middleware.AuthMiddleware(jwtService))
 	{
 		teamChatRoutes.POST("/delete", teamChatC.DeleteMessage)
-		teamChatRoutes.POST("/edit", teamChatC.UpdateMessage)
+		teamChatRoutes.POST("/edit", teamChatC.EditMessage)
 		teamChatRoutes.POST("/create", teamChatC.CreateMessage)
 	}
 }
