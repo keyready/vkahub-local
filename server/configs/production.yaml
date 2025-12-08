@@ -26,3 +26,9 @@ cloud:
   password: minio-root
   enableSSL: false
   initBucket: vkahub-bucket
+
+broker:
+  address:
+  exchange:
+  routingKey:
+  queue: 

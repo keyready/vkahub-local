@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"server/internal/authorizer"
+	"server/internal/broker"
 	"server/internal/cloud"
 	"server/internal/database"
 	"server/internal/onliner"
@@ -16,6 +17,7 @@ type VkaHubConfig struct {
 	Authorizer authorizer.Config         `mapstructure:"authorizer"`
 	Onliner    onliner.Config            `mapstructure:"onliner"`
 	Cloud      cloud.Config              `mapstructure:"cloud"`
+	Broker     broker.Config             `mapstructure:"broker"`
 }
 
 func FromFile(filePath string) (*VkaHubConfig, error) {
@@ -48,6 +50,11 @@ func FromFile(filePath string) (*VkaHubConfig, error) {
 	viperInstance.SetDefault("cloud.password", "minio-root")
 	viperInstance.SetDefault("cloud.enableSSL", false)
 	viperInstance.SetDefault("cloud.initBucket", "vkahub-bucket")
+
+	viperInstance.SetDefault("broker.address", "")
+	viperInstance.SetDefault("broker.exchange", "")
+	viperInstance.SetDefault("broker.routingKey", "")
+	viperInstance.SetDefault("broker.queue", "")
 
 	if err := viperInstance.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read config file %s: %v", filePath, err)

@@ -39,7 +39,13 @@ cloud:
   username: minio-root
   password: minio-root
   enableSSL: false
-  InitBucket: vkahub-bucket
+  initBucket: vkahub-bucket
+
+broker:
+  address:
+  exchange:
+  routingKey:
+  queue: 
 ```
 
 ```env
