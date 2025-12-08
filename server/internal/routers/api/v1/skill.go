@@ -12,7 +12,7 @@ func NewSkillRoutes(r *gin.Engine, jwtService *authorizer.Authorizer, sc *contro
 	skillRoutes := r.Group("/api/skills")
 	skillRoutes.Use(middleware.AuthMiddleware(jwtService))
 	{
-		skillRoutes.GET("", sc.FetchAllSkills)
+		skillRoutes.GET("", sc.GetSkills)
 		skillRoutes.POST("/create", sc.AddSkill)
 	}
 }

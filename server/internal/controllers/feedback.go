@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"server/pkg/app"
 	"net/http"
-	"server/internal/dto/request"
+	"server/internal/forms/request"
 	"server/internal/services"
+	"server/pkg/app"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,17 +19,17 @@ func NewFeedbackController(feedService services.FeedbackService) *FeedbackContro
 
 func (f *FeedbackController) AddFeedback(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var addFeed request.AddFeedReq
+	jsonForm := request.AddFeedbackForm{}
 
-	bindErr := ctx.ShouldBindJSON(&addFeed)
+	bindErr := ctx.ShouldBindJSON(&jsonForm)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	addFeed.Author = ctx.GetString("username")
+	jsonForm.Author.Username = ctx.GetString("username")
 
-	httpCode, err := f.feedService.AddFeed(addFeed)
+	httpCode, err := f.feedService.AddFeedback(jsonForm)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return
@@ -38,14 +38,14 @@ func (f *FeedbackController) AddFeedback(ctx *gin.Context) {
 	appGin.SuccessResponse(httpCode, gin.H{})
 }
 
-func (f *FeedbackController) FetchAllFeedbacks(ctx *gin.Context) {
+func (f *FeedbackController) GetFeedbacks(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
 
-	httpCode, err, feeds := f.feedService.FetchAllFeeds()
+	httpCode, feedbacks, err := f.feedService.GetFeedbacks()
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return
 	}
 
-	appGin.SuccessResponse(httpCode, feeds)
+	appGin.SuccessResponse(httpCode, feedbacks)
 }

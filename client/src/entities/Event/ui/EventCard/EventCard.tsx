@@ -1,4 +1,3 @@
-import { Image } from '@nextui-org/react';
 import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -6,6 +5,7 @@ import { Event } from '../../model/types/Event';
 
 import classes from './EventCard.module.scss';
 
+import { Image } from '@/shared/ui/Image';
 import { Skeleton } from '@/shared/ui/Skeleton';
 import { HStack, VStack } from '@/shared/ui/Stack';
 import { RoutePath } from '@/shared/config/routeConfig';
@@ -99,7 +99,8 @@ export const EventCard = (props: EventCardProps) => {
             <HStack gap="24px" align="start" justify="start" maxW>
                 <Image
                     fallbackSrc={`/static/events-types/${event?.type}-fallback.webp`}
-                    src={`/minio/${event?.image}`}
+                    hash={event?.image.hash}
+                    src={`/minio/${event?.image.image}`}
                     width={75}
                     height={75}
                     classNames={{

@@ -1,30 +1,30 @@
 package services
 
 import (
-	"server/internal/dto/request"
-	"server/internal/dto/response"
+	"server/internal/forms/request"
+	"server/internal/forms/response"
 	"server/internal/repositories"
 )
 
 type AchievementService interface {
-	AddAchievement(addAchReq request.AddAchievementReq) (httpCode int, err error)
-	FetchAchievementsTeam(fetchAllAc request.FetchAllAcRequest) (httpCode int, err error, data []response.FetchAllAchievementResponse)
+	AddAchievement(addAchivForm request.AddAchievementForm) (int, error)
+	GetAchievementsTeam(getAchivsForm request.GetAchievementsForm) (int, error, []response.Achievement)
 }
 
 type AchievementServiceImpl struct {
 	AcRepository repositories.AchievementRepository
 }
 
-func NewAcServiceImpl(aRepository repositories.AchievementRepository) AchievementService {
+func NewAchievementServiceImpl(aRepository repositories.AchievementRepository) AchievementService {
 	return &AchievementServiceImpl{AcRepository: aRepository}
 }
 
-func (a AchievementServiceImpl) FetchAchievementsTeam(fetchAllAc request.FetchAllAcRequest) (httpCode int, err error, data []response.FetchAllAchievementResponse) {
-	httpCode, err, data = a.AcRepository.FetchAchievementsTeam(fetchAllAc)
-	return httpCode, err, data
+func (a AchievementServiceImpl) GetAchievementsTeam(getAchivsForm request.GetAchievementsForm) (int, error, []response.Achievement) {
+	httpCode, err, achievements := a.AcRepository.GetAchievementsTeam(getAchivsForm)
+	return httpCode, achievements, err
 }
 
-func (a AchievementServiceImpl) AddAchievement(addAchReq request.AddAchievementReq) (httpCode int, err error) {
-	httpCode, err = a.AcRepository.AddAchievement(addAchReq)
+func (a AchievementServiceImpl) AddAchievement(addAchivForm request.AddAchievementForm) (int, error) {
+	httpCode, err := a.AcRepository.AddAchievement(addAchivForm)
 	return httpCode, err
 }

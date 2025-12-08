@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Divider, Image, Input } from '@nextui-org/react';
+import { Button, Divider, Input } from '@nextui-org/react';
 import toast from 'react-hot-toast';
 
 import { getTeamData, getTeamError, getTeamIsLoading } from '../../model/selectors/TeamSelectors';
@@ -20,6 +20,7 @@ import { getUserData, InvitationMembersList } from '@/entities/User';
 import { HStack, VStack } from '@/shared/ui/Stack';
 import { RoutePath } from '@/shared/config/routeConfig';
 import { TextButton } from '@/shared/ui/TextButton';
+import { Image } from '@/shared/ui/Image';
 import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
 import { DynamicModuleLoader } from '@/shared/lib/DynamicModuleLoader';
 import { ProposalReducer } from '@/entities/Proposal';
@@ -55,6 +56,7 @@ export const MyTeamPreviewBlock = (props: MyTeamPreviewBlockProps) => {
     const [isEditorMode, setIsEditorMode] = useState<boolean>(false);
     const [changedTeamData, setChangedTeamData] = useState<Partial<Team>>({});
     const [selectedPositions, setSelectedPositions] = useState<ExtendedTag[]>([]);
+    const [imageHash, setImageHash] = useState<string>('');
 
     const { data: oldEvents } = useEvents('old');
     const { data: positions } = usePositions(undefined, { refetchOnMountOrArgChange: true });
@@ -125,6 +127,7 @@ export const MyTeamPreviewBlock = (props: MyTeamPreviewBlockProps) => {
                 const team = {
                     ...changedTeamData,
                     image: changedTeamData.newImage,
+                    hash: imageHash,
                 };
                 delete team.newImage;
                 formData = objectToFormData(team);
@@ -154,7 +157,7 @@ export const MyTeamPreviewBlock = (props: MyTeamPreviewBlockProps) => {
         } else {
             setIsEditorMode(true);
         }
-    }, [changedTeamData, dispatch, isEditorMode, selectedPositions, userData?.teamId]);
+    }, [changedTeamData, dispatch, imageHash, isEditorMode, selectedPositions, userData?.teamId]);
 
     if (isTeamLoading) {
         return (
@@ -258,13 +261,16 @@ export const MyTeamPreviewBlock = (props: MyTeamPreviewBlockProps) => {
                         (isEditorMode ? (
                             <ImageUpload
                                 className="w-[100px] h-[100px]"
-                                initialImage={`/minio/${changedTeamData?.image}`}
+                                initialImage={`/minio/${changedTeamData?.image?.image}`}
                                 onChange={handleChangeTeamImage}
+                                onImageHashGenerated={setImageHash}
                             />
                         ) : (
                             <Image
-                                className="w-[100px] h-[100px]"
-                                src={`/minio/${changedTeamData?.image}`}
+                                src={`/minio/${changedTeamData?.image?.image}`}
+                                hash={changedTeamData?.image?.hash}
+                                width={100}
+                                height={100}
                                 fallbackSrc="/static/fallbacks/team-fallback.webp"
                                 classNames={{
                                     wrapper: classes.teamImageWrapper,

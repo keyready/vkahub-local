@@ -5,6 +5,6 @@ type Authorizer struct {
 }
 
 type IAuthorizer interface {
-	GenerateTokens(payload Payload) (tokens TokensResponse)
+	GenerateTokens(payload Payload) (*TokensResponse, error)
 	ValidateToken(tokenString string) (*JwtClaims, error)
 }

@@ -23,7 +23,7 @@ func Banned(db *gorm.DB) func() {
 		var lastEvent database.EventModel
 		db.Last(&lastEvent)
 
-		for _, teamId := range lastEvent.ParticipantsTeamsIds {
+		for _, teamId := range lastEvent.ParticipantsTeamIDs {
 
 			deadlineDate := time.Now().AddDate(0, 0, 1)
 			if !((lastEvent.FinishDate.Before(deadlineDate)) && (lastEvent.FinishDate.After(time.Now()))) {
@@ -33,20 +33,32 @@ func Banned(db *gorm.DB) func() {
 
 				createdAt, _ := time.Parse(time.RFC3339, time.Now().String())
 				db.Create(&database.BanModel{
-					Type:      "team",
-					OwnerId:   teamId,
-					Reason:    fmt.Sprintf("Несвоевременная сдача отчета о событии: %s", lastEvent.Title),
+					Type:    "team",
+					OwnerID: teamId,
+					Reason: fmt.Sprintf(
+						`
+							Несвоевременная сдача отчета о событии: %s
+						`,
+						lastEvent.Title,
+					),
 					CreatedAt: createdAt,
 				})
 
 				db.Create(&database.BanModel{
-					Type:      "user",
-					OwnerId:   bannedTeam.CaptainId,
-					Reason:    fmt.Sprintf("Несвоевременная сдача отчета о событии: %s\nБан капитана команды %s", lastEvent.Title, bannedTeam.Title),
+					Type:    "user",
+					OwnerID: bannedTeam.CaptainID,
+					Reason: fmt.Sprintf(
+						`
+							Несвоевременная сдача отчета о событии: %s \n 
+							Бан капитана команды %s
+						`,
+						lastEvent.Title,
+						bannedTeam.Title,
+					),
 					CreatedAt: createdAt,
 				})
 
-				db.Where("id = ?", bannedTeam.CaptainId).First(&captain)
+				db.Where("id = ?", bannedTeam.CaptainID).First(&captain)
 				if slices.Compare(captain.Roles, []string{"banned", "user"}) != 0 {
 					captain.Roles = []string{"banned", "user"}
 					db.Save(&captain)

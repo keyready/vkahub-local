@@ -17,7 +17,7 @@ func DatabaseConnect(
 	dbCfg *Config,
 	migrationsCfg *MigrationsConfig,
 ) *gorm.DB {
-	dsn := BuildConnectDSN(
+	dsn := BuildDSN(
 		dbCfg.Host,
 		dbCfg.Username,
 		dbCfg.Password,

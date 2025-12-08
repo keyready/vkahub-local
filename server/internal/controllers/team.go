@@ -3,8 +3,8 @@ package controllers
 import (
 	"net/http"
 	"server/internal/cloud"
-	"server/internal/dto/other"
-	"server/internal/dto/request"
+	"server/internal/forms/dto"
+	"server/internal/forms/request"
 	"server/internal/services"
 	"server/internal/utils"
 	"server/pkg/app"
@@ -45,7 +45,7 @@ func (tc *TeamController) EditTeam(gCtx *gin.Context) {
 
 		params := utils.ReadFileParams{
 			File:    image,
-			SaveDir: other.TEAM_IMAGES_STORAGE,
+			SaveDir: dto.TEAM_IMAGES_FOLDER,
 		}
 
 		readFileResult, err := utils.ReadFile(params)
@@ -81,15 +81,15 @@ func (tc *TeamController) EditTeam(gCtx *gin.Context) {
 
 func (tc *TeamController) PartInTeam(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var partInTeam request.PartInTeam
+	jsonForm := request.PartInTeamForm{}
 
-	bindErr := ctx.ShouldBindJSON(&partInTeam)
+	bindErr := ctx.ShouldBindJSON(&jsonForm)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	httpCode, err := tc.teamService.PartInTeam(partInTeam)
+	httpCode, err := tc.teamService.PartInTeam(jsonForm)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return
@@ -100,17 +100,17 @@ func (tc *TeamController) PartInTeam(ctx *gin.Context) {
 
 func (tc *TeamController) TransferCaptainRights(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var transCaptainRig request.TransferCaptainRightsRequest
+	jsonForm := request.TransferCaptainRightsForm{}
 
-	bindErr := ctx.ShouldBindJSON(&transCaptainRig)
+	bindErr := ctx.ShouldBindJSON(&jsonForm)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	transCaptainRig.Owner = ctx.GetString("username")
+	jsonForm.Owner.Username = ctx.GetString("username")
 
-	httpCode, serviceErr := tc.teamService.TransferCaptainRights(transCaptainRig)
+	httpCode, serviceErr := tc.teamService.TransferCaptainRights(jsonForm)
 	if serviceErr != nil {
 		appGin.ErrorResponse(httpCode, serviceErr)
 		return
@@ -121,15 +121,15 @@ func (tc *TeamController) TransferCaptainRights(ctx *gin.Context) {
 
 func (tc *TeamController) DeleteMember(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var deleteMember request.DeleteMemberRequest
+	jsonForm := request.DeleteMemberForm{}
 
-	bindErr := ctx.ShouldBindJSON(&deleteMember)
+	bindErr := ctx.ShouldBindJSON(&jsonForm)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	httpCode, serviceErr := tc.teamService.DeleteMember(deleteMember)
+	httpCode, serviceErr := tc.teamService.DeleteMember(jsonForm)
 	if serviceErr != nil {
 		appGin.ErrorResponse(httpCode, serviceErr)
 		return
@@ -140,7 +140,6 @@ func (tc *TeamController) DeleteMember(ctx *gin.Context) {
 
 func (tc *TeamController) RegisterTeam(gCtx *gin.Context) {
 	appGin := app.Gin{Ctx: gCtx}
-
 	formData := request.RegisterTeamForm{}
 
 	if bindErr := gCtx.ShouldBind(&formData); bindErr != nil {
@@ -148,9 +147,18 @@ func (tc *TeamController) RegisterTeam(gCtx *gin.Context) {
 		return
 	}
 
+	image, err := gCtx.FormFile("image")
+	if err != nil {
+		appGin.ErrorResponse(
+			http.StatusBadRequest,
+			err,
+		)
+		return
+	}
+
 	readFileParams := utils.ReadFileParams{
-		File:    formData.Image,
-		SaveDir: other.TEAM_IMAGES_STORAGE,
+		File:    image,
+		SaveDir: dto.TEAM_IMAGES_FOLDER,
 	}
 
 	readFileResult, err := utils.ReadFile(readFileParams)
@@ -162,7 +170,7 @@ func (tc *TeamController) RegisterTeam(gCtx *gin.Context) {
 		return
 	}
 
-	formData.Image.Filename = readFileResult.FullFilePath
+	formData.Image = readFileResult.FullFilePath
 
 	httpCode, serviceErr := tc.teamService.RegisterTeam(formData)
 	if serviceErr != nil {
@@ -182,60 +190,67 @@ func (tc *TeamController) RegisterTeam(gCtx *gin.Context) {
 	appGin.SuccessResponse(http.StatusCreated, gin.H{})
 }
 
-func (tc *TeamController) FetchOneTeamById(ctx *gin.Context) {
+func (tc *TeamController) GetTeamById(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	tId := ctx.Query("id")
+	teamId := ctx.Query("id")
 
-	teamId, _ := strconv.ParseInt(tId, 10, 64)
+	teamID, _ := strconv.ParseInt(teamId, 10, 64)
 
-	httpCode, serviceErr, data := tc.teamService.FetchOneTeamById(teamId)
-	if serviceErr != nil {
-		appGin.ErrorResponse(httpCode, serviceErr)
+	team, err := tc.teamService.GetTeamById(teamID)
+	if err != nil {
+		appGin.ErrorResponse(http.StatusInternalServerError, err)
 		return
 	}
 
-	appGin.SuccessResponse(httpCode, data)
+	appGin.SuccessResponse(http.StatusOK, team)
 }
 
-func (tc *TeamController) FetchAllTeamsByParams(ctx *gin.Context) {
+func (tc *TeamController) GetTeamsByParams(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var FetchAllTeams request.FetchAllTeamsByParamsRequest
+	queryForm := request.GetTeamsByParamsForm{}
 
-	FetchAllTeams.Title = ctx.Query("title")
-	FetchAllTeams.Wanted = ctx.Query("wanted")
-	FetchAllTeams.Members = ctx.Query("members")
+	if bindErr := ctx.ShouldBindQuery(&queryForm); bindErr != nil {
+		appGin.ErrorResponse(
+			http.StatusBadRequest,
+			bindErr,
+		)
+		return
+	}
+	// form.Title = ctx.Query("title")
+	// form.Wanted = ctx.Query("wanted")
+	// form.Members = ctx.Query("members")
 
-	httpCode, _, data := tc.teamService.FetchAllTeamsByParams(FetchAllTeams)
+	httpCode, _, data := tc.teamService.GetTeamsByParams(queryForm)
 
 	appGin.SuccessResponse(httpCode, data)
 }
 
-func (tc *TeamController) FetchTeamMembers(ctx *gin.Context) {
+func (tc *TeamController) GetTeamMembers(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
 
 	tId := ctx.Query("teamId")
 	teamId, _ := strconv.ParseInt(tId, 10, 64)
 
-	httpCode, serviceErr, users := tc.teamService.FetchTeamMembers(teamId)
-	if serviceErr != nil {
-		appGin.ErrorResponse(httpCode, serviceErr)
+	httpCode, members, err := tc.teamService.GetTeamMembers(teamId)
+	if err != nil {
+		appGin.ErrorResponse(httpCode, err)
 		return
 	}
 
-	appGin.SuccessResponse(httpCode, users)
+	appGin.SuccessResponse(httpCode, members)
 }
 
 func (tc *TeamController) AddMembersInTeam(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var addMemInTeam request.AddMembersInTeamRequest
+	jsonForm := request.AddMembersInTeamForm{}
 
-	bindErr := ctx.ShouldBindJSON(&addMemInTeam)
+	bindErr := ctx.ShouldBindJSON(&jsonForm)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	httpCode, serviceErr := tc.teamService.AddMembersInTeam(addMemInTeam)
+	httpCode, serviceErr := tc.teamService.AddMembersInTeam(jsonForm)
 	if serviceErr != nil {
 		appGin.ErrorResponse(httpCode, serviceErr)
 		return

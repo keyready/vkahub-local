@@ -3,16 +3,16 @@ package repositories
 import (
 	"fmt"
 	"net/http"
-	"server/internal/dto/request"
 	"server/internal/database"
+	"server/internal/forms/request"
 
 	"gorm.io/gorm"
 )
 
 type TrackRepository interface {
-	AddTrack(addTrack request.AddTrackDto) (httpCode int, err error)
-	PartTeamInTrack(partTeamInTrack request.PartTeamInTrackRequest) (httpCode int, err error)
-	FetchOneTrack(fetchOneTrack request.FetchOneTrackReq) (httpCode int, err error, data database.TrackModel)
+	AddTrack(addTrackForm request.AddTrackForm) (int, error)
+	PartTeamInTrack(partTeamInTrackForm request.PartTeamInTrackForm) (int, error)
+	GetTrack(getTrackForm request.GetTrackForm) (int, database.TrackModel, error)
 }
 
 type TrackRepositoryImpl struct {
@@ -23,32 +23,40 @@ func NewTrackRepositoryImpl(db *gorm.DB) TrackRepository {
 	return &TrackRepositoryImpl{Db: db}
 }
 
-func (t *TrackRepositoryImpl) FetchOneTrack(fetchOneTrack request.FetchOneTrackReq) (httpCode int, findTrackErr error, track database.TrackModel) {
-	if findTrackErr = t.Db.First(&track, fetchOneTrack.TrackId).Where("event_id = ?", fetchOneTrack.EventId).Error; findTrackErr != nil {
-		return http.StatusNotFound, findTrackErr, database.TrackModel{ID: 0}
+func (t *TrackRepositoryImpl) GetTrack(getTrackForm request.GetTrackForm) (int, database.TrackModel, error) {
+	track := database.TrackModel{}
+	if err := t.Db.
+		First(&track, getTrackForm.TrackID).
+		Where("event_id = ?", getTrackForm.EventID).
+		Error; err != nil {
+		return http.StatusNotFound, database.TrackModel{}, err
 	}
-	return http.StatusOK, nil, track
+
+	return http.StatusOK, track, nil
 }
 
-func (t *TrackRepositoryImpl) PartTeamInTrack(pTeamInTrack request.PartTeamInTrackRequest) (httpCode int, err error) {
+func (t *TrackRepositoryImpl) PartTeamInTrack(partTeamInTrackForm request.PartTeamInTrackForm) (int, error) {
 	var track database.TrackModel
 	var event database.EventModel
 
-	if pTeamInTrack.TrackId != 0 {
-		t.Db.Where("id = ?", pTeamInTrack.TrackId).First(&track)
-		t.Db.Where("id = ?", track.EventId).First(&event)
-		track.ParticipantsTeamsIds = append(track.ParticipantsTeamsIds, pTeamInTrack.TeamId)
+	if partTeamInTrackForm.TrackId != 0 {
+		t.Db.Where("id = ?", partTeamInTrackForm.TrackId).First(&track)
+		t.Db.Where("id = ?", track.EventID).First(&event)
+		track.ParticipantsTeamIDs = append(track.ParticipantsTeamIDs, partTeamInTrackForm.TeamId)
 		t.Db.Save(&track)
-		event.ParticipantsTeamsIds = append(event.ParticipantsTeamsIds, pTeamInTrack.TeamId)
+		event.ParticipantsTeamIDs = append(event.ParticipantsTeamIDs, partTeamInTrackForm.TeamId)
 		t.Db.Save(&event)
-		for _, teamId := range event.ParticipantsTeamsIds {
+		for _, teamId := range event.ParticipantsTeamIDs {
 			var team database.TeamModel
 			t.Db.Where("id = ?", teamId).First(&team)
-			for _, memberId := range team.MembersId {
+			for _, memberId := range team.MemberIDs {
 				t.Db.Create(&database.NotificationModel{
-					OwnerId: memberId,
+					OwnerID: memberId,
 					Message: fmt.Sprintf(
-						"Ваша команда %s присоеденилась к эвенту %s на трек %s",
+						`
+							Ваша команда %s присоединилась к событию %s \n
+							Трек: %s
+						`,
 						team.Title,
 						event.Title,
 						track.Title,
@@ -57,17 +65,19 @@ func (t *TrackRepositoryImpl) PartTeamInTrack(pTeamInTrack request.PartTeamInTra
 			}
 		}
 	} else {
-		t.Db.Where("id = ?", pTeamInTrack.EventId).First(&event)
-		event.ParticipantsTeamsIds = append(event.ParticipantsTeamsIds, pTeamInTrack.TeamId)
+		t.Db.Where("id = ?", partTeamInTrackForm.EventId).First(&event)
+		event.ParticipantsTeamIDs = append(event.ParticipantsTeamIDs, partTeamInTrackForm.TeamId)
 		t.Db.Save(&event)
-		for _, teamId := range event.ParticipantsTeamsIds {
+		for _, teamId := range event.ParticipantsTeamIDs {
 			var team database.TeamModel
 			t.Db.Where("id = ?", teamId).First(&team)
-			for _, userId := range team.MembersId {
+			for _, userId := range team.MemberIDs {
 				t.Db.Create(&database.NotificationModel{
-					OwnerId: userId,
+					OwnerID: userId,
 					Message: fmt.Sprintf(
-						"Ваша команда %s присоеденилась к эвенту %s",
+						`
+							Ваша команда %s присоеденилась к эвенту %s
+						`,
 						team.Title,
 						event.Title,
 					),
@@ -79,31 +89,38 @@ func (t *TrackRepositoryImpl) PartTeamInTrack(pTeamInTrack request.PartTeamInTra
 	return http.StatusOK, nil
 }
 
-func (t *TrackRepositoryImpl) AddTrack(addTrack request.AddTrackDto) (httpCode int, err error) {
+func (t *TrackRepositoryImpl) AddTrack(addTrackForm request.AddTrackForm) (int, error) {
 	var event database.EventModel
 	newTrack := database.TrackModel{
-		Title:                addTrack.Title,
-		Description:          addTrack.Description,
-		EventId:              addTrack.EventId,
-		ParticipantsTeamsIds: []int64{},
+		Title:               addTrackForm.Title,
+		Description:         addTrackForm.Description,
+		EventID:             addTrackForm.EventID,
+		ParticipantsTeamIDs: []int64{},
 	}
 	if addTrackErr := t.Db.Create(&newTrack).Error; addTrackErr != nil {
 		return http.StatusBadRequest, addTrackErr
 	}
 
-	if findEventErr := t.Db.First(&event, addTrack.EventId).Error; findEventErr != nil {
+	if findEventErr := t.Db.First(&event, addTrackForm.EventID).Error; findEventErr != nil {
 		return http.StatusNotFound, findEventErr
 	}
-	event.TracksId = append(event.TracksId, newTrack.ID)
+	event.TrackIDs = append(event.TrackIDs, newTrack.ID)
 	t.Db.Save(&event)
 
-	for _, teamId := range event.ParticipantsTeamsIds {
+	for _, teamId := range event.ParticipantsTeamIDs {
 		var team database.TeamModel
 		t.Db.Where("id = ?", teamId).First(&team)
-		for _, memberId := range team.MembersId {
+		for _, memberId := range team.MemberIDs {
 			t.Db.Create(&database.NotificationModel{
-				OwnerId: memberId,
-				Message: fmt.Sprintf("Анонсирован новый трек %s на событие %s", newTrack.Title, event.Title),
+				OwnerID: memberId,
+				Message: fmt.Sprintf(
+					`
+						Анонсирован новый трек %s в событии %s. \n
+						Спеши зарегистрироваться и прими участие.
+					`,
+					newTrack.Title,
+					event.Title,
+				),
 			})
 		}
 	}

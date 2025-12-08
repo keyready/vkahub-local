@@ -2,19 +2,18 @@ package repositories
 
 import (
 	"net/http"
-	"server/internal/dto/request"
 	"server/internal/database"
+	"server/internal/forms/request"
 	"strconv"
-	"time"
 
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
 type TeamChatRepository interface {
-	DeleteMessage(deleteMessage request.DeleteMessage) (httpCode int, err error, attachmentsMessage []string)
-	UpdateMessage(updateMessage request.UpdateMessage) (httpCode int, err error)
-	CreateMessage(createMessage request.WriteMessageForm) (httpCode int, err error)
+	DeleteMessage(delMsgForm request.DeleteMessageForm) (int, []string, error)
+	EditMessage(editMsgForm request.EditMessageForm) (int, error)
+	CreateMessage(createMessageForm request.WriteMessageForm) (int, error)
 }
 
 type TeamChatRepositoryImpl struct {
@@ -25,12 +24,12 @@ func NewTeamChatServiceImpl(db *gorm.DB) TeamChatRepository {
 	return &TeamChatRepositoryImpl{DB: db}
 }
 
-func (tc TeamChatRepositoryImpl) CreateMessage(createMessage request.WriteMessageForm) (httpCode int, err error) {
+func (tc TeamChatRepositoryImpl) CreateMessage(createMessageForm request.WriteMessageForm) (int, error) {
 	var author database.UserModel
-	tc.DB.Where("username = ?", createMessage.Author).First(&author)
+	tc.DB.Where("username = ?", createMessageForm.Author).First(&author)
 
 	var teamChatIdString string
-	err = tc.DB.
+	err := tc.DB.
 		Model(&database.TeamChatModel{}).
 		Select("id").
 		Where("? = ANY (members_id)", author.ID).
@@ -41,14 +40,12 @@ func (tc TeamChatRepositoryImpl) CreateMessage(createMessage request.WriteMessag
 	}
 
 	teamChatId, _ := strconv.ParseInt(teamChatIdString, 10, 64)
-	createdAt, _ := time.Parse(time.RFC3339, time.Now().String())
 
 	newMessage := database.ChatMessageModel{
-		TeamChatId: teamChatId,
-		Author:     createMessage.Author,
-		Message:    createMessage.Message,
-		Attachment: createMessage.AttachmentNames,
-		CreatedAt:  createdAt,
+		TeamChatID: teamChatId,
+		Author:     createMessageForm.Author.Username,
+		Message:    createMessageForm.Message,
+		Attachment: createMessageForm.AttachmentNames,
 	}
 	_ = tc.DB.Create(&newMessage).Error
 
@@ -65,24 +62,23 @@ func (tc TeamChatRepositoryImpl) CreateMessage(createMessage request.WriteMessag
 	return http.StatusCreated, nil
 }
 
-func (tc TeamChatRepositoryImpl) DeleteMessage(deleteMessage request.DeleteMessage) (httpCode int, err error, attachmentsMessage []string) {
-	var messages []database.ChatMessageModel
-	err = tc.DB.
-		Where("author = ?", deleteMessage.Author).
-		Where("id = ANY(?)", deleteMessage.MessagesId).
+func (tc TeamChatRepositoryImpl) DeleteMessage(delMsgForm request.DeleteMessageForm) (int, []string, error) {
+	messages := make([]database.ChatMessageModel, 0)
+	err := tc.DB.
+		Where("id = ? AND author = ?", delMsgForm.MessageID, delMsgForm.Author).
 		Delete(messages).
 		Error
 	if err != nil {
-		return http.StatusNotFound, err, []string{}
+		return http.StatusNotFound, nil, nil
 	}
-	return http.StatusOK, nil, []string{}
+	return http.StatusOK, nil, nil
 }
 
-func (tc TeamChatRepositoryImpl) UpdateMessage(updateMessage request.UpdateMessage) (httpCode int, err error) {
-	err = tc.DB.
+func (tc TeamChatRepositoryImpl) EditMessage(editMsgForm request.EditMessageForm) (int, error) {
+	err := tc.DB.
 		Model(&database.ChatMessageModel{}).
-		Where("id = ? AND author = ?", updateMessage.MessageId, updateMessage.Author).
-		Updates(database.ChatMessageModel{Message: updateMessage.NewBody}).
+		Where("id = ? AND author = ?", editMsgForm.MessageID, editMsgForm.Author.Username).
+		Update("message", editMsgForm.NewBody).
 		Error
 	if err != nil {
 		return http.StatusInternalServerError, err

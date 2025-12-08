@@ -19,9 +19,10 @@ export const changeUserProfile = createAsyncThunk<string, Partial<User>, ThunkCo
             let formdata = new FormData();
 
             if (profile.newAvatar) {
-                const newProfile: UpdatedAvatarProfile = {
+                const newProfile = {
                     ...profile,
                     avatar: profile.newAvatar,
+                    hash: profile.avatar?.hash,
                 };
                 delete newProfile.newAvatar;
                 formdata = objectToFormData(newProfile);
@@ -30,6 +31,7 @@ export const changeUserProfile = createAsyncThunk<string, Partial<User>, ThunkCo
                     {
                         ...profile,
                         avatar: null,
+                        hash: profile.avatar?.hash,
                     },
                     {
                         nullValueHandling: 'stringify',

@@ -1,7 +1,3 @@
-/**
- * Ну я же не много прошу: просто чтобы айдишник команды был. И все. Базовые потребности удовлетворить...
- */
-
 import { useSelector } from 'react-redux';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -9,7 +5,6 @@ import {
     AutocompleteItem,
     AutocompleteSection,
     Button,
-    Image,
     Input,
     Textarea,
     Tooltip,
@@ -32,6 +27,7 @@ import classes from './ProfileInfoBlock.module.scss';
 
 import { classNames } from '@/shared/lib/classNames';
 import { HStack, VStack } from '@/shared/ui/Stack';
+import { Image } from '@/shared/ui/Image';
 import { toastDispatch } from '@/widgets/Toaster';
 import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
 import { getUserDataService, getUserRoles } from '@/entities/User';
@@ -65,6 +61,7 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
 
     const [isEditorMode, setIsEditorMode] = useState<boolean>(false);
     const [avatar, setAvatar] = useState<File>();
+    const [avatarHash, setAvatarHash] = useState<string>('');
 
     const {
         control,
@@ -122,13 +119,20 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
     const handleChangeProfile = useCallback(
         async (profile: UserProfileFormValues) => {
             await toastDispatch(
-                dispatch(changeUserProfile({ ...profile, newAvatar: avatar, id: userData?.id })),
+                dispatch(
+                    changeUserProfile({
+                        ...profile,
+                        newAvatar: avatar,
+                        avatar: { image: '', hash: avatarHash },
+                        id: userData?.id,
+                    }),
+                ),
             );
 
             await dispatch(getUserDataService());
             setIsEditorMode(false);
         },
-        [avatar, dispatch, userData?.id],
+        [avatar, avatarHash, dispatch, userData?.id],
     );
 
     const handleChangeEditorMode = useCallback(() => {
@@ -210,16 +214,18 @@ export const ProfileInfoBlock = (props: ProfileInfoBlockProps) => {
                     {isEditorMode ? (
                         <ImageUpload
                             className="w-[200px] h-[200px]"
-                            initialImage={`/minio/${userData?.avatar}`}
+                            initialImage={`/minio/${userData?.avatar?.image}`}
                             onChange={setAvatar}
+                            onImageHashGenerated={setAvatarHash}
                         />
                     ) : (
                         <Image
+                            hash={userData?.avatar?.hash}
                             fallbackSrc="/static/fallbacks/user-fallback.webp"
                             width={200}
                             height={200}
                             classNames={{ wrapper: classes.profileAvatar }}
-                            src={`/minio/${userData?.avatar}`}
+                            src={`/minio/${userData?.avatar?.image}`}
                             alt="Аватар пользователя"
                         />
                     )}

@@ -12,9 +12,9 @@ func NewEventRouters(r *gin.Engine, jwtService *authorizer.Authorizer, ec *contr
 	eventRouters := r.Group("/api/events")
 	eventRouters.Use(middleware.AuthMiddleware(jwtService))
 	{
-		eventRouters.GET("", ec.FetchAllEvents)
-		eventRouters.POST("/create", ec.AddEvent)
-		eventRouters.GET("/event", ec.FetchOneEvent)
-		eventRouters.GET("/tracks", ec.FetchTracksEvent)
+		eventRouters.GET("", ec.GetEvents)
+		eventRouters.POST("/create", ec.RegisterEvent)
+		eventRouters.GET("/event", ec.GetEvent)
+		eventRouters.GET("/tracks", ec.GetTracksEvent)
 	}
 }

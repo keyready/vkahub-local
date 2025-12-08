@@ -12,7 +12,7 @@ func NewFeedbackRoutes(r *gin.Engine, jwtService *authorizer.Authorizer, fc *con
 	feedRoutes := r.Group("/api/feedbacks")
 	feedRoutes.Use(middleware.AuthMiddleware(jwtService))
 	{
-		feedRoutes.GET("", fc.FetchAllFeedbacks)
+		feedRoutes.GET("", fc.GetFeedbacks)
 		feedRoutes.POST("/create", fc.AddFeedback)
 	}
 }

@@ -3,5 +3,5 @@ export interface Track {
     eventId: number;
     title: string;
     description: string;
-    participantsTeamsIds: number[];
+    participantsTeamsIds: string[];
 }

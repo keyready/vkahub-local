@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"net/http"
-	"server/internal/dto/request"
+	"server/internal/forms/request"
 	"server/internal/services"
 	"server/pkg/app"
 
@@ -19,15 +19,15 @@ func NewTrackController(trackService services.TrackService) *TrackController {
 
 func (tc *TrackController) PartTeamInTrack(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var partTeamInTrack request.PartTeamInTrackRequest
+	jsonForm := request.PartTeamInTrackForm{}
 
-	bindErr := ctx.ShouldBindJSON(&partTeamInTrack)
+	bindErr := ctx.ShouldBindJSON(&jsonForm)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	httpCode, err := tc.trackService.PartTeamInTrack(partTeamInTrack)
+	httpCode, err := tc.trackService.PartTeamInTrack(jsonForm)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return
@@ -36,30 +36,30 @@ func (tc *TrackController) PartTeamInTrack(ctx *gin.Context) {
 	appGin.SuccessResponse(httpCode, gin.H{})
 }
 
-func (tc *TrackController) FetchOneTrack(ctx *gin.Context) {
+func (tc *TrackController) GetTrack(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var fetchOneTrack request.FetchOneTrackReq
+	form := request.GetTrackForm{}
 
-	httpCode, err, data := tc.trackService.FetchOneTrack(fetchOneTrack)
+	httpCode, track, err := tc.trackService.GetTrack(form)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return
 	}
 
-	appGin.SuccessResponse(httpCode, data)
+	appGin.SuccessResponse(httpCode, track)
 }
 
 func (tc *TrackController) AddTrack(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var addTrack request.AddTrackDto
+	jsonForm := request.AddTrackForm{}
 
-	bindErr := ctx.ShouldBindJSON(&addTrack)
+	bindErr := ctx.ShouldBindJSON(&jsonForm)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	httpCode, err := tc.trackService.AddTrack(addTrack)
+	httpCode, err := tc.trackService.AddTrack(jsonForm)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return

@@ -1,3 +1,5 @@
+import { ImageObj } from '@/shared/ui/Image';
+
 export type EventType = 'ctf' | 'hack' | 'other' | 'all' | 'old';
 
 export interface Event {
@@ -6,7 +8,7 @@ export interface Event {
     description: string;
     shortDescription: string;
     sponsors: string[];
-    image?: string;
+    image: ImageObj;
     type: EventType;
 
     // Даты проведения и регистрации

@@ -1,9 +1,11 @@
 package repositories
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
-	"server/internal/dto/request"
 	"server/internal/database"
+	"server/internal/forms/request"
 	"strconv"
 	"strings"
 
@@ -11,8 +13,8 @@ import (
 )
 
 type PositionRepository interface {
-	AddPosition(addPosition request.AddPositionReq) (httpCode int, err error)
-	FetchAllPositions(positionIdsString string) (httpCode int, err error, positions []database.PositionModel)
+	AddPosition(addPositionForm request.AddPositionForm) (int, error)
+	GetPositions(positionIDs string) (int, []database.PositionModel, error)
 }
 
 type PositionRepositoryImpl struct {
@@ -23,39 +25,44 @@ func NewPositionRepImpl(DB *gorm.DB) PositionRepository {
 	return &PositionRepositoryImpl{DB: DB}
 }
 
-func (p *PositionRepositoryImpl) AddPosition(addPosition request.AddPositionReq) (httpCode int, err error) {
-	if addDdErr := p.DB.Create(
+func (p *PositionRepositoryImpl) AddPosition(addPositionForm request.AddPositionForm) (int, error) {
+	if err := p.DB.Create(
 		&database.PositionModel{
-			Name:   addPosition.Name,
-			Author: addPosition.Author,
-		}).Error; addDdErr != nil {
-		return http.StatusBadRequest, addDdErr
+			Name:   addPositionForm.Name,
+			Author: addPositionForm.Author.Username,
+		}).Error; err != nil {
+		return http.StatusInternalServerError, err
 	}
 
-	// deletedKeys, _ := p.RedisClient.Keys(context.TODO(), "positionsCache:*").Result()
-	// if len(deletedKeys) > 0 {
-	// 	_, err = p.RedisClient.Del(context.TODO(), deletedKeys...).Result()
-	// 	if err != nil {
-	// 		return http.StatusInternalServerError, err
-	// 	}
-	// }
-
-	return http.StatusOK, nil
+	return http.StatusCreated, nil
 }
 
-func (p *PositionRepositoryImpl) FetchAllPositions(positionIdsString string) (httpCode int, err error, positions []database.PositionModel) {
-	if positionIdsString != "" {
-		positionIdsSlice := strings.Split(positionIdsString, ",")
-		var positionIds []int64
-		for _, positionIdStr := range positionIdsSlice {
-			positionId, _ := strconv.ParseInt(positionIdStr, 10, 64)
-			positionIds = append(positionIds, positionId)
+func (p *PositionRepositoryImpl) GetPositions(positionsString string) (int, []database.PositionModel, error) {
+	positions := make([]database.PositionModel, 0)
+
+	if positionsString != "" {
+		positionsSplit := strings.Split(positionsString, ",")
+
+		positionIDs := make([]int64, len(positionsSplit))
+		for _, positionID := range positionsSplit {
+			positionIDInt, _ := strconv.ParseInt(positionID, 10, 64)
+			positionIDs = append(positionIDs, positionIDInt)
 		}
 
-		p.DB.Where("id IN (?)", positionIds).Find(&positions)
-	} else {
-		p.DB.Find(&positions)
+		err := p.DB.Where("id IN ?", positionIDs).Find(&positions).Error
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return http.StatusNotFound, nil, fmt.Errorf("skills not found: %v", err)
+			}
+		}
 	}
 
-	return http.StatusOK, nil, positions
+	err := p.DB.Find(&positions).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return http.StatusNotFound, nil, fmt.Errorf("skills not found: %v", err)
+		}
+	}
+
+	return http.StatusOK, positions, nil
 }

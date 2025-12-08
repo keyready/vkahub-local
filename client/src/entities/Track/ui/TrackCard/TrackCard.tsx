@@ -1,4 +1,4 @@
-import { Button, Divider } from '@nextui-org/react';
+import { Button, cn, Divider } from '@nextui-org/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
@@ -10,7 +10,6 @@ import { getTrackIsLoading } from '../../model/selectors/TrackSelectors';
 
 import classes from './TrackCard.module.scss';
 
-import { classNames } from '@/shared/lib/classNames';
 import { VStack } from '@/shared/ui/Stack';
 import { fetchTeam, getTeamData, useTeams } from '@/entities/Team';
 import { Skeleton } from '@/shared/ui/Skeleton';
@@ -154,7 +153,7 @@ export const TrackCard = (props: TrackCardProps) => {
 
     return (
         <VStack
-            className={classNames(classes.TrackCard, {}, [className])}
+            className={cn(classes.TrackCard, 'hover:scale-105', className)}
             align="start"
             justify="between"
             maxW

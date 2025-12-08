@@ -2,7 +2,6 @@ package authorizer
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -22,8 +21,7 @@ func New(cfg *Config) *Authorizer {
 	}
 }
 
-func (j *JWT) GenerateTokens(payload Payload) (tokens TokensResponse) {
-
+func (j *JWT) GenerateTokens(payload Payload) (*TokensResponse, error) {
 	accessClaims := JwtClaims{
 		Payload: payload,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -39,23 +37,25 @@ func (j *JWT) GenerateTokens(payload Payload) (tokens TokensResponse) {
 	}
 
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
-	jwtAccessSecretKey := []byte(j.config.AccessSecretKey)
-	accessTokenString, signedErr := accessToken.SignedString(jwtAccessSecretKey)
+	accessSecretKey := []byte(j.config.AccessSecretKey)
+
+	accessTokenString, signedErr := accessToken.SignedString(accessSecretKey)
 	if signedErr != nil {
-		log.Fatalln("failed to signed access: ", signedErr.Error())
+		return nil, fmt.Errorf("failed to signed access: %v", signedErr)
 	}
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-	jwtRefreshSecretKey := []byte(j.config.RefreshSecretKey)
-	refreshTokenString, signedErr := refreshToken.SignedString(jwtRefreshSecretKey)
+	refreshSecretKey := []byte(j.config.RefreshSecretKey)
+
+	refreshTokenString, signedErr := refreshToken.SignedString(refreshSecretKey)
 	if signedErr != nil {
-		log.Fatalln("failed to signed refresh: ", signedErr.Error())
+		return nil, fmt.Errorf("failed to signed refresh: %v", signedErr)
 	}
 
-	return TokensResponse{
+	return &TokensResponse{
 		AccessToken:  accessTokenString,
 		RefreshToken: refreshTokenString,
-	}
+	}, nil
 }
 
 func (j *JWT) ValidateToken(tokenString string) (*JwtClaims, error) {

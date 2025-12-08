@@ -2,29 +2,29 @@ package services
 
 import (
 	"server/internal/database"
-	"server/internal/dto/request"
+	"server/internal/forms/request"
 	"server/internal/repositories"
 )
 
 type PositionService interface {
-	AddPosition(addPosition request.AddPositionReq) (httpCode int, err error)
-	FetchAllPositions(s string) (httpCode int, err error, positions []database.PositionModel)
+	AddPosition(addPositionForm request.AddPositionForm) (int, error)
+	GetPositions(positionIDs string) (int, []database.PositionModel, error)
 }
 
 type PositionServiceImpl struct {
 	posRep repositories.PositionRepository
 }
 
-func NewPosServiceImpl(posRep repositories.PositionRepository) PositionService {
+func NewPositionServiceImpl(posRep repositories.PositionRepository) PositionService {
 	return &PositionServiceImpl{posRep: posRep}
 }
 
-func (p PositionServiceImpl) AddPosition(addPosition request.AddPositionReq) (httpCode int, err error) {
-	httpCode, err = p.posRep.AddPosition(addPosition)
+func (p PositionServiceImpl) AddPosition(addPositionForm request.AddPositionForm) (int, error) {
+	httpCode, err := p.posRep.AddPosition(addPositionForm)
 	return httpCode, err
 }
 
-func (p PositionServiceImpl) FetchAllPositions(s string) (httpCode int, err error, positions []database.PositionModel) {
-	httpCode, err, positions = p.posRep.FetchAllPositions(s)
-	return httpCode, err, positions
+func (p PositionServiceImpl) GetPositions(positionIDs string) (int, []database.PositionModel, error) {
+	httpCode, positions, err := p.posRep.GetPositions(positionIDs)
+	return httpCode, positions, err
 }

@@ -12,8 +12,8 @@ func NewBugRoutes(r *gin.Engine, jwtService *authorizer.Authorizer, bc *controll
 	bugRoutes := r.Group("/api/bugs")
 	bugRoutes.Use(middleware.AuthMiddleware(jwtService))
 	{
-		bugRoutes.POST("/create", bc.AddBug)
-		bugRoutes.GET("", bc.FetchAllBugs)
+		bugRoutes.POST("/create", bc.RegisterBug)
+		bugRoutes.GET("", bc.GetBugs)
 		bugRoutes.POST("/change-status", bc.UpdateBug)
 	}
 }

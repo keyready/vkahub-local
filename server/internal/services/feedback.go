@@ -2,13 +2,13 @@ package services
 
 import (
 	"server/internal/database"
-	"server/internal/dto/request"
+	"server/internal/forms/request"
 	"server/internal/repositories"
 )
 
 type FeedbackService interface {
-	AddFeed(addFeed request.AddFeedReq) (httpCode int, err error)
-	FetchAllFeeds() (httpCode int, err error, feeds []database.FeedbackModel)
+	AddFeedback(addFeedbackForm request.AddFeedbackForm) (int, error)
+	GetFeedbacks() (int, []database.FeedbackModel, error)
 }
 
 type FeedbackServiceImpl struct {
@@ -19,12 +19,12 @@ func NewFeedbackServiceImpl(repository repositories.FeedbackRepository) Feedback
 	return &FeedbackServiceImpl{feedRep: repository}
 }
 
-func (f FeedbackServiceImpl) AddFeed(addFeed request.AddFeedReq) (httpCode int, err error) {
-	httpCode, err = f.feedRep.AddFeed(addFeed)
+func (f FeedbackServiceImpl) AddFeedback(addFeedbackForm request.AddFeedbackForm) (int, error) {
+	httpCode, err := f.feedRep.AddFeedback(addFeedbackForm)
 	return httpCode, err
 }
 
-func (f FeedbackServiceImpl) FetchAllFeeds() (httpCode int, err error, feeds []database.FeedbackModel) {
-	httpCode, err, feeds = f.feedRep.FetchAllFeed()
-	return httpCode, err, feeds
+func (f FeedbackServiceImpl) GetFeedbacks() (int, []database.FeedbackModel, error) {
+	httpCode, feedbacks, err := f.feedRep.GetFeedbacks()
+	return httpCode, feedbacks, err
 }

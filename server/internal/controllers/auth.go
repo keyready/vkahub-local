@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"server/internal/authorizer"
 	"server/internal/cloud"
-	"server/internal/dto/other"
-	"server/internal/dto/request"
+	"server/internal/forms/dto"
+	"server/internal/forms/request"
 	"server/internal/onliner"
 	"server/internal/services"
 	"server/internal/utils"
@@ -38,7 +38,7 @@ func NewAuthController(
 }
 
 func (ac *AuthController) SignUp(gCtx *gin.Context) {
-	formData := request.SignUpRequest{}
+	formData := request.SignUpForm{}
 
 	if bindErr := gCtx.ShouldBind(&formData); bindErr != nil {
 		gCtx.AbortWithError(
@@ -71,7 +71,7 @@ func (ac *AuthController) SignUp(gCtx *gin.Context) {
 
 	readFileParams := utils.ReadFileParams{
 		File:    avatar,
-		SaveDir: other.USER_AVATARS_STORAGE,
+		SaveDir: dto.USER_AVATARS_FOLDER,
 	}
 
 	readFileResult, err := utils.ReadFile(readFileParams)
@@ -103,8 +103,8 @@ func (ac *AuthController) SignUp(gCtx *gin.Context) {
 
 		return
 	}
-
-	httpCode, serviceErr := ac.authService.SignUp(formData, readFileResult.FullFilePath)
+	formData.Avatar = readFileResult.FullFilePath
+	httpCode, serviceErr := ac.authService.SignUp(formData)
 	if serviceErr != nil {
 		gCtx.AbortWithError(
 			httpCode,
@@ -122,26 +122,20 @@ func (ac *AuthController) SignUp(gCtx *gin.Context) {
 	gCtx.JSON(http.StatusCreated, gin.H{})
 }
 
-func (ac *AuthController) Login(ctx *gin.Context) {
+func (ac *AuthController) SignIn(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	jsonForm := request.LoginRequest{}
+	jsonForm := request.SignInForm{}
 
 	if bindErr := ctx.ShouldBindJSON(&jsonForm); bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	httpCode, serviceErr := ac.authService.Login(jsonForm)
-	if serviceErr != nil {
-		appGin.ErrorResponse(httpCode, serviceErr)
+	httpCode, tokens, err := ac.authService.SignIn(jsonForm)
+	if err != nil {
+		appGin.ErrorResponse(httpCode, err)
 		return
 	}
-
-	payload := authorizer.Payload{
-		Username: jsonForm.Username,
-	}
-
-	tokens := ac.jwtService.Authorizer.GenerateTokens(payload)
 
 	appGin.SuccessResponse(httpCode, tokens)
 }
@@ -239,7 +233,7 @@ func (ac *AuthController) GetPersonalQuestion(gCtx *gin.Context) {
 		return
 	}
 
-	httpCode, err, question := ac.authService.GetPersonalQuestion(jsonForm)
+	httpCode, question, err := ac.authService.GetPersonalQuestion(jsonForm)
 	if err != nil || question == "" {
 		appGin.ErrorResponse(
 			httpCode,

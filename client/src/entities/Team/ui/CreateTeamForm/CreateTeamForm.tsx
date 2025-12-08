@@ -1,6 +1,10 @@
 import { Button, Input, Modal, ModalContent, Textarea } from '@nextui-org/react';
-import { FormEvent, useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Controller, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+
+import { createTeamSchema, CreateTeamTypes } from '../../model/types/validationSchemas';
 
 import classes from './CreateTeamForm.module.scss';
 
@@ -25,14 +29,17 @@ export const CreateTeamForm = (props: CreateTeamFormProps) => {
 
     const isTeamCreating = useSelector(getTeamIsLoading);
 
-    const [title, setTitle] = useState<string>('');
-    const [description, setDescription] = useState<string>('');
     const [file, setFile] = useState<File>();
+    const [imageHash, setImageHash] = useState<string>('');
 
-    const isButtonDisabled = useMemo(
-        () => !title || !description || isTeamCreating,
-        [description, isTeamCreating, title],
-    );
+    const {
+        control,
+        handleSubmit,
+        reset,
+        formState: { errors, isValid },
+    } = useForm<CreateTeamTypes>({
+        resolver: yupResolver(createTeamSchema),
+    });
 
     const handleChangeAvatar = useCallback((avatar: File) => {
         setFile(avatar);
@@ -40,25 +47,26 @@ export const CreateTeamForm = (props: CreateTeamFormProps) => {
 
     const handleCloseForm = useCallback(() => {
         setIsOpened(false);
-    }, [setIsOpened]);
+        reset();
+    }, [reset, setIsOpened]);
 
     const handleFormSubmit = useCallback(
-        async (event: FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-
+        async (team: CreateTeamTypes) => {
             const formData = new FormData();
             if (file) formData.append('image', file);
-            formData.append('title', title);
-            formData.append('description', description);
+            formData.append('title', team.title);
+            formData.append('hash', imageHash);
+            formData.append('description', team.description);
 
             const result = await toastDispatch(dispatch(createTeam(formData)));
 
             if (result.meta.requestStatus === 'fulfilled') {
                 setIsOpened(false);
+                reset();
                 await dispatch(getUserDataService());
             }
         },
-        [description, dispatch, file, setIsOpened, title],
+        [file, imageHash, dispatch, setIsOpened, reset],
     );
 
     return (
@@ -80,30 +88,50 @@ export const CreateTeamForm = (props: CreateTeamFormProps) => {
                         Создайте <span className="font-bold">свою</span> команду и покоряйте новые{' '}
                         <span className="font-bold">высоты</span>!
                     </h1>
-                    <form onSubmit={handleFormSubmit}>
+                    <form onSubmit={handleSubmit(handleFormSubmit)}>
                         <HStack maxW align="start" gap="24px">
-                            <ImageUpload isLoading={isTeamCreating} onChange={handleChangeAvatar} />
+                            <ImageUpload
+                                onImageHashGenerated={setImageHash}
+                                isLoading={isTeamCreating}
+                                onChange={handleChangeAvatar}
+                            />
                             <VStack maxW gap="12px">
-                                <Input
-                                    isDisabled={isTeamCreating}
-                                    value={title}
-                                    onChange={(event) => setTitle(event.target.value)}
-                                    size="sm"
-                                    label="Название команды"
+                                <Controller
+                                    render={({ field }) => (
+                                        <Input
+                                            isDisabled={isTeamCreating}
+                                            value={field.value}
+                                            onValueChange={field.onChange}
+                                            size="sm"
+                                            label="Название команды"
+                                            isInvalid={Boolean(errors.title?.message)}
+                                            errorMessage={errors.title?.message}
+                                        />
+                                    )}
+                                    name="title"
+                                    control={control}
                                 />
-                                <Textarea
-                                    isDisabled={isTeamCreating}
-                                    classNames={{
-                                        inputWrapper: 'h-full',
-                                    }}
-                                    minRows={6}
-                                    maxRows={6}
-                                    value={description}
-                                    onChange={(event) => setDescription(event.target.value)}
-                                    label="Описание команды"
+                                <Controller
+                                    render={({ field }) => (
+                                        <Textarea
+                                            isDisabled={isTeamCreating}
+                                            classNames={{
+                                                inputWrapper: 'h-full',
+                                            }}
+                                            minRows={6}
+                                            maxRows={6}
+                                            value={field.value}
+                                            onValueChange={field.onChange}
+                                            label="Описание команды"
+                                            isInvalid={Boolean(errors.description?.message)}
+                                            errorMessage={errors.description?.message}
+                                        />
+                                    )}
+                                    name="description"
+                                    control={control}
                                 />
                                 <Button
-                                    isDisabled={isButtonDisabled}
+                                    isDisabled={!file || isTeamCreating}
                                     isLoading={isTeamCreating}
                                     className="self-end"
                                     size="sm"

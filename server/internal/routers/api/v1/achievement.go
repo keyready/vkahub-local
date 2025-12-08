@@ -17,6 +17,6 @@ func NewAchievementRoutes(
 	acRoutes.Use(middleware.AuthMiddleware(jwtService))
 	{
 		acRoutes.POST("/create", ac.AddAchievement)
-		acRoutes.GET("", ac.FetchAchievementsTeam)
+		acRoutes.GET("", ac.GetAchievementsTeam)
 	}
 }

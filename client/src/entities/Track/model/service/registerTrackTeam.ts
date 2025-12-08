@@ -4,7 +4,7 @@ import { AxiosError } from 'axios';
 import { ThunkConfig } from '@/app/providers/StoreProvider/config/StateSchema';
 
 interface RegisterTrackTeamProps {
-    teamId: number;
+    teamId: string;
     trackId?: number;
     eventId?: number;
 }

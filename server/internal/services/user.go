@@ -4,25 +4,25 @@ import (
 	"context"
 	"server/internal/cloud"
 	"server/internal/database"
-	"server/internal/dto/other"
-	"server/internal/dto/request"
-	"server/internal/dto/response"
+	"server/internal/forms/request"
+	"server/internal/forms/response"
 	"server/internal/repositories"
 )
 
 type UserService interface {
-	FetchAllMembersByParams(FetchAllMem request.FetchAllMembersByParamsRequest) (httpCode int, err error, members []response.FetchAllMembers)
-	GetUserData(username string) (httpCode int, err error, userData response.UserData)
-	GetProfile(username string) (httpCode int, err error, userData response.ProfileData)
-	EditProfile(EditProfReq request.EditProfileInfoForm) (httpCode int, err error)
-	FetchPersonalAchievements(username, personalUsername string) (httpCode int, err error, data []response.FetchPersonalAchievementResponse)
-	FetchAllPersonalNotifications(allNtf request.FetchAllNotifications) (httpCode int, err error, ntfs []database.NotificationModel)
-	UpdateNotification(updateNtf other.UpdateNotificationData) (httpCode int, err error)
-	GetActualInfo() (httpCode int, err error, info response.ActualInfo)
-	FetchAllMessages(fetchAllMessage request.FetchAllMessages) (httpCode int, err error, messages []response.FetchAllMessagesResponse)
-	AddPortfolio(addPortfolioReq request.AddPortfolioForm, certificateNames []string) (httpCode int, err error)
-	DeletePortfolio(certificateName, ownerName string) (httpCode int, err error)
-	GetBannedReason(ownerID int64) (httpCode int, err error, banned database.BanModel)
+	GetMembersByParams(getMembersForm request.GetMembersByParamsForm) (int, []*response.Member, error)
+	// GetMemberByUsername(username string) (int, *response.Member, error)
+	GetUserData(username string) (int, *response.UserData, error)
+	GetProfile(username string) (int, *response.ProfileData, error)
+	EditProfile(editProfileForm request.EditProfileInfoForm) (int, error)
+	GetPersonalAchievements(username, personalUsername string) (int, []response.PersonalAchievement, error)
+	GetPersonalNotifications(getNotificationsForm request.GetNotificationsForm) (int, []database.NotificationModel)
+	UpdateNotificationStatus(updateNotificationForm request.UpdateNotificationForm) (int, error)
+	GetActualInfo() response.ActualInfo
+	GetMessages(getMessagesForm request.GetMessagesForm) (int, []response.Message, error)
+	AddPortfolio(addPortfolioForm request.AddPortfolioForm) (int, error)
+	DeletePortfolio(ctx context.Context, certificateName, ownerName string) (int, error)
+	GetBannedReason(ownerID int64) (int, *database.BanModel, error)
 	SetSettings(ctx context.Context, saveSettingsForm request.SetSettingsForm) error
 	GetSettings(ctx context.Context, username string) (string, error)
 }
@@ -50,62 +50,61 @@ func (u UserServiceImpl) SetSettings(ctx context.Context, saveSettingsForm reque
 	return u.UserRepository.SetSettings(ctx, saveSettingsForm)
 }
 
-func (u UserServiceImpl) GetBannedReason(ownerID int64) (httpCode int, err error, banned database.BanModel) {
-	httpCode, err, banned = u.UserRepository.GetBannedReason(ownerID)
-	return httpCode, err, banned
+func (u UserServiceImpl) GetBannedReason(ownerID int64) (int, *database.BanModel, error) {
+	httpCode, banned, err := u.UserRepository.GetBannedReason(ownerID)
+	return httpCode, banned, err
 }
 
-func (u UserServiceImpl) DeletePortfolio(certificateName, ownerName string) (httpCode int, err error) {
-	httpCode, err = u.UserRepository.DeletePortfolio(certificateName, ownerName)
+func (u UserServiceImpl) DeletePortfolio(ctx context.Context, certificateName, ownerName string) (httpCode int, err error) {
+	httpCode, err = u.UserRepository.DeletePortfolio(ctx, certificateName, ownerName)
 	return httpCode, err
 }
 
-func (u UserServiceImpl) AddPortfolio(addPortfolioReq request.AddPortfolioForm, certificateNames []string) (httpCode int, err error) {
-	httpCode, err = u.UserRepository.AddPortfolio(addPortfolioReq, certificateNames)
+func (u UserServiceImpl) AddPortfolio(addPortfolioForm request.AddPortfolioForm) (int, error) {
+	httpCode, err := u.UserRepository.AddPortfolio(addPortfolioForm)
 	return httpCode, err
 }
 
-func (u UserServiceImpl) FetchAllMessages(fetchAllMessage request.FetchAllMessages) (httpCode int, err error, messages []response.FetchAllMessagesResponse) {
-	httpCode, err, messages = u.UserRepository.FetchAllMessages(fetchAllMessage)
-	return httpCode, err, messages
+func (u UserServiceImpl) GetMessages(getMessagesForm request.GetMessagesForm) (int, []response.Message, error) {
+	httpCode, messages, err := u.UserRepository.GetMessages(getMessagesForm)
+	return httpCode, messages, err
 }
 
-func (u UserServiceImpl) GetActualInfo() (httpCode int, err error, info response.ActualInfo) {
-	httpCode, err, info = u.UserRepository.GetActualInfo()
-	return httpCode, err, info
+func (u UserServiceImpl) GetActualInfo() response.ActualInfo {
+	return u.UserRepository.GetActualInfo()
 }
 
-func (u UserServiceImpl) UpdateNotification(updateNtf other.UpdateNotificationData) (httpCode int, err error) {
-	httpCode, err = u.UserRepository.UpdateNotificationStatus(updateNtf)
+func (u UserServiceImpl) UpdateNotificationStatus(updateNotificationForm request.UpdateNotificationForm) (int, error) {
+	httpCode, err := u.UserRepository.UpdateNotificationStatus(updateNotificationForm)
 	return httpCode, err
 }
 
-func (u UserServiceImpl) FetchAllPersonalNotifications(allNtf request.FetchAllNotifications) (httpCode int, err error, ntfs []database.NotificationModel) {
-	httpCode, err, ntfs = u.UserRepository.FetchAllPersonalNotifications(allNtf)
-	return httpCode, err, ntfs
+func (u UserServiceImpl) GetPersonalNotifications(getNotificationsForm request.GetNotificationsForm) (int, []database.NotificationModel) {
+	httpCode, ntfs := u.UserRepository.GetPersonalNotifications(getNotificationsForm)
+	return httpCode, ntfs
 }
 
-func (u UserServiceImpl) FetchPersonalAchievements(username, personalUsername string) (httpCode int, err error, data []response.FetchPersonalAchievementResponse) {
-	httpCode, err, data = u.UserRepository.FetchPersonalAchievements(username, personalUsername)
-	return httpCode, err, data
+func (u UserServiceImpl) GetPersonalAchievements(username, personalUsername string) (int, []response.PersonalAchievement, error) {
+	httpCode, achievements, err := u.UserRepository.GetPersonalAchievements(username, personalUsername)
+	return httpCode, achievements, err
 }
 
-func (u UserServiceImpl) EditProfile(EditProfReq request.EditProfileInfoForm) (httpCode int, err error) {
-	httpCode, err = u.UserRepository.EditProfile(EditProfReq)
+func (u UserServiceImpl) EditProfile(editProfileForm request.EditProfileInfoForm) (int, error) {
+	httpCode, err := u.UserRepository.EditProfile(editProfileForm)
 	return httpCode, err
 }
 
-func (u UserServiceImpl) FetchAllMembersByParams(FetchAllMem request.FetchAllMembersByParamsRequest) (httpCode int, err error, members []response.FetchAllMembers) {
-	httpCode, err, members = u.UserRepository.FetchAllMembersByParams(FetchAllMem)
-	return httpCode, err, members
+func (u UserServiceImpl) GetMembersByParams(getMembersForm request.GetMembersByParamsForm) (int, []*response.Member, error) {
+	httpCode, members, err := u.UserRepository.GetMembersByParams(getMembersForm)
+	return httpCode, members, err
 }
 
-func (u UserServiceImpl) GetUserData(username string) (httpCode int, err error, userData response.UserData) {
-	httpCode, err, userData = u.UserRepository.GetUserData(username)
-	return httpCode, err, userData
+func (u UserServiceImpl) GetUserData(username string) (int, *response.UserData, error) {
+	httpCode, userData, err := u.UserRepository.GetUserData(username)
+	return httpCode, userData, err
 }
 
-func (u UserServiceImpl) GetProfile(username string) (httpCode int, err error, profileData response.ProfileData) {
-	httpCode, err, profileData = u.UserRepository.GetProfile(username)
-	return httpCode, err, profileData
+func (u UserServiceImpl) GetProfile(username string) (int, *response.ProfileData, error) {
+	httpCode, profileData, err := u.UserRepository.GetProfile(username)
+	return httpCode, profileData, err
 }

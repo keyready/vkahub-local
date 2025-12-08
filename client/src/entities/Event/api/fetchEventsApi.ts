@@ -8,6 +8,16 @@ const fetchEventsApi = rtkApi.injectEndpoints({
             query: (type) => ({
                 url: `/api/events?type=${type}`,
             }),
+
+            // FIXME remove before production
+            transformResponse: (events: Event[]) =>
+                events.map((event) => ({
+                    ...event,
+                    image: {
+                        image: event.image as unknown as string,
+                        hash: 'eA9jfh%2IAs:E1tRbbR*WpWB00Rjx]Rj%MIAiwxao1oz_NNGIoozRj',
+                    },
+                })),
         }),
     }),
 });

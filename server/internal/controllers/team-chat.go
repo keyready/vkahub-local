@@ -3,8 +3,8 @@ package controllers
 import (
 	"net/http"
 	"server/internal/cloud"
-	"server/internal/dto/other"
-	"server/internal/dto/request"
+	"server/internal/forms/dto"
+	"server/internal/forms/request"
 	"server/internal/services"
 	"server/internal/utils"
 	"server/pkg/app"
@@ -43,7 +43,7 @@ func (teamChatC *TeamChatController) CreateMessage(gCtx *gin.Context) {
 	for _, img := range multipartForm.File["attachment"] {
 		readFileParams := utils.ReadFileParams{
 			File:    img,
-			SaveDir: other.CHAT_ATTACHMENTS_STORAGE,
+			SaveDir: dto.CHAT_ATTACHMENTS_FOLDER,
 		}
 
 		readFileResult, err := utils.ReadFile(readFileParams)
@@ -66,7 +66,7 @@ func (teamChatC *TeamChatController) CreateMessage(gCtx *gin.Context) {
 		formData.AttachmentNames = append(formData.AttachmentNames, readFileResult.FullFilePath)
 	}
 
-	formData.Author = gCtx.GetString("username")
+	formData.Author.Username = gCtx.GetString("username")
 	httpCode, err := teamChatC.teamChatService.CreateMessage(formData)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
@@ -77,17 +77,17 @@ func (teamChatC *TeamChatController) CreateMessage(gCtx *gin.Context) {
 
 func (teamChatC *TeamChatController) DeleteMessage(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var deleteMessage request.DeleteMessage
+	jsonForm := request.DeleteMessageForm{}
 
-	deleteMessage.Author = appGin.Ctx.GetString("username")
-
-	bindErr := ctx.ShouldBindJSON(&deleteMessage)
+	bindErr := ctx.ShouldBindJSON(&jsonForm)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	httpCode, err, _ := teamChatC.teamChatService.DeleteMessage(deleteMessage)
+	jsonForm.Author.Username = appGin.Ctx.GetString("username")
+
+	httpCode, _, err := teamChatC.teamChatService.DeleteMessage(jsonForm)
 	if err != nil {
 		appGin.ErrorResponse(http.StatusInternalServerError, err)
 		return
@@ -96,19 +96,19 @@ func (teamChatC *TeamChatController) DeleteMessage(ctx *gin.Context) {
 	appGin.SuccessResponse(httpCode, gin.H{})
 }
 
-func (teamChatC *TeamChatController) UpdateMessage(ctx *gin.Context) {
+func (teamChatC *TeamChatController) EditMessage(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var updateMessage request.UpdateMessage
+	jsonForm := request.EditMessageForm{}
 
-	updateMessage.Author = appGin.Ctx.GetString("username")
-
-	bindErr := ctx.ShouldBindJSON(&updateMessage)
+	bindErr := ctx.ShouldBindJSON(&jsonForm)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	httpCode, err := teamChatC.teamChatService.UpdateMessage(updateMessage)
+	jsonForm.Author.Username = appGin.Ctx.GetString("username")
+
+	httpCode, err := teamChatC.teamChatService.EditMessage(jsonForm)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return

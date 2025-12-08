@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent, useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
     Autocomplete,
     AutocompleteItem,
@@ -16,10 +16,15 @@ import { I18nProvider } from '@react-aria/i18n';
 import { useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { getLocalTimeZone, today } from '@internationalized/date';
+import { Controller, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 
-import { Event, EventType } from '../../../model/types/Event';
 import { createEvent } from '../../../model/services/createEvent';
 import { getParsedEventData } from '../../../model/selectors/EventSeceltors';
+import {
+    CreateEventTypes,
+    createEventValidationSchema,
+} from '../../../model/types/validationSchema';
 
 import classes from './CreateEventForm.module.scss';
 
@@ -28,6 +33,7 @@ import { useAppDispatch } from '@/shared/lib/hooks/useAppDispatch';
 import { toastDispatch } from '@/widgets/Toaster';
 import { HStack, VStack } from '@/shared/ui/Stack';
 import { ImageUpload } from '@/shared/ui/ImageUpload';
+import { objectToFormData } from '@/shared/lib/objFormdata';
 
 interface CreateEventFormProps {
     className?: string;
@@ -39,61 +45,44 @@ export const CreateEventForm = (props: CreateEventFormProps) => {
     const dispatch = useAppDispatch();
     const parsedEvent = useSelector(getParsedEventData);
 
-    const [value, setValue] = useState<RangeValue<DateValue>>();
+    const [eventsDates, setEventsDates] = useState<RangeValue<DateValue>>();
     const [registerUntilDate, setRegisterUntilDate] = useState<DateValue>();
-    const [sponsors, setSponsors] = useState<string>('');
     const [file, setFile] = useState<File>();
+    const [imageHash, setImageHash] = useState<string>('');
 
-    const [newEvent, setNewEvent] = useState<Partial<Event>>({});
     const [isOpened, setIsOpened] = useState<boolean>(false);
 
-    const handleSponsorsChange = useCallback(
-        (event: ChangeEvent<HTMLInputElement>) => {
-            setSponsors(event.target.value);
-            setNewEvent({
-                ...newEvent,
-                // @ts-ignore
-                sponsors: event.target.value.replace(', ', ','),
-            });
-        },
-        [newEvent],
-    );
+    const {
+        handleSubmit,
+        formState: { errors },
+        reset,
+        control,
+    } = useForm<CreateEventTypes>({
+        resolver: yupResolver(createEventValidationSchema),
+    });
 
     const handleFileChange = useCallback((file: File) => {
         setFile(file);
     }, []);
 
     const handleFormSubmit = useCallback(
-        async (event: FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-
+        async (event: CreateEventTypes) => {
             if (!file) {
                 toast.error('Необходимо выбрать файл');
                 return;
             }
 
-            const temp: Omit<Partial<Event>, 'startDate' | 'finishDate' | 'registerUntil'> & {
-                startDate: string;
-                finishDate: string;
-                registerUntil: string;
-            } = {
-                ...newEvent,
-                startDate: new Date(
-                    `${value?.start.year}-${value?.start.month}-${value?.start.day}`,
-                ).toISOString(),
-                finishDate: new Date(
-                    `${value?.end.year}-${value?.end.month}-${value?.end.day}`,
-                ).toISOString(),
-                registerUntil: new Date(
-                    `${registerUntilDate?.year}-${registerUntilDate?.month}-${registerUntilDate?.day}`,
-                ).toISOString(),
-            };
+            if (!eventsDates?.start || !eventsDates?.end || !registerUntilDate) {
+                toast.error('Вы не выбрали даты проведения');
+                return;
+            }
 
-            const formData = new FormData();
+            const formData = objectToFormData(event);
             formData.append('image', file);
-            Object.entries(temp).forEach(([key, value]) => {
-                formData.append(key, value.toString());
-            });
+            formData.append('hash', imageHash);
+            formData.append('startDate', new Date(eventsDates?.start.toString()).toISOString());
+            formData.append('finishDate', new Date(eventsDates?.end.toString()).toISOString());
+            formData.append('registerUntil', new Date(registerUntilDate?.toString()).toISOString());
 
             const result = await toastDispatch(dispatch(createEvent(formData)), {
                 loading: 'Создание события...',
@@ -102,23 +91,10 @@ export const CreateEventForm = (props: CreateEventFormProps) => {
             });
 
             if (result.meta.requestStatus === 'fulfilled') {
-                setNewEvent({});
+                reset();
             }
         },
-        [
-            dispatch,
-            file,
-            newEvent,
-            registerUntilDate?.day,
-            registerUntilDate?.month,
-            registerUntilDate?.year,
-            value?.end.day,
-            value?.end.month,
-            value?.end.year,
-            value?.start.day,
-            value?.start.month,
-            value?.start.year,
-        ],
+        [file, imageHash, eventsDates, registerUntilDate, dispatch, reset],
     );
 
     return (
@@ -146,94 +122,132 @@ export const CreateEventForm = (props: CreateEventFormProps) => {
                 )}
             </HStack>
 
-            <form onSubmit={handleFormSubmit}>
+            <form onSubmit={handleSubmit(handleFormSubmit)}>
                 <VStack maxW gap="12px">
                     <HStack maxW align="start" gap="24px">
-                        <ImageUpload onChange={handleFileChange} />
+                        <ImageUpload
+                            onImageHashGenerated={setImageHash}
+                            onChange={handleFileChange}
+                        />
                         <VStack maxW gap="12px">
-                            <Input
-                                value={newEvent.title}
-                                onChange={(event) =>
-                                    setNewEvent({
-                                        ...newEvent,
-                                        title: event.target.value,
-                                    })
-                                }
-                                label="Название события"
+                            <Controller
+                                render={({ field }) => (
+                                    <Input
+                                        isRequired
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                        label="Название события"
+                                        isInvalid={Boolean(errors.title?.message)}
+                                        errorMessage={errors.title?.message}
+                                    />
+                                )}
+                                name="title"
+                                control={control}
                             />
-                            <Input
-                                label="Спонсоры соревнований"
-                                value={sponsors}
-                                onChange={handleSponsorsChange}
+                            <Controller
+                                render={({ field }) => (
+                                    <Input
+                                        isRequired
+                                        value={field.value}
+                                        onValueChange={(val) =>
+                                            field.onChange(val.replace(', ', ','))
+                                        }
+                                        label="Спонсоры соревнований"
+                                        isInvalid={Boolean(errors.sponsors?.message)}
+                                        errorMessage={errors.sponsors?.message}
+                                    />
+                                )}
+                                name="sponsors"
+                                control={control}
                             />
                         </VStack>
                     </HStack>
-                    <Textarea
-                        classNames={{
-                            inputWrapper: 'h-auto',
-                        }}
-                        minRows={4}
-                        value={newEvent.description}
-                        onChange={(event) =>
-                            setNewEvent({
-                                ...newEvent,
-                                description: event.target.value,
-                            })
-                        }
-                        label="Описание события"
+
+                    <Controller
+                        render={({ field }) => (
+                            <Textarea
+                                isRequired
+                                classNames={{
+                                    inputWrapper: 'h-auto',
+                                }}
+                                minRows={4}
+                                label="Описание события"
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                isInvalid={Boolean(errors.description?.message)}
+                                errorMessage={errors.description?.message}
+                            />
+                        )}
+                        name="description"
+                        control={control}
                     />
-                    <Textarea
-                        classNames={{
-                            inputWrapper: 'h-auto',
-                        }}
-                        minRows={4}
-                        value={newEvent.shortDescription}
-                        onChange={(event) =>
-                            setNewEvent({
-                                ...newEvent,
-                                shortDescription: event.target.value,
-                            })
-                        }
-                        label="Краткое описание события"
+
+                    <Controller
+                        render={({ field }) => (
+                            <Textarea
+                                isRequired
+                                classNames={{
+                                    inputWrapper: 'h-auto',
+                                }}
+                                minRows={4}
+                                label="Краткое описание события"
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                isInvalid={Boolean(errors.shortDescription?.message)}
+                                errorMessage={errors.shortDescription?.message}
+                            />
+                        )}
+                        name="shortDescription"
+                        control={control}
                     />
+
                     <I18nProvider>
                         <DateRangePicker
+                            isRequired
                             fullWidth={false}
                             radius="md"
-                            disableAnimation={false}
                             minValue={today(getLocalTimeZone())}
                             labelPlacement="inside"
-                            isDisabled={false}
                             size="md"
                             visibleMonths={2}
                             label="Даты проведения события"
-                            value={value}
-                            onChange={setValue}
+                            value={eventsDates}
+                            onChange={setEventsDates}
                         />
                         <DatePicker
+                            isRequired
                             minValue={today(getLocalTimeZone())}
                             labelPlacement="inside"
-                            isDisabled={false}
                             size="md"
                             label="Регистрация до"
                             value={registerUntilDate}
                             onChange={setRegisterUntilDate}
                         />
                     </I18nProvider>
-                    <Autocomplete
-                        value={newEvent.type}
-                        onSelectionChange={(event) => {
-                            setNewEvent({
-                                ...newEvent,
-                                type: event as EventType,
-                            });
-                        }}
-                        label="Тип события"
-                    >
-                        <AutocompleteItem key="ctf">CTF</AutocompleteItem>
-                        <AutocompleteItem key="hack">Хакатон</AutocompleteItem>
-                        <AutocompleteItem key="other">Другое</AutocompleteItem>
-                    </Autocomplete>
+
+                    <Controller
+                        render={({ field }) => (
+                            <Autocomplete
+                                isRequired
+                                value={field.value}
+                                onSelectionChange={field.onChange}
+                                label="Тип события"
+                                isInvalid={Boolean(errors.type?.message)}
+                                errorMessage={errors.type?.message}
+                                listboxProps={{
+                                    itemClasses: {
+                                        title: 'dark:text-white',
+                                    },
+                                }}
+                            >
+                                <AutocompleteItem key="ctf">CTF</AutocompleteItem>
+                                <AutocompleteItem key="hack">Хакатон</AutocompleteItem>
+                                <AutocompleteItem key="other">Другое</AutocompleteItem>
+                            </Autocomplete>
+                        )}
+                        name="type"
+                        control={control}
+                    />
 
                     <Button className="self-end" type="submit" size="sm">
                         Создать событие

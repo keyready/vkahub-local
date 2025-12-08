@@ -1,9 +1,11 @@
 package repositories
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
-	"server/internal/dto/request"
 	"server/internal/database"
+	"server/internal/forms/request"
 	"strconv"
 	"strings"
 
@@ -11,8 +13,8 @@ import (
 )
 
 type SkillRepository interface {
-	AddSkill(addSkill request.AddSkillReq) (httpCode int, err error)
-	FetchAllSkills(skillIdsString string) (httpCode int, err error, skills []database.SkillModel)
+	AddSkill(addSkillForm request.AddSkillForm) (int, error)
+	GetAllSkills(skillIDs string) (int, []database.SkillModel, error)
 }
 
 type SkillRepositoryImpl struct {
@@ -23,32 +25,44 @@ func NewSkillRepositoryImpl(db *gorm.DB) SkillRepository {
 	return &SkillRepositoryImpl{Db: db}
 }
 
-func (s SkillRepositoryImpl) AddSkill(addSkill request.AddSkillReq) (httpCode int, err error) {
-	if addDbErr := s.Db.Create(
+func (s SkillRepositoryImpl) AddSkill(addSkillForm request.AddSkillForm) (int, error) {
+	if err := s.Db.Create(
 		&database.SkillModel{
-			Name:   addSkill.Name,
-			Author: addSkill.Author,
-		}).Error; addDbErr != nil {
-		return http.StatusBadRequest, addDbErr
+			Name:   addSkillForm.Name,
+			Author: addSkillForm.Author.Username,
+		}).Error; err != nil {
+		return http.StatusInternalServerError, err
 	}
 
-	return http.StatusOK, nil
+	return http.StatusCreated, nil
 }
 
-func (s SkillRepositoryImpl) FetchAllSkills(skillIdsString string) (httpCode int, err error, skills []database.SkillModel) {
-	if skillIdsString != "" {
-		skillIdsSlice := strings.Split(skillIdsString, ",")
-		var skillIds []int64
-		for _, skillId := range skillIdsSlice {
-			skillIdInt, _ := strconv.ParseInt(skillId, 10, 64)
-			skillIds = append(skillIds, skillIdInt)
+func (s SkillRepositoryImpl) GetAllSkills(skillsString string) (int, []database.SkillModel, error) {
+	skills := make([]database.SkillModel, 0)
+
+	if skillsString != "" {
+		skillsSplit := strings.Split(skillsString, ",")
+
+		skillIDs := make([]int64, len(skillsSplit))
+		for _, skillID := range skillsSplit {
+			skillIDInt, _ := strconv.ParseInt(skillID, 10, 64)
+			skillIDs = append(skillIDs, skillIDInt)
 		}
 
-		s.Db.Where("id IN ?", skillIds).Find(&skills)
-
-	} else {
-		s.Db.Find(&skills)
+		err := s.Db.Where("id IN ?", skillIDs).Find(&skills).Error
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return http.StatusNotFound, nil, fmt.Errorf("skills not found: %v", err)
+			}
+		}
 	}
 
-	return http.StatusOK, nil, skills
+	err := s.Db.Find(&skills).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return http.StatusNotFound, nil, fmt.Errorf("skills not found: %v", err)
+		}
+	}
+
+	return http.StatusOK, skills, nil
 }

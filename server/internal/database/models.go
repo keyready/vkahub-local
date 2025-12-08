@@ -19,7 +19,7 @@ type AchievementModel struct {
 type BanModel struct {
 	ID        int64     `gorm:"primaryKey" json:"id"`
 	Type      string    `json:"type"`
-	OwnerId   int64     `gorm:"unique" json:"ownerId"`
+	OwnerID   int64     `gorm:"unique" json:"ownerId"`
 	Reason    string    `json:"reason"`
 	CreatedAt time.Time `json:"createdAt"`
 }
@@ -39,14 +39,14 @@ type BugModel struct {
 }
 
 type EventModel struct {
-	ID                   int64         `gorm:"primaryKey" json:"id"`
-	Type                 string        `gorm:"not null;index'" json:"type"`
-	Title                string        `gorm:"unique;not null" json:"title"`
-	ShortDescription     string        `json:"shortDescription"`
-	Description          string        `gorm:"unique;not null" json:"description"`
-	Image                string        `json:"image"`
-	ParticipantsTeamsIds pq.Int64Array `gorm:"type:integer[]" json:"participantsTeamsIds"`
-	TracksId             pq.Int64Array `gorm:"type:integer[]" json:"trackId"`
+	ID                  int64          `gorm:"primaryKey" json:"id"`
+	Type                string         `gorm:"not null;index'" json:"type"`
+	Title               string         `gorm:"unique;not null" json:"title"`
+	ShortDescription    string         `json:"shortDescription"`
+	Description         string         `gorm:"unique;not null" json:"description"`
+	Image               datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"image"`
+	ParticipantsTeamIDs pq.Int64Array  `gorm:"type:integer[]" json:"participantsTeamsIds"`
+	TrackIDs            pq.Int64Array  `gorm:"type:integer[]" json:"trackIDs"`
 
 	StartDate     time.Time `json:"startDate"`
 	FinishDate    time.Time `json:"finishDate"`
@@ -65,7 +65,7 @@ type FeedbackModel struct {
 type NotificationModel struct {
 	ID        int64     `gorm:"primaryKey" json:"id"`
 	Message   string    `json:"message"`
-	OwnerId   int64     `json:"ownerId"`
+	OwnerID   int64     `json:"ownerId"`
 	Status    string    `gorm:"default:'new'" json:"status"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
@@ -77,7 +77,7 @@ type PersonalAchievementModel struct {
 	Description string        `gorm:"unique" json:"description"`
 	Image       string        `gorm:"unique" json:"image"`
 	Key         string        `gorm:"unique" json:"key"`
-	OwnerIds    pq.Int64Array `gorm:"type:integer[];default:'{}'" json:"ownerIds"`
+	OwnerIDs    pq.Int64Array `gorm:"type:integer[];default:'{}'" json:"ownerIds"`
 }
 
 type PositionModel struct {
@@ -90,7 +90,7 @@ type ProposalModel struct {
 	ID        int64     `gorm:"primaryKey" json:"id"`
 	Type      string    `gorm:"not null" json:"type"`
 	TeamID    int64     `gorm:"not null" json:"teamId"`
-	OwnerId   int64     `gorm:"not null" json:"ownerId"`
+	OwnerID   int64     `gorm:"not null" json:"ownerId"`
 	Message   string    `json:"message"`
 	CreatedAt time.Time `json:"createdAt"`
 }
@@ -103,15 +103,15 @@ type SkillModel struct {
 
 type TeamChatModel struct {
 	ID         int64         `gorm:"primaryKey" json:"id"`
-	TeamId     int64         `gorm:"unique" json:"teamId"`
+	TeamID     int64         `gorm:"unique" json:"teamId"`
 	Title      string        `json:"title"`
-	MembersId  pq.Int64Array `gorm:"type:integer[]" json:"membersId"`
-	MessagesId pq.Int64Array `gorm:"type:integer[]" json:"messagesId"`
+	MemberIDs  pq.Int64Array `gorm:"type:integer[]" json:"membersId"`
+	MessageIDs pq.Int64Array `gorm:"type:integer[]" json:"messagesId"`
 }
 
 type ChatMessageModel struct {
 	ID         int64          `gorm:"primaryKey" json:"id"`
-	TeamChatId int64          `json:"teamChatId"`
+	TeamChatID int64          `json:"teamChatId"`
 	Author     string         `json:"author"`
 	Message    string         `gorm:"not null" json:"message"`
 	Attachment pq.StringArray `gorm:"type:varchar[]" json:"attachment"`
@@ -124,20 +124,20 @@ type TeamModel struct {
 	ID              int64          `gorm:"primaryKey" json:"id"`
 	Title           string         `gorm:"unique;not null;index" json:"title"`
 	Description     string         `gorm:"not null" json:"description"`
-	CaptainId       int64          `gorm:"unique; not null" json:"captain_id"`
-	Image           string         `json:"image"`
-	MembersId       pq.Int64Array  `gorm:"type:integer[]" json:"members"`
-	WantedPositions pq.StringArray `gorm:"type:varchar[]" json:"wantedPositions"`
+	CaptainID       int64          `gorm:"unique; not null" json:"captain_id"`
+	Image           datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"image"`
+	MemberIDs       pq.Int64Array  `gorm:"type:integer[]" json:"members"`
+	WantedPositions pq.StringArray `gorm:"type:varchar[];default:'{}'" json:"wantedPositions"`
 	EventLocation   string         `gorm:"default:'г. Санкт-Петербург'" json:"eventLocation"`
-	TeamChatId      int64          `json:"teamChatId"`
+	TeamChatID      int64          `json:"teamChatId"`
 }
 
 type TrackModel struct {
-	ID                   int64         `gorm:"primaryKey" json:"id"`
-	Title                string        `json:"title"`
-	Description          string        `gorm:"not null" json:"description"`
-	ParticipantsTeamsIds pq.Int64Array `gorm:"type:integer[];" json:"participantsTeamsIds"`
-	EventId              int64         `json:"eventId"`
+	ID                  int64         `gorm:"primaryKey" json:"id"`
+	Title               string        `json:"title"`
+	Description         string        `gorm:"not null" json:"description"`
+	ParticipantsTeamIDs pq.Int64Array `gorm:"type:integer[];" json:"participantsTeamsIds"`
+	EventID             int64         `json:"eventId"`
 }
 
 type UserModel struct {
@@ -148,7 +148,7 @@ type UserModel struct {
 
 	Recovery datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"recovery"`
 
-	Avatar string `json:"avatar"`
+	Avatar datatypes.JSON `gorm:"type:jsonb;default:'{}'" json:"avatar"`
 
 	Firstname  string `json:"firstname"`
 	Middlename string `json:"middlename"`
@@ -161,7 +161,7 @@ type UserModel struct {
 
 	IsProfileConfirmed bool `gorm:"default:false" json:"is_profile_confirmed"`
 
-	TeamId int64 `gorm:"default:0" json:"teamId"`
+	TeamID int64 `gorm:"default:0" json:"teamId"`
 
 	RefreshToken string `json:"refresh_token"`
 
@@ -178,7 +178,7 @@ type UserModel struct {
 
 	Portfolio datatypes.JSON `gorm:"type:jsonb;default:'[]'" json:"-"`
 
-	Online     bool      `json:"online"`
+	Online     bool      `gorm:"default:false" json:"online"`
 	LastOnline time.Time `json:"lastOnline"`
 }
 

@@ -9,17 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func OnlineMiddleware() gin.HandlerFunc {
-	return func(gCtx *gin.Context) {
-		if username, exists := gCtx.Get("username"); exists {
-			_ = username
-			// TODO - маркируем валидный авторизованный запрос (пользователь подтвердил онлайн)
-
-			gCtx.Next()
-		}
-	}
-}
-
 func AuthMiddleware(jwtService *authorizer.Authorizer) gin.HandlerFunc {
 	return func(gCtx *gin.Context) {
 
@@ -55,6 +44,7 @@ func AuthMiddleware(jwtService *authorizer.Authorizer) gin.HandlerFunc {
 		}
 
 		gCtx.Set("username", claims.Payload.Username)
+		gCtx.Set("userID", claims.Payload.ID)
 
 		gCtx.Next()
 	}

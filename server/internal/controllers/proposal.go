@@ -2,7 +2,8 @@ package controllers
 
 import (
 	"net/http"
-	"server/internal/dto/request"
+	"server/internal/forms/dto"
+	"server/internal/forms/request"
 	"server/internal/services"
 	"server/pkg/app"
 	"strconv"
@@ -21,12 +22,9 @@ func NewProposalControllers(proposalService services.ProposalService) *ProposalC
 func (pc *ProposalController) CancelProposal(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
 
-	propId, _ := strconv.ParseInt(ctx.PostForm("proposalId"), 10, 64)
-	aprProp := request.ApproveProposalRequest{
-		ProposalId: propId,
-	}
+	proposalID, _ := strconv.ParseInt(ctx.PostForm("proposalId"), 10, 64)
 
-	httpCode, err := pc.proposalService.CancelProposal(aprProp.ProposalId)
+	httpCode, err := pc.proposalService.CancelProposal(proposalID)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return
@@ -40,12 +38,12 @@ func (pc *ProposalController) ApproveProposal(ctx *gin.Context) {
 
 	propId, _ := strconv.ParseInt(ctx.PostForm("proposalId"), 10, 64)
 
-	aprProp := request.ApproveProposalRequest{
+	form := request.ApproveProposalForm{
 		Username:   ctx.GetString("username"),
-		ProposalId: propId,
+		ProposalID: propId,
 	}
 
-	httpCode, err := pc.proposalService.ApproveProposal(aprProp)
+	httpCode, err := pc.proposalService.ApproveProposal(form)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return
@@ -56,15 +54,15 @@ func (pc *ProposalController) ApproveProposal(ctx *gin.Context) {
 
 func (pc *ProposalController) CreateProposal(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
-	var cpe request.CreateProposalRequest
+	jsonForm := request.CreateProposalForm{}
 
-	bindErr := ctx.ShouldBindJSON(&cpe)
+	bindErr := ctx.ShouldBindJSON(&jsonForm)
 	if bindErr != nil {
 		appGin.ErrorResponse(http.StatusBadRequest, bindErr)
 		return
 	}
 
-	httpCode, serviceErr := pc.proposalService.CreateProposal(cpe)
+	httpCode, serviceErr := pc.proposalService.CreateProposal(jsonForm)
 	if serviceErr != nil {
 		appGin.ErrorResponse(httpCode, serviceErr)
 		return
@@ -73,19 +71,22 @@ func (pc *ProposalController) CreateProposal(ctx *gin.Context) {
 	appGin.SuccessResponse(http.StatusCreated, gin.H{})
 }
 
-func (pc *ProposalController) FetchPersonalProposals(ctx *gin.Context) {
+func (pc *ProposalController) GetPersonalProposals(ctx *gin.Context) {
 	appGin := app.Gin{Ctx: ctx}
 
-	fetchPropRequest := request.FetchProposalRequest{
-		Type:     ctx.Query("type"),
-		Observer: ctx.GetString("username"),
+	form := request.GetProposalForm{
+		Type: ctx.Query("type"),
+		Observer: dto.AuthorMetaData{
+			Username: ctx.GetString("username"),
+			ID:       ctx.GetInt64("userID"),
+		},
 	}
 
-	httpCode, err, data := pc.proposalService.FetchPersonalProposals(fetchPropRequest)
+	httpCode, proposals, err := pc.proposalService.GetPersonalProposals(form)
 	if err != nil {
 		appGin.ErrorResponse(httpCode, err)
 		return
 	}
 
-	appGin.SuccessResponse(http.StatusOK, data)
+	appGin.SuccessResponse(http.StatusOK, proposals)
 }

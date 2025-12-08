@@ -4,17 +4,16 @@ import (
 	"fmt"
 	"net/http"
 	"server/internal/database"
-	"server/internal/dto/request"
+	"server/internal/forms/request"
 	"slices"
-	"time"
 
 	"gorm.io/gorm"
 )
 
 type BugRepository interface {
-	AddBug(addBug request.AddBugReq, mediaNames []string) (httpCode int, err error)
-	FetchAllBugs(t string) (httpCode int, err error, bugs []database.BugModel)
-	UpdateBug(updateBug request.UpdateBugReq) (httpCode int, err error)
+	RegisterBug(regBugFrom request.RegisterBugForm) (int, error)
+	GetBugs(statusBug string) (int, []database.BugModel, error)
+	UpdateBug(updBugForm request.UpdateBugForm) (int, error)
 }
 
 type BugRepositoryImpl struct {
@@ -25,82 +24,86 @@ func NewBugRepositoryImpl(db *gorm.DB) BugRepository {
 	return &BugRepositoryImpl{DB: db}
 }
 
-func (b BugRepositoryImpl) UpdateBug(updateBugReq request.UpdateBugReq) (httpCode int, err error) {
-	var updateBug database.BugModel
-	b.DB.Where("id = ?", updateBugReq.BugID).First(&updateBug)
+func (b BugRepositoryImpl) UpdateBug(updBugForm request.UpdateBugForm) (int, error) {
+	err := b.DB.
+		Where("id = ? AND author = ?", updBugForm.BugID, updBugForm.Author).
+		Update(
+			"status",
+			updBugForm.Status,
+		).Error
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("failed to upd status bug: %v", err)
+	}
 
-	updatedAt, _ := time.Parse(time.RFC3339, time.Now().String())
-
-	updateBug.Status = updateBugReq.StatusName
-	updateBug.UpdatedAt = updatedAt
-	b.DB.Save(&updateBug)
-
-	var ownerAchievement database.UserModel
-	var bugAchievement database.PersonalAchievementModel
-	b.DB.Where("username = ?", updateBugReq.Author).First(&ownerAchievement)
+	bugAchievement := database.PersonalAchievementModel{}
 	b.DB.Where("key = ?", "bug").First(&bugAchievement)
-
-	if !slices.Contains(bugAchievement.OwnerIds, ownerAchievement.ID) {
-		bugAchievement.OwnerIds = append(bugAchievement.OwnerIds, ownerAchievement.ID)
+	if !slices.Contains(bugAchievement.OwnerIDs, updBugForm.Author.ID) {
+		bugAchievement.OwnerIDs = append(bugAchievement.OwnerIDs, updBugForm.Author.ID)
 		b.DB.Save(&bugAchievement)
-		var author database.UserModel
-		b.DB.Where("username = ?", updateBugReq.Author).First(&author)
 		b.DB.Create(&database.NotificationModel{
-			OwnerId: author.ID,
+			OwnerID: updBugForm.Author.ID,
 			Message: fmt.Sprintf(
-				"Поздравляем, %s! Ваш репорт на первый найденный баг был принят и исправлен! Вы получили новое достижение: %s \n Спасибо, что помогаете нам в поддержании сервиса!",
-				ownerAchievement.Username,
+				`
+					Поздравляем, %s! Ваш репорт на первый найденный баг был принят и исправлен! 
+					Вы получили новое достижение: %s \n 
+					Спасибо, что помогаете нам в поддержании сервиса!
+				`,
+				updBugForm.Author.Username,
 				bugAchievement.Title,
 			),
 		})
 	}
 
 	b.DB.Create(&database.NotificationModel{
-		OwnerId: ownerAchievement.ID,
+		OwnerID: updBugForm.Author.ID,
 		Message: fmt.Sprintf(
-			"Поздравляем, %s! Ваш репорт на найденный баг был принят и исправлен! \n Спасибо, что помогаете нам в поддержании сервиса!",
-			ownerAchievement.Username,
+			`
+				Поздравляем, %s! 
+				Ваш репорт на найденный баг был принят и исправлен! \n 
+				Спасибо, что помогаете нам в поддержании сервиса!
+			`,
+			updBugForm.Author.Username,
 		),
 	})
 
 	return http.StatusOK, nil
 }
 
-func (b BugRepositoryImpl) AddBug(addBug request.AddBugReq, mediaNames []string) (httpCode int, err error) {
-	var allBugs []database.BugModel
-	b.DB.Find(&allBugs)
-
-	var author database.UserModel
-	b.DB.Where("username = ?", addBug.Author).First(&author)
-
-	createdAt, _ := time.Parse(time.RFC3339, time.Now().String())
+func (b BugRepositoryImpl) RegisterBug(regBugFrom request.RegisterBugForm) (int, error) {
 	newBug := database.BugModel{
-		Description: addBug.Description,
-		Additional:  addBug.Additional, //Примечания
-		Expected:    addBug.Expected,   //Ожидаемые действия
-		Author:      addBug.Author,
-		Produce:     addBug.Produce, //Вывод
-		Media:       mediaNames,
-		CreatedAt:   createdAt,
+		Description: regBugFrom.Description,
+		Additional:  regBugFrom.Additional, //Примечания
+		Expected:    regBugFrom.Expected,   //Ожидаемые действия
+		Author:      regBugFrom.Author.Username,
+		Produce:     regBugFrom.Produce, //Вывод
+		Media:       regBugFrom.MediaNames,
 	}
-	b.DB.Create(&newBug)
+	err := b.DB.Create(&newBug).Error
+	if err != nil {
+		return http.StatusInternalServerError, fmt.Errorf("failed to register new bug: %v", err)
+	}
 
 	b.DB.Create(&database.NotificationModel{
-		OwnerId: author.ID,
+		OwnerID: regBugFrom.Author.ID,
 		Message: fmt.Sprintf(
-			"Уважаемый %s! \n Ваш баг прошел предварительную проверку и был предоставлен разработчикам на рассмотрение.\n Следите за обновлениями!",
-			author.Username),
+			`
+				Уважаемый %s! \n 
+				Ваш баг прошел предварительную проверку и был предоставлен разработчикам на рассмотрение. \n 
+				Спасибо, что помогаете сделать сервис лучше! \n
+				Следите за обновлениями!
+			`,
+			regBugFrom.Author.Username,
+		),
 	})
 
-	return http.StatusOK, err
+	return http.StatusOK, nil
 }
 
-func (b BugRepositoryImpl) FetchAllBugs(t string) (httpCode int, err error, bugs []database.BugModel) {
-	switch t {
-	case "":
-		b.DB.Where("status = ?", t).Find(&bugs)
-	default:
-		b.DB.Find(&bugs)
+func (b BugRepositoryImpl) GetBugs(bugStatus string) (int, []database.BugModel, error) {
+	bugModels := make([]database.BugModel, 0)
+	if bugStatus != "" {
+		b.DB.Where("status = ?", bugStatus).Find(&bugModels)
 	}
-	return http.StatusOK, nil, bugs
+	b.DB.Find(&bugModels)
+	return http.StatusOK, bugModels, nil
 }

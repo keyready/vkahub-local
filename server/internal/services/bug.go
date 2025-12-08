@@ -3,14 +3,14 @@ package services
 import (
 	"server/internal/cloud"
 	"server/internal/database"
-	"server/internal/dto/request"
+	"server/internal/forms/request"
 	"server/internal/repositories"
 )
 
 type BugService interface {
-	AddBug(addBug request.AddBugReq, mediaNames []string) (httpCode int, err error)
-	FetchAllBugs(t string) (httpCode int, err error, bugs []database.BugModel)
-	UpdateBug(updateBug request.UpdateBugReq) (httpCode int, err error)
+	RegisterBug(regBugFrom request.RegisterBugForm) (int, error)
+	GetBugs(statuBug string) (int, []database.BugModel, error)
+	UpdateBug(updBugForm request.UpdateBugForm) (int, error)
 }
 
 type BugServiceImpl struct {
@@ -28,17 +28,17 @@ func NewBugServiceImpl(
 	}
 }
 
-func (b BugServiceImpl) UpdateBug(updateBug request.UpdateBugReq) (httpCode int, err error) {
-	httpCode, err = b.bugRepository.UpdateBug(updateBug)
+func (b BugServiceImpl) UpdateBug(updBugForm request.UpdateBugForm) (int, error) {
+	httpCode, err := b.bugRepository.UpdateBug(updBugForm)
 	return httpCode, err
 }
 
-func (b BugServiceImpl) AddBug(addBug request.AddBugReq, mediaNames []string) (httpCode int, err error) {
-	httpCode, err = b.bugRepository.AddBug(addBug, mediaNames)
+func (b BugServiceImpl) RegisterBug(regBugFrom request.RegisterBugForm) (int, error) {
+	httpCode, err := b.bugRepository.RegisterBug(regBugFrom)
 	return httpCode, err
 }
 
-func (b BugServiceImpl) FetchAllBugs(t string) (httpCode int, err error, bugs []database.BugModel) {
-	httpCode, err, bugs = b.bugRepository.FetchAllBugs(t)
-	return httpCode, err, bugs
+func (b BugServiceImpl) GetBugs(statusBug string) (int, []database.BugModel, error) {
+	httpCode, bugs, err := b.bugRepository.GetBugs(statusBug)
+	return httpCode, bugs, err
 }

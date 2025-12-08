@@ -29,6 +29,7 @@ export const RegisterModal = (props: RegisterModalProps) => {
     const isLoading = useSelector(getUserIsLoading);
 
     const [file, setFile] = useState<File>();
+    const [avatarHash, setAvatarHash] = useState<string>('');
     const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
 
     const {
@@ -57,6 +58,7 @@ export const RegisterModal = (props: RegisterModalProps) => {
 
             const formData = new FormData();
             formData.append('avatar', file);
+            formData.append('hash', avatarHash);
             formData.append('username', user.username);
             formData.append('password', user.password);
 
@@ -71,7 +73,7 @@ export const RegisterModal = (props: RegisterModalProps) => {
                 dispatch(UserActions.clearAuthError());
             }
         },
-        [setIsOpened, dispatch, file],
+        [file, avatarHash, dispatch, setIsOpened],
     );
 
     const handleChangeAvatar = useCallback((avatar: File) => {
@@ -106,7 +108,11 @@ export const RegisterModal = (props: RegisterModalProps) => {
                                 <span className="font-bold">Зарегистрируйтесь</span> прямо сейчас
                             </h1>
                             <HStack maxW align="start" gap="24px">
-                                <ImageUpload isLoading={isLoading} onChange={handleChangeAvatar} />
+                                <ImageUpload
+                                    onImageHashGenerated={setAvatarHash}
+                                    isLoading={isLoading}
+                                    onChange={handleChangeAvatar}
+                                />
 
                                 <VStack maxW gap="12px">
                                     <Controller

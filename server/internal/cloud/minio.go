@@ -3,6 +3,7 @@ package cloud
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/minio/minio-go/v7"
@@ -37,10 +38,18 @@ func New(cfg *Config) *Cloud {
 
 func (mw *S3Minio) InitBucket(ctx context.Context) error {
 	opts := minio.MakeBucketOptions{}
-	policy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::` + mw.config.InitBucket + `/*"]}]}`
+	bucketPolicy := fmt.Sprintf(`
+		{
+			"Version":"2012-10-17",
+			"Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},
+			"Action":["s3:GetObject"],
+			"Resource":["arn:aws:s3:::%s/*"]}]
+		}`,
+		mw.config.InitBucket,
+	)
 
 	_ = mw.mc.MakeBucket(ctx, mw.config.InitBucket, opts)
-	_ = mw.mc.SetBucketPolicy(ctx, mw.config.InitBucket, policy)
+	_ = mw.mc.SetBucketPolicy(ctx, mw.config.InitBucket, bucketPolicy)
 
 	return nil
 }

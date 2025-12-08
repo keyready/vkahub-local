@@ -6,7 +6,6 @@ import (
 	"server/internal/cloud"
 	"server/internal/controllers"
 	"server/internal/gocron"
-	"server/internal/middleware"
 	"server/internal/onliner"
 	"server/internal/repositories"
 	v1 "server/internal/routers/api/v1"
@@ -39,9 +38,11 @@ func InitRouter(
 	userCtrl := controllers.NewUserControllers(userService, cloud, onliner)
 	v1.NewUserRouters(r, jwtService, userCtrl)
 
+	// go onliner.Onliner.SyncWorker(5 * time.Second)
+
 	r.GET("/service-info", userCtrl.GetActualInfo)
 
-	r.GET("/ws/online", middleware.AuthMiddleware(jwtService), userCtrl.Online)
+	// r.GET("/ws/online", userCtrl.Online)
 	r.GET("/ws/notifications", userCtrl.SendNotifications)
 	r.GET("/ws/messenger/:teamId", userCtrl.FetchAllMessages)
 
@@ -71,7 +72,7 @@ func InitRouter(
 	v1.NewTrackRouters(r, jwtService, trackCtrl)
 
 	achievementRepo := repositories.NewAchievementRepositoryImpl(db)
-	achievementService := services.NewAcServiceImpl(achievementRepo)
+	achievementService := services.NewAchievementServiceImpl(achievementRepo)
 	achievementCtrl := controllers.NewAchievementController(achievementService)
 	v1.NewAchievementRoutes(r, jwtService, achievementCtrl)
 
@@ -81,7 +82,7 @@ func InitRouter(
 	v1.NewSkillRoutes(r, jwtService, skillCtrl)
 
 	positionRepo := repositories.NewPositionRepImpl(db)
-	positionService := services.NewPosServiceImpl(positionRepo)
+	positionService := services.NewPositionServiceImpl(positionRepo)
 	positionCtrl := controllers.NewPositionController(positionService)
 	v1.NewPositionsRoutes(r, jwtService, positionCtrl)
 
