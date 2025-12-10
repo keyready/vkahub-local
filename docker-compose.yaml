@@ -1,5 +1,5 @@
 services:
-  db:
+  database:
     image: postgres:15-alpine
     container_name: vkahub-db
     env_file:
@@ -34,7 +34,7 @@ services:
     networks:
       - vkahub-net
 
-  admin:
+  admin-panel:
     image: dpage/pgadmin4:latest
     container_name: vkahub-admin
     env_file:
@@ -46,7 +46,7 @@ services:
     networks:
       - vkahub-net
   
-  redis:
+  onliner:
     image: redis:alpine3.22
     container_name: vkahub-redis
     env_file:
@@ -58,8 +58,8 @@ services:
     networks:
       - vkahub-net
 
-  cloud:
-    container_name: cloud
+  file-storage:
+    container_name: file-storage
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
     command: server --address ":9000" --console-address ":9001" /data
     networks:
@@ -72,6 +72,19 @@ services:
     volumes:
       - minio_data:/data
 
+  rmq:
+    image: rabbitmq:4-management
+    restart: unless-stopped
+    volumes:
+      - ./rabbitmq-data:/var/lib/rabbitmq
+      - ./server/configs/rmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./server/configs/rmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+    ports:
+      - '5552:5552'
+      - '5672:5672'
+      - '15672:15672'
+    networks:
+      - vkahub-net
   client-builder:
     build:
       context: ./client
@@ -84,9 +97,3 @@ networks:
   vkahub-net:
     name: vkahub-net
     driver: bridge
-
-volumes:
-  db_data:
-  pgadmin_data:
-  redis_data:
-  minio_data:

@@ -16,7 +16,7 @@ type VkaHubConfig struct {
 	Migrations database.MigrationsConfig `mapstructure:"migrations"`
 	Authorizer authorizer.Config         `mapstructure:"authorizer"`
 	Onliner    onliner.Config            `mapstructure:"onliner"`
-	Cloud      cloud.Config              `mapstructure:"cloud"`
+	Cloud      cloud.Config              `mapstructure:"file-storage"`
 	Broker     broker.Config             `mapstructure:"broker"`
 }
 
@@ -29,27 +29,27 @@ func FromFile(filePath string) (*VkaHubConfig, error) {
 
 	viperInstance.SetDefault("database.username", "postgres")
 	viperInstance.SetDefault("database.password", "postgres")
-	viperInstance.SetDefault("database.host", "db")
+	viperInstance.SetDefault("database.host", "database")
 	viperInstance.SetDefault("database.port", 5432)
 	viperInstance.SetDefault("database.databaseName", "vkahub")
 	viperInstance.SetDefault("database.sslMode", false)
 
-	viperInstance.SetDefault("migrations.connUri", "postgres://postgres:postgres@db:5432/vkahub?sslmode=disable")
+	viperInstance.SetDefault("migrations.connUri", "postgres://postgres:postgres@database:5432/vkahub?sslmode=disable")
 	viperInstance.SetDefault("migrations.enable", true)
 	viperInstance.SetDefault("migrations.dirUrl", "file:///app/migrations")
 
 	viperInstance.SetDefault("authorizer.accessSecretKey", "access-vkahub-secret-vkahub-key")
 	viperInstance.SetDefault("authorizer.refreshSecretKey", "refresh-vkahub-secret-vkahub-key")
 
-	viperInstance.SetDefault("redis.address", "redis:6379")
-	viperInstance.SetDefault("redis.password", "redis-vkahub-password")
-	viperInstance.SetDefault("redis.databaseNum", 0)
+	viperInstance.SetDefault("onliner.address", "onliner:6379")
+	viperInstance.SetDefault("onliner.password", "redis-vkahub-password")
+	viperInstance.SetDefault("onliner.databaseNum", 0)
 
-	viperInstance.SetDefault("cloud.address", "cloud:9000")
-	viperInstance.SetDefault("cloud.username", "minio-root")
-	viperInstance.SetDefault("cloud.password", "minio-root")
-	viperInstance.SetDefault("cloud.enableSSL", false)
-	viperInstance.SetDefault("cloud.initBucket", "vkahub-bucket")
+	viperInstance.SetDefault("file-storage.address", "file-storage:9000")
+	viperInstance.SetDefault("file-storage.username", "minio-root")
+	viperInstance.SetDefault("file-storage.password", "minio-root")
+	viperInstance.SetDefault("file-storage.enableSSL", false)
+	viperInstance.SetDefault("file-storage.initBucket", "vkahub-bucket")
 
 	viperInstance.SetDefault("broker.address", "")
 	viperInstance.SetDefault("broker.exchange", "")

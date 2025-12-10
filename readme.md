@@ -15,14 +15,14 @@ cd vkahub-local
 database:
   username: postgres
   password: postgres
-  host: db
+  host: database
   port: 5432
   databaseName: vkahub
   sslMode: false
 
 migrations:
   enable: true
-  connUri: postgres://postgres:postgres@db:5432/vkahub?sslmode=disable
+  connUri: postgres://postgres:postgres@database:5432/vkahub?sslmode=disable
   dirUrl: file:///app/migrations
 
 authorizer:
@@ -30,12 +30,12 @@ authorizer:
   refreshSecretKey: refresh-vkahub-secret-vkahub-key
 
 onliner:
-  address: http://redis:6379
+  address: http://onliner:6379
   password: 
   databaseNum: 0
 
-cloud:
-  address: cloud:9000
+file-storage:
+  address: file-storage:9000
   username: minio-root
   password: minio-root
   enableSSL: false
@@ -45,7 +45,7 @@ broker:
   address:
   exchange:
   routingKey:
-  queue: 
+  queue:
 ```
 
 ```env

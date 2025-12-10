@@ -1,3 +1,5 @@
+bin/
+server/configs/rmq/
+
 Dockerfile
 .dockerignore
-bin/
